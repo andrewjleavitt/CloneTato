@@ -1,0 +1,65 @@
+using CloneTato.Core;
+using CloneTato.UI;
+using Raylib_cs;
+
+namespace CloneTato.Screens;
+
+public class MainMenuScreen
+{
+    public void Update(float dt, GameState state, GameStateManager manager)
+    {
+        if (Raylib.IsKeyPressed(KeyboardKey.Enter) || Raylib.IsKeyPressed(KeyboardKey.Space))
+            manager.TransitionTo(GameScreen.CharacterSelect);
+        if (Raylib.IsKeyPressed(KeyboardKey.Escape))
+            manager.QuitRequested = true;
+    }
+
+    public void Draw(GameState state, GameStateManager manager)
+    {
+        Raylib.ClearBackground(new Color(45, 30, 20, 255));
+
+        // Draw desert tile background
+        for (int x = 0; x < Constants.LogicalWidth; x += Constants.TileSize)
+        {
+            for (int y = 0; y < Constants.LogicalHeight; y += Constants.TileSize)
+            {
+                int tileIdx = ((x / Constants.TileSize) + (y / Constants.TileSize)) % 3;
+                state.Assets.Tiles.Draw(tileIdx, x, y, new Color(60, 40, 30, 255));
+            }
+        }
+
+        // Title
+        string title = "CLONETATO";
+        int titleW = Raylib.MeasureText(title, 24);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2 + 1, 51, 24, Color.Black);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 50, 24, Color.Gold);
+
+        string subtitle = "Desert Survivor";
+        int subW = Raylib.MeasureText(subtitle, 10);
+        Raylib.DrawText(subtitle, Constants.LogicalWidth / 2 - subW / 2, 78, 10, Color.Orange);
+
+        // Character sprites as decoration
+        for (int i = 0; i < 4; i++)
+        {
+            state.Assets.Players.DrawScaled(i * 4, Constants.LogicalWidth / 2 - 50 + i * 30, 110, 1.5f, Color.White);
+        }
+
+        // Buttons
+        int btnW = 80, btnH = 18;
+        int btnX = Constants.LogicalWidth / 2 - btnW / 2;
+
+        if (UIRenderer.DrawButton("START RUN", btnX, 140, btnW, btnH, new Color(60, 100, 60, 255)))
+        {
+            manager.TransitionTo(GameScreen.CharacterSelect);
+            state.Assets.PlaySoundVariant("select", 0.5f);
+        }
+
+        if (UIRenderer.DrawButton("QUIT", btnX, 165, btnW, btnH, new Color(100, 60, 60, 255)))
+        {
+            manager.QuitRequested = true;
+        }
+
+        UIRenderer.DrawTextSmall("WASD to move, weapons auto-fire",
+            Constants.LogicalWidth / 2 - 70, Constants.LogicalHeight - 15, Color.Gray);
+    }
+}

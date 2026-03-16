@@ -1,0 +1,45 @@
+using System.Numerics;
+
+namespace CloneTato.Data;
+
+public struct Stats
+{
+    public int MaxHP;
+    public float MoveSpeed;
+    public float DamageMultiplier;
+    public float AttackSpeedMultiplier;
+    public float CritChance;
+    public float CritDamage;
+    public int Armor;
+    public float DodgeChance;
+    public float PickupRange;
+    public float XPMultiplier;
+
+    public static Stats Default() => new()
+    {
+        MaxHP = 100,
+        MoveSpeed = 80f,
+        DamageMultiplier = 1.0f,
+        AttackSpeedMultiplier = 1.0f,
+        CritChance = 0.05f,
+        CritDamage = 1.5f,
+        Armor = 0,
+        DodgeChance = 0f,
+        PickupRange = 50f,
+        XPMultiplier = 1.0f,
+    };
+
+    public static Stats operator +(Stats a, Stats b) => new()
+    {
+        MaxHP = a.MaxHP + b.MaxHP,
+        MoveSpeed = a.MoveSpeed + b.MoveSpeed,
+        DamageMultiplier = a.DamageMultiplier + b.DamageMultiplier,
+        AttackSpeedMultiplier = a.AttackSpeedMultiplier + b.AttackSpeedMultiplier,
+        CritChance = a.CritChance + b.CritChance,
+        CritDamage = a.CritDamage + b.CritDamage,
+        Armor = a.Armor + b.Armor,
+        DodgeChance = a.DodgeChance + b.DodgeChance,
+        PickupRange = a.PickupRange + b.PickupRange,
+        XPMultiplier = a.XPMultiplier + b.XPMultiplier,
+    };
+}
