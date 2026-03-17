@@ -1,4 +1,5 @@
 using CloneTato.Assets;
+using CloneTato.Data;
 using CloneTato.Screens;
 
 namespace CloneTato.Core;
@@ -12,11 +13,14 @@ public enum GameScreen
     LevelUp,
     GameOver,
     Victory,
+    WeaponGallery,
+    MetaUpgrades,
 }
 
 public class GameStateManager
 {
     public GameState State { get; } = new();
+    public MetaProgression Meta { get; private set; } = null!;
     public GameScreen CurrentScreen { get; private set; } = GameScreen.MainMenu;
     public GameScreen? PendingScreen { get; set; }
     public bool QuitRequested { get; set; }
@@ -28,10 +32,13 @@ public class GameStateManager
     private readonly LevelUpScreen _levelUp = new();
     private readonly GameOverScreen _gameOver = new();
     private readonly VictoryScreen _victory = new();
+    private readonly WeaponGalleryScreen _weaponGallery = new();
+    private readonly MetaUpgradeScreen _metaUpgrades = new();
 
     public void Init(AssetManager assets)
     {
         State.Assets = assets;
+        Meta = MetaProgression.Load();
     }
 
     public void Update(float dt)
@@ -51,6 +58,8 @@ public class GameStateManager
             case GameScreen.LevelUp: _levelUp.Update(dt, State, this); break;
             case GameScreen.GameOver: _gameOver.Update(dt, State, this); break;
             case GameScreen.Victory: _victory.Update(dt, State, this); break;
+            case GameScreen.WeaponGallery: _weaponGallery.Update(dt, State, this); break;
+            case GameScreen.MetaUpgrades: _metaUpgrades.Update(dt, State, this); break;
         }
     }
 
@@ -65,6 +74,8 @@ public class GameStateManager
             case GameScreen.LevelUp: _levelUp.Draw(State, this); break;
             case GameScreen.GameOver: _gameOver.Draw(State, this); break;
             case GameScreen.Victory: _victory.Draw(State, this); break;
+            case GameScreen.WeaponGallery: _weaponGallery.Draw(State, this); break;
+            case GameScreen.MetaUpgrades: _metaUpgrades.Draw(State, this); break;
         }
     }
 

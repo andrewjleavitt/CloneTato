@@ -1,4 +1,5 @@
 using CloneTato.Core;
+using CloneTato.Data;
 using CloneTato.UI;
 using Raylib_cs;
 
@@ -6,12 +7,34 @@ namespace CloneTato.Screens;
 
 public class GameOverScreen
 {
+    private bool _tokensAwarded;
+    private int _tokensEarned;
+
     public void Update(float dt, GameState state, GameStateManager manager)
     {
-        if (Raylib.IsKeyPressed(KeyboardKey.Enter) || Raylib.IsKeyPressed(KeyboardKey.Space))
+        if (!_tokensAwarded)
+        {
+            _tokensEarned = manager.Meta.CalculateRunTokens(state.CurrentWave, state.TotalEnemiesKilled, false);
+            manager.Meta.Tokens += _tokensEarned;
+            manager.Meta.TotalRuns++;
+            manager.Meta.TotalKills += state.TotalEnemiesKilled;
+            if (state.CurrentWave > manager.Meta.BestWave)
+                manager.Meta.BestWave = state.CurrentWave;
+            manager.Meta.CheckUnlocks();
+            manager.Meta.Save();
+            _tokensAwarded = true;
+        }
+
+        if (InputHelper.IsConfirmPressed())
+        {
+            _tokensAwarded = false;
             manager.TransitionTo(GameScreen.CharacterSelect);
-        if (Raylib.IsKeyPressed(KeyboardKey.Escape))
+        }
+        if (InputHelper.IsCancelPressed())
+        {
+            _tokensAwarded = false;
             manager.TransitionTo(GameScreen.MainMenu);
+        }
     }
 
     public void Draw(GameState state, GameStateManager manager)
@@ -22,28 +45,84 @@ public class GameOverScreen
         int titleW = Raylib.MeasureText(title, 24);
         Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 40, 24, Color.Red);
 
-        int cy = 80;
-        int cx = Constants.LogicalWidth / 2 - 60;
-        UIRenderer.DrawTextSmall($"Wave Reached: {state.CurrentWave}/{Constants.MaxWaves}", cx, cy, Color.White);
-        UIRenderer.DrawTextSmall($"Enemies Killed: {state.TotalEnemiesKilled}", cx, cy + 14, Color.White);
-        UIRenderer.DrawTextSmall($"Damage Dealt: {state.TotalDamageDealt}", cx, cy + 28, Color.White);
-        UIRenderer.DrawTextSmall($"Time Survived: {state.TotalTimeSurvived:F1}s", cx, cy + 42, Color.White);
-        UIRenderer.DrawTextSmall($"Level: {state.Level}", cx, cy + 56, Color.SkyBlue);
+        var stats = state.Player.ComputedStats;
+        int leftX = 30;
+        int rightX = Constants.LogicalWidth / 2 + 20;
 
+        // Left column: run summary
+        int y = 68;
+        UIRenderer.DrawTextSmall("-- RUN --", leftX, y, Color.Gold);
+        y += 12;
+        UIRenderer.DrawTextSmall($"Wave: {state.CurrentWave}/{Constants.MaxWaves}", leftX, y, Color.White); y += 10;
+        UIRenderer.DrawTextSmall($"Level: {state.Level}", leftX, y, Color.SkyBlue); y += 10;
+        UIRenderer.DrawTextSmall($"Kills: {state.TotalEnemiesKilled}", leftX, y, Color.White); y += 10;
+        UIRenderer.DrawTextSmall($"Damage: {state.TotalDamageDealt}", leftX, y, Color.White); y += 10;
+        UIRenderer.DrawTextSmall($"Time: {state.TotalTimeSurvived:F1}s", leftX, y, Color.White); y += 10;
+        UIRenderer.DrawTextSmall($"Gold: {state.Gold}", leftX, y, Color.Gold); y += 10;
+        UIRenderer.DrawTextSmall($"Tokens: +{_tokensEarned}", leftX, y, Color.Gold); y += 14;
+
+        // Weapons
+        UIRenderer.DrawTextSmall("-- WEAPONS --", leftX, y, Color.Gold);
+        y += 12;
+        for (int i = 0; i < state.EquippedWeapons.Count; i++)
+        {
+            var w = state.EquippedWeapons[i];
+            string lvl = w.UpgradeLevel > 0 ? $" +{w.UpgradeLevel}" : "";
+            UIRenderer.DrawTextSmall($"{w.Def.Name}{lvl}", leftX, y, Color.White);
+            y += 10;
+        }
+
+        // Right column: all stats
+        y = 68;
+        UIRenderer.DrawTextSmall("-- STATS --", rightX, y, Color.Gold);
+        y += 12;
+
+        DrawStat("Max HP", $"{stats.MaxHP}", rightX, ref y, Color.Green);
+        DrawStat("Move Spd", $"{stats.MoveSpeed:F0}", rightX, ref y, Color.White);
+        DrawStat("Damage", $"{stats.DamageMultiplier:F2}x", rightX, ref y, Color.Orange);
+        DrawStat("Atk Spd", $"{stats.AttackSpeedMultiplier:F2}x", rightX, ref y, Color.Orange);
+        DrawStat("Crit", $"{stats.CritChance * 100:F0}% ({stats.CritDamage:F1}x)", rightX, ref y, Color.Yellow);
+        DrawStat("Armor", $"{stats.Armor}", rightX, ref y, Color.LightGray);
+        DrawStat("Dodge", $"{stats.DodgeChance * 100:F0}%", rightX, ref y, Color.SkyBlue);
+        DrawStat("Pickup", $"{stats.PickupRange:F0}", rightX, ref y, Color.Lime);
+        DrawStat("XP Mult", $"{stats.XPMultiplier:F2}x", rightX, ref y, Color.SkyBlue);
+        DrawStat("Reload Spd", $"{stats.ReloadSpeedMultiplier:F2}x", rightX, ref y, Color.SkyBlue);
+
+        // Dash stats (only show if non-default)
+        if (stats.DashSpeedBonus > 0)
+            DrawStat("Dash Spd", $"+{stats.DashSpeedBonus:F0}", rightX, ref y, Color.Purple);
+        if (stats.DashCooldownReduction > 0)
+            DrawStat("Dash CD", $"-{stats.DashCooldownReduction:F2}s", rightX, ref y, Color.Purple);
+        if (stats.DashDurationBonus > 0)
+            DrawStat("Dash Dur", $"+{stats.DashDurationBonus:F2}s", rightX, ref y, Color.Purple);
+        if (stats.PostDashAttackSpeed > 0)
+            DrawStat("Post-Dash AS", $"+{stats.PostDashAttackSpeed * 100:F0}%", rightX, ref y, Color.Gold);
+        if (stats.PostDashMoveSpeed > 0)
+            DrawStat("Post-Dash MS", $"+{stats.PostDashMoveSpeed * 100:F0}%", rightX, ref y, Color.Gold);
+        if (stats.PostDashInvuln > 0)
+            DrawStat("Post-Dash Inv", $"{stats.PostDashInvuln:F1}s", rightX, ref y, Color.Gold);
+
+        // Buttons
         int btnW = 80, btnH = 18;
-        if (UIRenderer.DrawButton("RETRY", Constants.LogicalWidth / 2 - btnW / 2, 190, btnW, btnH,
+        if (UIRenderer.DrawButton("RETRY", Constants.LogicalWidth / 2 - btnW / 2, 232, btnW, btnH,
             new Color(60, 100, 60, 255)))
         {
+            _tokensAwarded = false;
             manager.TransitionTo(GameScreen.CharacterSelect);
         }
 
-        if (UIRenderer.DrawButton("MENU", Constants.LogicalWidth / 2 - btnW / 2, 215, btnW, btnH,
+        if (UIRenderer.DrawButton("MENU", Constants.LogicalWidth / 2 - btnW / 2, 253, btnW, btnH,
             new Color(100, 60, 60, 255)))
         {
+            _tokensAwarded = false;
             manager.TransitionTo(GameScreen.MainMenu);
         }
+    }
 
-        UIRenderer.DrawTextSmall("Enter = Retry, Esc = Menu", Constants.LogicalWidth / 2 - 55,
-            Constants.LogicalHeight - 15, Color.Gray);
+    private static void DrawStat(string label, string value, int x, ref int y, Color color)
+    {
+        UIRenderer.DrawTextSmall(label, x, y, Color.Gray);
+        UIRenderer.DrawTextSmall(value, x + 75, y, color);
+        y += 10;
     }
 }

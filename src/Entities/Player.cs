@@ -13,6 +13,16 @@ public class Player : Entity
     public bool FacingLeft;
     public float AnimTimer;
 
+    // Dash
+    public bool IsDashing;
+    public float DashTimer;
+    public float DashCooldownTimer;
+    public Vector2 DashDirection;
+
+    // Post-dash buff
+    public float DashBuffTimer; // time remaining on post-dash buff
+    public const float DashBuffDuration = 1.2f; // seconds of buff after dash
+
     public Player()
     {
         Radius = 10f;
@@ -36,11 +46,10 @@ public class Player : Entity
 
     public int GetDisplaySprite()
     {
-        // Row 0: idle frames (0,1), Row 1: walk frames (2,3) based on the 4x4 player grid
-        // Each character has 4 sprites: 2 idle variants + 2 walk variants
+        // Each character has 4 sprites in a row: 3 walk frames + 1 death frame
         int baseSprite = CharacterIndex;
-        bool moving = Velocity.LengthSquared() > 1f;
-        int frame = (int)(AnimTimer * 4f) % 2;
-        return moving ? baseSprite + 2 + frame : baseSprite + frame;
+        if (CurrentHP <= 0) return baseSprite + 3; // death frame
+        int frame = (int)(AnimTimer * 6f) % 3; // cycle through frames 0, 1, 2
+        return baseSprite + frame;
     }
 }

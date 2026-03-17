@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace CloneTato.Entities;
+namespace DesertEngine.Core;
 
 public class Projectile : Entity
 {
@@ -9,12 +9,7 @@ public class Projectile : Entity
     public float MaxLifetime;
     public int PierceCount;
     public Raylib_cs.Color ProjectileColor;
-    public float ExplosionRadius; // >0 means AOE on impact/expiry
-
-    // Homing missile fields
-    public bool IsHoming;
-    public int TargetEnemyIndex; // index into Enemies pool (-1 = no target)
-    public float TurnRate; // radians per second
+    public float ExplosionRadius;
 
     public void Init(Vector2 pos, Vector2 vel, int damage, float lifetime, int pierce,
         Raylib_cs.Color color, float explosionRadius = 0f)
@@ -27,24 +22,17 @@ public class Projectile : Entity
         PierceCount = pierce;
         ProjectileColor = color;
         ExplosionRadius = explosionRadius;
-        Radius = explosionRadius > 0 ? 4f : 3f; // explosives are slightly larger
+        Radius = explosionRadius > 0 ? 4f : 3f;
         Active = true;
         FlashTimer = 0;
         SpriteIndex = 0;
-        IsHoming = false;
-        TargetEnemyIndex = -1;
-        TurnRate = 0f;
     }
 
     public override void Update(float dt)
     {
         base.Update(dt);
         Lifetime -= dt;
-        if (Lifetime <= 0)
-        {
-            Active = false;
-            // Mark for explosion check (handled by CollisionSystem)
-        }
+        if (Lifetime <= 0) Active = false;
     }
 
     public bool IsExplosive => ExplosionRadius > 0;

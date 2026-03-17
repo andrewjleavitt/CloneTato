@@ -15,6 +15,23 @@ public class Enemy : Entity
     public Vector2 KnockbackVelocity;
     public EnemyBehavior Behavior;
     public float SineOffset; // for erratic movement
+    public float AnimTimer;
+    public bool IsDying;
+    public float DeathTimer;
+    private const float DeathDuration = 0.4f;
+
+    // Armed enemy fields — any enemy can get a weapon
+    public bool IsArmed;
+    public int WeaponSpriteIndex; // index into Weapons atlas
+    public float ShootCooldown;
+    public float ShootTimer;
+    public int ProjectileDamage;
+    public float ProjectileSpeed;
+    public float PreferredRange;
+
+    // Boss fields
+    public bool IsBoss;
+    public float Scale = 1f;
 
     public void Init(EnemyDef def, Vector2 spawnPos, float scaleFactor = 1f)
     {
@@ -30,9 +47,62 @@ public class Enemy : Entity
         Behavior = def.Behavior;
         SineOffset = Random.Shared.NextSingle() * MathF.PI * 2f;
         KnockbackTimer = 0;
+        AnimTimer = Random.Shared.NextSingle() * 2f;
+        IsDying = false;
+        DeathTimer = 0;
         Active = true;
         FlashTimer = 0;
+        IsBoss = false;
+        Scale = 1f;
+        IsArmed = false;
+        WeaponSpriteIndex = 0;
+        ShootCooldown = 0;
+        ShootTimer = 0;
+        ProjectileDamage = 0;
+        ProjectileSpeed = 0;
+        PreferredRange = 0;
     }
+
+    public void ArmWithWeapon(WeaponDef weapon, float scaleFactor)
+    {
+        IsArmed = true;
+        WeaponSpriteIndex = weapon.SpriteIndex;
+        ShootCooldown = 1f / weapon.FireRate;
+        ShootTimer = Random.Shared.NextSingle() * ShootCooldown; // stagger
+        ProjectileDamage = (int)(weapon.BaseDamage * 0.35f * scaleFactor); // enemies do much less damage than player
+        ProjectileSpeed = 160f + Random.Shared.NextSingle() * 40f;
+        PreferredRange = weapon.Range * 0.7f;
+        Speed *= 0.7f; // armed enemies are slower
+        XPValue += 2; // worth more XP
+        GoldValue += 1;
+    }
+
+    public void InitAsBoss(EnemyDef def, Vector2 spawnPos, float scaleFactor)
+    {
+        Init(def, spawnPos, scaleFactor);
+        IsBoss = true;
+        Scale = 2f;
+        Radius = def.Radius * Scale;
+        XPValue = def.XPValue * 5;
+        GoldValue = def.GoldValue * 5;
+    }
+
+    public void StartDeath()
+    {
+        IsDying = true;
+        DeathTimer = DeathDuration;
+        Velocity = Vector2.Zero;
+    }
+
+    // SpriteIndex is the base (row start). Walk frames: +0, +1, +2. Death frame: +3.
+    public int GetDisplaySprite()
+    {
+        if (IsDying) return SpriteIndex + 3;
+        int frame = (int)(AnimTimer * 6f) % 3; // 6 fps walk cycle
+        return SpriteIndex + frame;
+    }
+
+    public float DeathAlpha => IsDying ? Math.Clamp(DeathTimer / DeathDuration, 0f, 1f) : 1f;
 }
 
 public enum EnemyBehavior
@@ -40,5 +110,5 @@ public enum EnemyBehavior
     Chase,
     FastChase,
     Tank,
-    Erratic
+    Erratic,
 }

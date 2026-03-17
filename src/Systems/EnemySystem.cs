@@ -7,6 +7,19 @@ namespace CloneTato.Systems;
 
 public static class EnemySystem
 {
+    // Auto-fire weapons that enemies can pick up (indices into WeaponDatabase)
+    // Only Auto weapons make sense for enemies
+    private static readonly int[] EnemyWeaponPool = GetAutoWeaponIndices();
+
+    private static int[] GetAutoWeaponIndices()
+    {
+        var indices = new List<int>();
+        for (int i = 0; i < WeaponDatabase.Weapons.Length; i++)
+            if (WeaponDatabase.Weapons[i].Type == WeaponType.Auto)
+                indices.Add(i);
+        return indices.ToArray();
+    }
+
     public static void Update(float dt, GameState state)
     {
         var playerPos = state.Player.Position;
@@ -17,6 +30,18 @@ public static class EnemySystem
             var enemy = state.Enemies[i];
             if (!enemy.Active) continue;
 
+            // Death animation
+            if (enemy.IsDying)
+            {
+                enemy.DeathTimer -= dt;
+                if (enemy.DeathTimer <= 0)
+                    enemy.Active = false;
+                continue;
+            }
+
+            // Walk animation
+            enemy.AnimTimer += dt;
+
             // Knockback
             if (enemy.KnockbackTimer > 0)
             {
@@ -26,30 +51,90 @@ public static class EnemySystem
                 continue;
             }
 
-            // Movement toward player
             Vector2 dir = playerPos - enemy.Position;
             float dist = dir.Length();
+
             if (dist > 1f)
             {
-                dir /= dist; // normalize
+                dir /= dist;
 
-                // Erratic enemies add sine wave perpendicular movement
-                if (enemy.Behavior == EnemyBehavior.Erratic)
+                // Armed enemies hang back at preferred range
+                if (enemy.IsArmed)
+                {
+                    if (dist < enemy.PreferredRange * 0.7f)
+                        enemy.Velocity = -dir * enemy.Speed; // back away
+                    else if (dist > enemy.PreferredRange * 1.3f)
+                        enemy.Velocity = dir * enemy.Speed; // close in
+                    else
+                    {
+                        // Strafe at range
+                        Vector2 perp = new(-dir.Y, dir.X);
+                        float sine = MathF.Sin(time * 2f + enemy.SineOffset);
+                        enemy.Velocity = perp * sine * enemy.Speed * 0.7f;
+                    }
+                }
+                // Unarmed: use original behavior
+                else if (enemy.Behavior == EnemyBehavior.Erratic)
                 {
                     float sine = MathF.Sin(time * 4f + enemy.SineOffset) * 0.6f;
                     Vector2 perp = new(-dir.Y, dir.X);
-                    dir += perp * sine;
-                    dir = Vector2.Normalize(dir);
+                    var erraticDir = dir + perp * sine;
+                    enemy.Velocity = Vector2.Normalize(erraticDir) * enemy.Speed;
                 }
-
-                enemy.Velocity = dir * enemy.Speed;
+                else
+                {
+                    enemy.Velocity = dir * enemy.Speed;
+                }
             }
+
+            // Armed enemies shoot
+            if (enemy.IsArmed)
+            {
+                enemy.ShootTimer -= dt;
+                if (enemy.ShootTimer <= 0 && dist < enemy.PreferredRange * 2.5f)
+                {
+                    enemy.ShootTimer = enemy.ShootCooldown;
+                    var proj = state.GetInactiveEnemyProjectile();
+                    if (proj != null)
+                    {
+                        Vector2 shotDir = Vector2.Normalize(playerPos - enemy.Position);
+                        float spread = (Random.Shared.NextSingle() - 0.5f) * 0.2f;
+                        float angle = MathF.Atan2(shotDir.Y, shotDir.X) + spread;
+                        shotDir = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+
+                        proj.Init(
+                            enemy.Position + shotDir * (enemy.Radius + 4f),
+                            shotDir * enemy.ProjectileSpeed,
+                            enemy.ProjectileDamage,
+                            2.5f, 0,
+                            Raylib_cs.Color.Orange
+                        );
+                    }
+                }
+            }
+
+            // Terrain zone speed modifier for enemies too
+            float terrainMult = CollisionSystem.GetTerrainSpeedMultiplier(state, enemy.Position);
+            if (terrainMult < 1f)
+                enemy.Velocity *= terrainMult;
 
             enemy.Position += enemy.Velocity * dt;
 
-            // Clamp to arena (enemies can be slightly outside to spawn)
+            // Clamp to arena + obstacle collision
             enemy.Position.X = Math.Clamp(enemy.Position.X, -20f, Constants.ArenaWidth + 20f);
             enemy.Position.Y = Math.Clamp(enemy.Position.Y, -20f, Constants.ArenaHeight + 20f);
+            CollisionSystem.ResolveObstacleCollision(state, ref enemy.Position, enemy.Radius);
+
+            // Ooze damage to enemies
+            float oozeDmg = CollisionSystem.GetTerrainDamageRate(state, enemy.Position);
+            if (oozeDmg > 0)
+            {
+                int dmg = Math.Max(1, (int)(oozeDmg * dt + 0.5f));
+                enemy.CurrentHP -= dmg;
+                enemy.FlashTimer = 0.08f;
+                if (enemy.CurrentHP <= 0 && !enemy.IsDying)
+                    state.HandleEnemyDeath(enemy);
+            }
 
             if (enemy.FlashTimer > 0) enemy.FlashTimer -= dt;
         }
@@ -70,15 +155,48 @@ public static class EnemySystem
         // Scale stats based on wave
         float scaleFactor = 1f + (waveNumber - 1) * 0.12f;
 
-        // Boss spawn on boss waves (last enemy of the wave)
-        if (config.IsBossWave && state.EnemiesSpawnedThisWave == config.TotalEnemies - 1)
-        {
-            scaleFactor *= 4f;
-        }
-
         // Spawn from random arena edge
         Vector2 spawnPos = GetEdgeSpawnPosition(state.Player.Position);
-        enemy.Init(def, spawnPos, scaleFactor);
+
+        // Boss spawning
+        bool spawnBoss = waveNumber >= 3 && config.IsBossWave
+            && state.EnemiesSpawnedThisWave == config.TotalEnemies - 1;
+
+        // Mini-bosses starting wave 5
+        if (!spawnBoss && waveNumber >= 5 && state.EnemiesSpawnedThisWave > 0
+            && state.EnemiesSpawnedThisWave % 20 == 0)
+        {
+            spawnBoss = true;
+            scaleFactor *= 2f;
+        }
+
+        if (spawnBoss)
+        {
+            scaleFactor *= 4f;
+            enemy.InitAsBoss(def, spawnPos, scaleFactor);
+            // Bosses always get a weapon
+            if (EnemyWeaponPool.Length > 0)
+            {
+                int weapIdx = EnemyWeaponPool[Random.Shared.Next(EnemyWeaponPool.Length)];
+                enemy.ArmWithWeapon(WeaponDatabase.Weapons[weapIdx], scaleFactor);
+            }
+        }
+        else
+        {
+            enemy.Init(def, spawnPos, scaleFactor);
+
+            // Chance to arm with a weapon — starts at wave 4, increases over time
+            if (waveNumber >= 4 && EnemyWeaponPool.Length > 0)
+            {
+                // 10% at wave 4, up to ~50% by wave 15+
+                float armChance = Math.Clamp((waveNumber - 3) * 0.04f, 0f, 0.5f);
+                if (Random.Shared.NextSingle() < armChance)
+                {
+                    int weapIdx = EnemyWeaponPool[Random.Shared.Next(EnemyWeaponPool.Length)];
+                    enemy.ArmWithWeapon(WeaponDatabase.Weapons[weapIdx], scaleFactor);
+                }
+            }
+        }
 
         state.EnemiesSpawnedThisWave++;
     }
@@ -89,10 +207,10 @@ public static class EnemySystem
         float margin = 30f;
         return edge switch
         {
-            0 => new Vector2(Random.Shared.NextSingle() * Constants.ArenaWidth, -margin), // top
-            1 => new Vector2(Random.Shared.NextSingle() * Constants.ArenaWidth, Constants.ArenaHeight + margin), // bottom
-            2 => new Vector2(-margin, Random.Shared.NextSingle() * Constants.ArenaHeight), // left
-            _ => new Vector2(Constants.ArenaWidth + margin, Random.Shared.NextSingle() * Constants.ArenaHeight), // right
+            0 => new Vector2(Random.Shared.NextSingle() * Constants.ArenaWidth, -margin),
+            1 => new Vector2(Random.Shared.NextSingle() * Constants.ArenaWidth, Constants.ArenaHeight + margin),
+            2 => new Vector2(-margin, Random.Shared.NextSingle() * Constants.ArenaHeight),
+            _ => new Vector2(Constants.ArenaWidth + margin, Random.Shared.NextSingle() * Constants.ArenaHeight),
         };
     }
 }

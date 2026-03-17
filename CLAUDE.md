@@ -4,55 +4,63 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CloneTato is a Brotato-style top-down arena survivor game built with C# and Raylib (Raylib-cs). The player selects a character, survives 20 waves of enemies that spawn from arena edges, collects XP to level up, and shops for weapons/items between waves. Weapons auto-fire at the nearest enemy.
+This repo contains two games sharing a common engine, all using C# and Raylib (Raylib-cs):
+
+- **CloneTato** — Brotato-style top-down arena survivor. Mouse-aimed auto-fire weapons orbit the player. Survive 20 waves, shop between waves.
+- **NukeDesert** — Nuclear Throne-style room-based roguelike (skeleton). Manual aim+fire, ammo management, dodge rolling, room transitions.
+- **DesertEngine** — Shared library: sprite atlas, camera, entity base classes, collision helpers, UI helpers.
 
 ## Build & Run
 
 ```bash
-dotnet restore         # first time only
-dotnet build           # compile
-dotnet run             # build and launch
+dotnet build CloneTato.sln    # build all three projects
+dotnet run --project CloneTato.csproj        # run Brotato clone
+dotnet run --project NukeDesert/NukeDesert.csproj   # run NT clone
 ```
 
-Requires .NET 8 SDK. The Raylib-cs NuGet package (v6.1.1) is the only dependency.
+Requires .NET 9 SDK. Raylib-cs 6.1.1 is the only external dependency.
+
+## Solution Structure
+
+- `CloneTato.csproj` (root) — Brotato clone, executable
+- `DesertEngine/` — Shared class library, referenced by both games
+- `NukeDesert/` — Nuclear Throne clone, executable, references DesertEngine
 
 ## Architecture
 
-**Game loop**: `Program.cs` renders to a `RenderTexture2D` at 480x270 (logical resolution), then scales 3x to 1440x810 window with nearest-neighbor filtering for pixel-perfect art.
+**Rendering**: Both games render to a `RenderTexture2D` at logical resolution, then scale to window with nearest-neighbor for pixel-perfect art. CloneTato uses 480x270 @ 3x. NukeDesert uses 480x400 @ 3x.
 
-**State machine**: `GameStateManager` drives screen transitions: MainMenu → CharacterSelect → Playing ↔ Shop/LevelUp → Victory/GameOver. Each screen has `Update(dt, state, manager)` and `Draw(state, manager)` methods.
+**State machine**: `GameStateManager` with enum-based screen transitions. Each screen has static `Update()` and `Draw()` methods receiving shared state + manager.
 
-**Central state**: `GameState` holds all entity pools, equipped weapons, items, wave state, gold, XP, and stats. All systems and screens receive this shared state object.
+**Entity pooling**: Pre-allocated arrays with `Active` flags — no runtime allocation during gameplay.
 
-**Entity pooling**: Enemies (300), Projectiles (500), XPOrbs (400), DamageNumbers (100) are pre-allocated. Entities have an `Active` flag — no runtime allocation during gameplay.
+**Systems**: Stateless static classes that operate on GameState each frame, called in sequence from `PlayingScreen.Update()`.
 
-**Systems**: Stateless static classes that operate on GameState each frame: `PlayerSystem`, `EnemySystem`, `WeaponSystem`, `WaveSystem`, `CollisionSystem`. Called in sequence from `PlayingScreen.Update()`.
+### CloneTato-specific
+- Weapons auto-fire when enemies are in range but **aim toward mouse cursor** (auto-shoot yes, auto-aim no)
+- Three weapon types: Auto (guns), Manual (grenades/mines), Melee (arc damage)
+- Weapons visibly orbit the player, fan out toward aim direction
+- Fixed-distance reticle (60px from player, not a mouse cursor replacement)
+- Screen shake + enlarged damage numbers on critical hits
 
-## Key Directories
-
-- `src/Core/` — GameState, GameStateManager, Camera, CollisionSystem
-- `src/Entities/` — Player, Enemy, Projectile, XPOrb, DamageNumber
-- `src/Data/` — Stats struct, definition classes (CharacterDef, WeaponDef, EnemyDef, ItemDef, WaveConfig) with static databases
-- `src/Systems/` — Per-frame logic (PlayerSystem, EnemySystem, WeaponSystem, WaveSystem)
-- `src/Screens/` — One class per game screen (MainMenu, CharacterSelect, Playing, Shop, LevelUp, GameOver, Victory)
-- `src/Assets/` — AssetManager (loads all textures/sounds), SpriteAtlas (cuts sprites from packed tilesheets)
-- `src/UI/` — UIRenderer (HUD, buttons, text helpers)
+### NukeDesert-specific (skeleton)
+- Manual aim and fire (click to shoot), ammo/clip system with reload
+- Dodge roll on Space (invincibility frames)
+- Room-based progression: 5 areas × 3 sub-levels
+- Mutations (upgrades) chosen between levels
+- Two weapon slots, swap with Q
 
 ## Assets
 
-`kenney_desert-shooter-pack_1/` — Kenney Desert Shooter Pack (CC0 license):
-- `PNG/*/Tilemap/tilemap_packed.png` — Packed tilesheets (NO spacing between tiles)
-- Players: 4x4 grid, 24px tiles (4 characters × 4 frames)
-- Enemies: 4x4 grid, 24px tiles (4 enemy types × 4 frames)
-- Weapons: 10x4 grid, 24px tiles (40 weapon sprites)
-- Tiles: 18x13 grid, 16px tiles (234 terrain/building tiles)
-- Interface: 18x11 grid, 16px tiles (198 UI elements including two font rows)
-- `Sounds/` — 40 OGG files with variants (coin-a..d, shoot-a..h, hurt-a..e, etc.)
+`kenney_desert-shooter-pack_1/` — Kenney Desert Shooter Pack (CC0):
+- `PNG/*/Tilemap/tilemap_packed.png` — Packed tilesheets (NO spacing)
+- Players: 4x4 grid, 24px | Enemies: 4x4, 24px | Weapons: 10x4, 24px
+- Tiles: 18x13, 16px | Interface: 18x11, 16px
+- `Sounds/` — 40 OGG files with variants (coin-a..d, shoot-a..h, etc.)
 
 ## Design Notes
 
 - All collision is circle-based (position + radius)
-- Camera follows player with lerp smoothing, clamped to arena bounds
-- Enemy stats scale by +12% per wave; boss enemies (every 5 waves) get 4x scale
-- Weapons auto-target nearest enemy within range and fire on cooldown
-- The shop offers weapons and stat items, with tier unlocks based on wave progress
+- Camera follows player with lerp smoothing, clamped to bounds
+- CloneTato: enemy stats scale +12%/wave; boss every 5 waves at 4x
+- NukeDesert: mob definitions per area with boss encounters

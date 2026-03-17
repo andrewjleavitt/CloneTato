@@ -16,7 +16,7 @@ public class WaveConfig
             Duration = Constants.WaveBaseDuration + wave * 2f,
             TotalEnemies = 12 + wave * 7,
             SpawnRate = 0.8f + wave * 0.18f,
-            IsBossWave = wave % 5 == 0,
+            IsBossWave = wave >= 3 && (wave % 3 == 0 || wave % 5 == 0),
             GoldReward = 20 + wave * 5,
         };
 

@@ -1,4 +1,5 @@
 using CloneTato.Core;
+using CloneTato.Data;
 using CloneTato.UI;
 using Raylib_cs;
 
@@ -6,12 +7,35 @@ namespace CloneTato.Screens;
 
 public class VictoryScreen
 {
+    private bool _tokensAwarded;
+    private int _tokensEarned;
+
     public void Update(float dt, GameState state, GameStateManager manager)
     {
-        if (Raylib.IsKeyPressed(KeyboardKey.Enter) || Raylib.IsKeyPressed(KeyboardKey.Space))
+        if (!_tokensAwarded)
+        {
+            _tokensEarned = manager.Meta.CalculateRunTokens(state.CurrentWave, state.TotalEnemiesKilled, true);
+            manager.Meta.Tokens += _tokensEarned;
+            manager.Meta.TotalRuns++;
+            manager.Meta.Victories++;
+            manager.Meta.TotalKills += state.TotalEnemiesKilled;
+            if (state.CurrentWave > manager.Meta.BestWave)
+                manager.Meta.BestWave = state.CurrentWave;
+            manager.Meta.CheckUnlocks();
+            manager.Meta.Save();
+            _tokensAwarded = true;
+        }
+
+        if (InputHelper.IsConfirmPressed())
+        {
+            _tokensAwarded = false;
             manager.TransitionTo(GameScreen.CharacterSelect);
-        if (Raylib.IsKeyPressed(KeyboardKey.Escape))
+        }
+        if (InputHelper.IsCancelPressed())
+        {
+            _tokensAwarded = false;
             manager.TransitionTo(GameScreen.MainMenu);
+        }
     }
 
     public void Draw(GameState state, GameStateManager manager)
@@ -31,16 +55,20 @@ public class VictoryScreen
         UIRenderer.DrawTextSmall($"Final Level: {state.Level}", cx, cy + 58, Color.SkyBlue);
         UIRenderer.DrawTextSmall($"Weapons: {state.EquippedWeapons.Count}", cx, cy + 72, Color.Orange);
 
+        UIRenderer.DrawTextSmall($"Tokens earned: +{_tokensEarned}", cx, cy + 90, Color.Gold);
+
         int btnW = 80, btnH = 18;
         if (UIRenderer.DrawButton("PLAY AGAIN", Constants.LogicalWidth / 2 - btnW / 2, 195, btnW, btnH,
             new Color(60, 100, 60, 255)))
         {
+            _tokensAwarded = false;
             manager.TransitionTo(GameScreen.CharacterSelect);
         }
 
         if (UIRenderer.DrawButton("MENU", Constants.LogicalWidth / 2 - btnW / 2, 220, btnW, btnH,
             new Color(100, 60, 60, 255)))
         {
+            _tokensAwarded = false;
             manager.TransitionTo(GameScreen.MainMenu);
         }
 

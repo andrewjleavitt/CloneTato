@@ -14,6 +14,13 @@ public struct Stats
     public float DodgeChance;
     public float PickupRange;
     public float XPMultiplier;
+    public float ReloadSpeedMultiplier;
+    public float DashSpeedBonus;
+    public float DashCooldownReduction;
+    public float DashDurationBonus;
+    public float PostDashAttackSpeed;  // bonus attack speed multiplier after dash
+    public float PostDashMoveSpeed;    // bonus move speed multiplier after dash
+    public float PostDashInvuln;       // seconds of invulnerability after dash
 
     public static Stats Default() => new()
     {
@@ -27,6 +34,10 @@ public struct Stats
         DodgeChance = 0f,
         PickupRange = 50f,
         XPMultiplier = 1.0f,
+        ReloadSpeedMultiplier = 1.0f,
+        DashSpeedBonus = 0f,
+        DashCooldownReduction = 0f,
+        DashDurationBonus = 0f,
     };
 
     public static Stats operator +(Stats a, Stats b) => new()
@@ -41,5 +52,12 @@ public struct Stats
         DodgeChance = a.DodgeChance + b.DodgeChance,
         PickupRange = a.PickupRange + b.PickupRange,
         XPMultiplier = a.XPMultiplier + b.XPMultiplier,
+        ReloadSpeedMultiplier = a.ReloadSpeedMultiplier + b.ReloadSpeedMultiplier,
+        DashSpeedBonus = a.DashSpeedBonus + b.DashSpeedBonus,
+        DashCooldownReduction = a.DashCooldownReduction + b.DashCooldownReduction,
+        DashDurationBonus = a.DashDurationBonus + b.DashDurationBonus,
+        PostDashAttackSpeed = a.PostDashAttackSpeed + b.PostDashAttackSpeed,
+        PostDashMoveSpeed = a.PostDashMoveSpeed + b.PostDashMoveSpeed,
+        PostDashInvuln = a.PostDashInvuln + b.PostDashInvuln,
     };
 }

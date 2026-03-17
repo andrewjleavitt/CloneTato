@@ -14,20 +14,22 @@ public class CharacterSelectScreen
     {
         _manager = manager;
 
-        if (Raylib.IsKeyPressed(KeyboardKey.Left) || Raylib.IsKeyPressed(KeyboardKey.A))
-            _selectedIndex = Math.Max(0, _selectedIndex - 1);
-        if (Raylib.IsKeyPressed(KeyboardKey.Right) || Raylib.IsKeyPressed(KeyboardKey.D))
-            _selectedIndex = Math.Min(CharacterDatabase.Characters.Length - 1, _selectedIndex + 1);
-        if (Raylib.IsKeyPressed(KeyboardKey.Enter) || Raylib.IsKeyPressed(KeyboardKey.Space))
+        int hDir = InputHelper.GetMenuHorizontal();
+        if (hDir != 0)
+            _selectedIndex = Math.Clamp(_selectedIndex + hDir, 0, CharacterDatabase.Characters.Length - 1);
+        if (InputHelper.IsConfirmPressed())
             StartRun(state, manager);
-        if (Raylib.IsKeyPressed(KeyboardKey.Escape))
+        if (InputHelper.IsCancelPressed())
             manager.TransitionTo(GameScreen.MainMenu);
     }
 
     private void StartRun(GameState state, GameStateManager manager)
     {
+        if (!manager.Meta.CharacterUnlocked[_selectedIndex]) return;
         var character = CharacterDatabase.Characters[_selectedIndex];
         state.StartNewRun(character);
+        state.MetaBonus = manager.Meta.GetMetaBonus();
+        state.RecomputePlayerStats();
         state.StartWave();
         manager.TransitionTo(GameScreen.Playing);
         state.Assets.PlaySoundVariant("select", 0.5f);
@@ -56,22 +58,41 @@ public class CharacterSelectScreen
             var ch = CharacterDatabase.Characters[i];
             int cx = startX + i * (cardW + 8);
             bool selected = i == _selectedIndex;
+            bool unlocked = manager.Meta.CharacterUnlocked.Length > i && manager.Meta.CharacterUnlocked[i];
 
-            Color cardBg = selected ? new Color(80, 60, 40, 255) : new Color(50, 35, 25, 255);
+            Color cardBg = !unlocked ? new Color(30, 25, 20, 255) :
+                selected ? new Color(80, 60, 40, 255) : new Color(50, 35, 25, 255);
             Raylib.DrawRectangle(cx, cardY, cardW, cardH, cardBg);
-            Color borderColor = selected ? Color.Gold : Color.Gray;
+            Color borderColor = !unlocked ? new Color(60, 50, 40, 255) :
+                selected ? Color.Gold : Color.Gray;
             Raylib.DrawRectangleLines(cx, cardY, cardW, cardH, borderColor);
 
-            state.Assets.Players.DrawScaled(ch.SpriteIndex, cx + cardW / 2, cardY + 28, 2f, Color.White);
+            if (unlocked)
+            {
+                state.Assets.Players.DrawScaled(ch.SpriteIndex, cx + cardW / 2, cardY + 28, 2f, Color.White);
+                UIRenderer.DrawTextSmall(ch.Name, cx + 4, cardY + 48, Color.White);
+                UIRenderer.DrawTextSmall(ch.Description, cx + 4, cardY + 58, Color.LightGray);
 
-            UIRenderer.DrawTextSmall(ch.Name, cx + 4, cardY + 48, Color.White);
-            UIRenderer.DrawTextSmall(ch.Description, cx + 4, cardY + 58, Color.LightGray);
-
-            var s = ch.BaseStats;
-            UIRenderer.DrawTextSmall($"HP: {s.MaxHP}", cx + 4, cardY + 70, Color.Green);
-            UIRenderer.DrawTextSmall($"SPD: {s.MoveSpeed:F0}", cx + 4, cardY + 80, Color.SkyBlue);
-            UIRenderer.DrawTextSmall($"ARM: {s.Armor}", cx + 4, cardY + 90, Color.Orange);
-            UIRenderer.DrawTextSmall($"DDG: {s.DodgeChance * 100:F0}%", cx + 4, cardY + 100, Color.Yellow);
+                var s = ch.BaseStats;
+                UIRenderer.DrawTextSmall($"HP: {s.MaxHP}", cx + 4, cardY + 70, Color.Green);
+                UIRenderer.DrawTextSmall($"SPD: {s.MoveSpeed:F0}", cx + 4, cardY + 80, Color.SkyBlue);
+                UIRenderer.DrawTextSmall($"ARM: {s.Armor}", cx + 4, cardY + 90, Color.Orange);
+                UIRenderer.DrawTextSmall($"DDG: {s.DodgeChance * 100:F0}%", cx + 4, cardY + 100, Color.Yellow);
+            }
+            else
+            {
+                state.Assets.Players.DrawScaled(ch.SpriteIndex, cx + cardW / 2, cardY + 28, 2f,
+                    new Color((byte)30, (byte)30, (byte)30, (byte)255));
+                UIRenderer.DrawTextSmall("LOCKED", cx + cardW / 2 - 14, cardY + 50, Color.Gray);
+                string hint = i switch
+                {
+                    1 => "Reach wave 5",
+                    2 => "Kill 200 enemies",
+                    3 => "Reach wave 10",
+                    _ => "???",
+                };
+                UIRenderer.DrawTextSmall(hint, cx + 4, cardY + 65, new Color(120, 100, 80, 255));
+            }
 
             // Click to select or double-click to start
             if (mouse.X >= cx && mouse.X <= cx + cardW && mouse.Y >= cardY && mouse.Y <= cardY + cardH)

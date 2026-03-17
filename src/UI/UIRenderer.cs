@@ -1,6 +1,7 @@
 using System.Numerics;
 using CloneTato.Assets;
 using CloneTato.Core;
+using CloneTato.Entities;
 using Raylib_cs;
 
 namespace CloneTato.UI;
@@ -54,13 +55,73 @@ public static class UIRenderer
             DrawTextSmall(enemyText, Constants.LogicalWidth - enemyText.Length * 5 - 8, 14, Color.Red);
         }
 
+        // Dash cooldown indicator (below XP bar)
+        int dashY = barY + barH + 3 + 6;
+        float dashCD = Math.Max(0.15f, Constants.DashCooldown - state.Player.ComputedStats.DashCooldownReduction);
+        if (state.Player.IsDashing)
+        {
+            DrawTextSmall("DASH", barX, dashY - 1, Color.White);
+        }
+        else if (state.Player.DashCooldownTimer > 0)
+        {
+            float dashPct = 1f - state.Player.DashCooldownTimer / dashCD;
+            Raylib.DrawRectangle(barX - 1, dashY - 1, 42, 5, Color.Black);
+            Raylib.DrawRectangle(barX, dashY, 40, 3, Color.DarkGray);
+            Raylib.DrawRectangle(barX, dashY, (int)(40 * dashPct), 3, Color.Purple);
+            DrawTextSmall("DASH", barX + 44, dashY - 1, Color.Gray);
+        }
+        else
+        {
+            DrawTextSmall("DASH [SPACE]", barX, dashY - 1, Color.Purple);
+        }
+
+        // Post-dash buff indicator
+        if (state.Player.DashBuffTimer > 0)
+        {
+            int buffY = dashY + 8;
+            float buffPct = state.Player.DashBuffTimer / Player.DashBuffDuration;
+            Raylib.DrawRectangle(barX - 1, buffY - 1, 42, 5, Color.Black);
+            Raylib.DrawRectangle(barX, buffY, 40, 3, Color.DarkGray);
+            Raylib.DrawRectangle(barX, buffY, (int)(40 * buffPct), 3, Color.Gold);
+            DrawTextSmall("BUFF", barX + 44, buffY - 1, Color.Gold);
+        }
+
         // Weapon icons (bottom left)
         int weaponY = Constants.LogicalHeight - 28;
         for (int i = 0; i < state.EquippedWeapons.Count; i++)
         {
+            var weapon = state.EquippedWeapons[i];
             int wx = 4 + i * 26;
+
+            // Dim background if reloading
+            bool isReloading = state.WeaponReloadTimers[i] > 0;
             Raylib.DrawRectangle(wx - 1, weaponY - 1, 26, 26, new Color(0, 0, 0, 150));
-            state.Assets.Weapons.Draw(state.EquippedWeapons[i].SpriteIndex, wx + 1, weaponY + 1, Color.White);
+
+            Color weapTint = isReloading ? new Color((byte)100, (byte)100, (byte)100, (byte)255) : Color.White;
+            state.Assets.Weapons.Draw(weapon.Def.SpriteIndex, wx + 1, weaponY + 1, weapTint);
+
+            // Reload bar overlay
+            if (isReloading)
+            {
+                float reloadPct = 1f - state.WeaponReloadTimers[i] / weapon.ReloadTime;
+                Raylib.DrawRectangle(wx, weaponY + 22, (int)(24 * reloadPct), 2, Color.SkyBlue);
+            }
+
+            // Clip ammo counter
+            if (weapon.ClipSize > 0)
+            {
+                string ammoText = isReloading ? "R" : $"{state.WeaponClipAmmo[i]}";
+                Color ammoColor = isReloading ? Color.SkyBlue :
+                    state.WeaponClipAmmo[i] <= weapon.ClipSize / 4 ? Color.Red : Color.White;
+                Raylib.DrawText(ammoText, wx + 1, weaponY - 8, 6, ammoColor);
+            }
+
+            // Upgrade level indicator
+            if (weapon.UpgradeLevel > 0)
+            {
+                string lvl = $"+{weapon.UpgradeLevel}";
+                Raylib.DrawText(lvl, wx + 16, weaponY + 18, 6, Color.Gold);
+            }
         }
     }
 

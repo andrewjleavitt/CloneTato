@@ -31,6 +31,7 @@ public static class CharacterDatabase
                 MaxHP = 70, MoveSpeed = 110f, DamageMultiplier = 0.9f,
                 AttackSpeedMultiplier = 1.2f, CritChance = 0.08f, CritDamage = 1.5f,
                 Armor = 0, DodgeChance = 0.1f, PickupRange = 60f, XPMultiplier = 1.0f,
+                ReloadSpeedMultiplier = 1.0f,
             },
             StartingWeaponIndex = 1, // SMG
         },
@@ -44,6 +45,7 @@ public static class CharacterDatabase
                 MaxHP = 85, MoveSpeed = 90f, DamageMultiplier = 1.1f,
                 AttackSpeedMultiplier = 1.0f, CritChance = 0.15f, CritDamage = 1.8f,
                 Armor = 0, DodgeChance = 0.15f, PickupRange = 50f, XPMultiplier = 1.1f,
+                ReloadSpeedMultiplier = 1.0f,
             },
             StartingWeaponIndex = 2, // Shotgun
         },
@@ -57,6 +59,7 @@ public static class CharacterDatabase
                 MaxHP = 150, MoveSpeed = 55f, DamageMultiplier = 1.0f,
                 AttackSpeedMultiplier = 0.8f, CritChance = 0.03f, CritDamage = 1.5f,
                 Armor = 3, DodgeChance = 0f, PickupRange = 40f, XPMultiplier = 1.0f,
+                ReloadSpeedMultiplier = 1.0f,
             },
             StartingWeaponIndex = 3, // Crossbow
         },

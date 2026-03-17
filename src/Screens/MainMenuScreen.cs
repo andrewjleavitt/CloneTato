@@ -8,9 +8,9 @@ public class MainMenuScreen
 {
     public void Update(float dt, GameState state, GameStateManager manager)
     {
-        if (Raylib.IsKeyPressed(KeyboardKey.Enter) || Raylib.IsKeyPressed(KeyboardKey.Space))
+        if (InputHelper.IsConfirmPressed())
             manager.TransitionTo(GameScreen.CharacterSelect);
-        if (Raylib.IsKeyPressed(KeyboardKey.Escape))
+        if (InputHelper.IsCancelPressed())
             manager.QuitRequested = true;
     }
 
@@ -54,7 +54,19 @@ public class MainMenuScreen
             state.Assets.PlaySoundVariant("select", 0.5f);
         }
 
-        if (UIRenderer.DrawButton("QUIT", btnX, 165, btnW, btnH, new Color(100, 60, 60, 255)))
+        if (UIRenderer.DrawButton("UPGRADES", btnX, 165, btnW, btnH, new Color(70, 50, 90, 255)))
+        {
+            manager.TransitionTo(GameScreen.MetaUpgrades);
+            state.Assets.PlaySoundVariant("select", 0.5f);
+        }
+
+        if (UIRenderer.DrawButton("WEAPONS", btnX, 190, btnW, btnH, new Color(80, 70, 50, 255)))
+        {
+            manager.TransitionTo(GameScreen.WeaponGallery);
+            state.Assets.PlaySoundVariant("select", 0.5f);
+        }
+
+        if (UIRenderer.DrawButton("QUIT", btnX, 215, btnW, btnH, new Color(100, 60, 60, 255)))
         {
             manager.QuitRequested = true;
         }

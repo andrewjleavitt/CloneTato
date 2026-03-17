@@ -11,6 +11,7 @@ public class EnemyDef
     public int GoldValue;
     public float Radius = 10f;
     public Entities.EnemyBehavior Behavior;
+
 }
 
 public static class EnemyDatabase

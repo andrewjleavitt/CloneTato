@@ -28,6 +28,14 @@ public class LevelUpScreen
         new("Crit +5%", "+5% Crit Chance", new Stats { CritChance = 0.05f }),
         new("Pickup +15", "+15 Pickup Range", new Stats { PickupRange = 15f }),
         new("XP +10%", "+10% XP Gain", new Stats { XPMultiplier = 0.10f }),
+        new("Reload +15%", "+15% Reload Speed", new Stats { ReloadSpeedMultiplier = 0.15f }),
+        new("Reload +25%", "+25% Reload Speed", new Stats { ReloadSpeedMultiplier = 0.25f }),
+        new("Dash Speed", "+80 Dash Speed", new Stats { DashSpeedBonus = 80f }),
+        new("Dash Cooldown", "-0.12s Dash Cooldown", new Stats { DashCooldownReduction = 0.12f }),
+        new("Long Dash", "+0.06s Dash Duration", new Stats { DashDurationBonus = 0.06f }),
+        new("Dash: Atk Speed", "30% atk speed after dash", new Stats { PostDashAttackSpeed = 0.3f }),
+        new("Dash: Move", "25% move speed after dash", new Stats { PostDashMoveSpeed = 0.25f }),
+        new("Dash: Invuln", "0.5s invuln after dash", new Stats { PostDashInvuln = 0.5f }),
     };
 
     public void Update(float dt, GameState state, GameStateManager manager)
