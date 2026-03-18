@@ -18,10 +18,7 @@ public class PlayingScreen
     public void Update(float dt, GameState state, GameStateManager manager)
     {
         // Compute mouse world position
-        var mouseScreen = Raylib.GetMousePosition();
-        Vector2 mouseLogical = new(
-            mouseScreen.X / Constants.WindowScale,
-            mouseScreen.Y / Constants.WindowScale);
+        var mouseLogical = Display.ScreenToLogical(Raylib.GetMousePosition());
         state.MouseWorldPosition = Raylib.GetScreenToWorld2D(mouseLogical, _camera.Camera);
         state.IsFiring = InputHelper.IsFireDown();
 
@@ -301,8 +298,7 @@ public class PlayingScreen
             bool flashing = barrel.FlashTimer > 0;
             // Tile indices: explosive barrel at col 4 row 11, toxic at col 5 row 11
             int tileIdx = barrel.Type == BarrelType.Explosive ? (11 * 18 + 4) : (11 * 18 + 5);
-            Color tint = flashing ? Color.White : Color.White;
-            if (flashing) tint = Color.Red;
+            Color tint = flashing ? Color.Red : Color.White;
             state.Assets.Tiles.DrawCentered(tileIdx, barrel.Position.X, barrel.Position.Y, tint);
         }
 

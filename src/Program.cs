@@ -3,11 +3,19 @@ using CloneTato.Assets;
 using CloneTato.Core;
 using Raylib_cs;
 
+// Load settings before anything else
+var settings = GameSettings.Load();
+
 Raylib.SetConfigFlags(ConfigFlags.VSyncHint);
 Raylib.InitWindow(Constants.WindowWidth, Constants.WindowHeight, "CloneTato - Desert Survivor");
 Raylib.SetExitKey(KeyboardKey.Null); // disable ESC auto-close, we handle it ourselves
 Raylib.SetTargetFPS(60);
 Raylib.InitAudioDevice();
+
+// Apply saved settings
+settings.Apply();
+if (settings.Fullscreen)
+    Raylib.ToggleBorderlessWindowed();
 
 // Render texture for pixel-perfect scaling
 var renderTarget = Raylib.LoadRenderTexture(Constants.LogicalWidth, Constants.LogicalHeight);
@@ -25,8 +33,11 @@ while (!Raylib.WindowShouldClose() && !manager.QuitRequested)
 {
     float dt = Raylib.GetFrameTime();
 
-    // Hide OS cursor during gameplay (we have a custom reticle)
-    if (manager.CurrentScreen == GameScreen.Playing)
+    // Update display scaling (handles fullscreen/windowed transitions)
+    Display.Update();
+
+    // Hide OS cursor during unpaused gameplay (we have a custom reticle)
+    if (manager.CurrentScreen == GameScreen.Playing && !manager.IsPaused)
     {
         if (!Raylib.IsCursorHidden()) Raylib.HideCursor();
     }
@@ -43,14 +54,13 @@ while (!Raylib.WindowShouldClose() && !manager.QuitRequested)
     manager.Draw();
     Raylib.EndTextureMode();
 
-    // Draw scaled to window
+    // Draw scaled to window (with letterboxing support)
     Raylib.BeginDrawing();
     Raylib.ClearBackground(Color.Black);
 
     // Flip the render texture vertically (render textures are flipped in OpenGL)
     var srcRect = new Rectangle(0, 0, renderTarget.Texture.Width, -renderTarget.Texture.Height);
-    var destRect = new Rectangle(0, 0, Constants.WindowWidth, Constants.WindowHeight);
-    Raylib.DrawTexturePro(renderTarget.Texture, srcRect, destRect,
+    Raylib.DrawTexturePro(renderTarget.Texture, srcRect, Display.DestRect,
         System.Numerics.Vector2.Zero, 0f, Color.White);
 
     Raylib.DrawFPS(4, 4);

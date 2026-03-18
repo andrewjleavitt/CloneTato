@@ -9,6 +9,7 @@ public class LevelUpScreen
 {
     private readonly StatUpgrade[] _choices = new StatUpgrade[3];
     private bool _initialized;
+    private int _selected;
 
     private record StatUpgrade(string Name, string Description, Stats Bonus);
 
@@ -44,7 +45,35 @@ public class LevelUpScreen
         {
             GenerateChoices();
             _initialized = true;
+            _selected = 0;
         }
+
+        int hDir = InputHelper.GetMenuHorizontal();
+        if (hDir != 0)
+            _selected = (_selected + hDir + 3) % 3;
+
+        if (InputHelper.IsConfirmPressed())
+            ChooseUpgrade(state, manager, _selected);
+    }
+
+    private void ChooseUpgrade(GameState state, GameStateManager manager, int index)
+    {
+        state.LevelBonus = state.LevelBonus + _choices[index].Bonus;
+        state.RecomputePlayerStats();
+        state.PendingLevelUps--;
+        if (state.PendingLevelUps <= 0)
+            state.LevelUpPending = false;
+        _initialized = false;
+
+        // Heal a bit on level up
+        state.Player.CurrentHP = Math.Min(
+            state.Player.CurrentHP + 5,
+            state.Player.ComputedStats.MaxHP);
+
+        state.Assets.PlaySoundVariant("select", 0.5f);
+
+        if (!state.LevelUpPending)
+            manager.TransitionTo(GameScreen.Playing);
     }
 
     private void GenerateChoices()
@@ -74,44 +103,31 @@ public class LevelUpScreen
         int startX = Constants.LogicalWidth / 2 - totalW / 2;
         int cardY = 90;
 
-        var mouse = Raylib.GetMousePosition();
-        mouse.X /= Constants.WindowScale;
-        mouse.Y /= Constants.WindowScale;
+        var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
         for (int i = 0; i < 3; i++)
         {
             int cx = startX + i * (cardW + 10);
             bool hovered = mouse.X >= cx && mouse.X <= cx + cardW && mouse.Y >= cardY && mouse.Y <= cardY + cardH;
+            bool selected = _selected == i;
 
-            Color bg = hovered ? new Color(80, 60, 40, 255) : new Color(50, 35, 25, 255);
+            if (hovered) _selected = i;
+
+            Color bg = (hovered || selected) ? new Color(80, 60, 40, 255) : new Color(50, 35, 25, 255);
             Raylib.DrawRectangle(cx, cardY, cardW, cardH, bg);
-            Raylib.DrawRectangleLines(cx, cardY, cardW, cardH, hovered ? Color.Gold : Color.Gray);
+            Raylib.DrawRectangleLines(cx, cardY, cardW, cardH, (hovered || selected) ? Color.Gold : Color.Gray);
 
             UIRenderer.DrawTextSmall(_choices[i].Name, cx + 6, cardY + 8, Color.White);
             UIRenderer.DrawTextSmall(_choices[i].Description, cx + 6, cardY + 22, Color.LightGray);
 
             if (hovered && Raylib.IsMouseButtonPressed(MouseButton.Left))
-            {
-                state.LevelBonus = state.LevelBonus + _choices[i].Bonus;
-                state.RecomputePlayerStats();
-                state.PendingLevelUps--;
-                if (state.PendingLevelUps <= 0)
-                    state.LevelUpPending = false;
-                _initialized = false;
-
-                // Heal a bit on level up
-                state.Player.CurrentHP = Math.Min(
-                    state.Player.CurrentHP + 5,
-                    state.Player.ComputedStats.MaxHP);
-
-                state.Assets.PlaySoundVariant("select", 0.5f);
-
-                // If no more pending level ups, go back to playing
-                if (!state.LevelUpPending)
-                {
-                    manager.TransitionTo(GameScreen.Playing);
-                }
-            }
+                ChooseUpgrade(state, manager, i);
         }
+
+        string hint = InputHelper.GamepadAvailable
+            ? "D-Pad select, A confirm"
+            : "Left/Right select, Enter confirm";
+        int hintW = hint.Length * 5;
+        UIRenderer.DrawTextSmall(hint, Constants.LogicalWidth / 2 - hintW / 2, cardY + cardH + 10, Color.Gray);
     }
 }

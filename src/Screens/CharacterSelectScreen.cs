@@ -49,9 +49,7 @@ public class CharacterSelectScreen
         int startX = Constants.LogicalWidth / 2 - totalW / 2;
         int cardY = 40;
 
-        var mouse = Raylib.GetMousePosition();
-        mouse.X /= Constants.WindowScale;
-        mouse.Y /= Constants.WindowScale;
+        var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
         for (int i = 0; i < CharacterDatabase.Characters.Length; i++)
         {

@@ -12,12 +12,13 @@ public static class InputHelper
     public static Vector2 GetMoveInput()
     {
         Vector2 input = Vector2.Zero;
+        var settings = GameSettings.Current;
 
-        // Keyboard
-        if (Raylib.IsKeyDown(KeyboardKey.W) || Raylib.IsKeyDown(KeyboardKey.Up)) input.Y -= 1;
-        if (Raylib.IsKeyDown(KeyboardKey.S) || Raylib.IsKeyDown(KeyboardKey.Down)) input.Y += 1;
-        if (Raylib.IsKeyDown(KeyboardKey.A) || Raylib.IsKeyDown(KeyboardKey.Left)) input.X -= 1;
-        if (Raylib.IsKeyDown(KeyboardKey.D) || Raylib.IsKeyDown(KeyboardKey.Right)) input.X += 1;
+        // Keyboard (bound keys)
+        if (Raylib.IsKeyDown(settings.GetKey(GameAction.MoveUp)) || Raylib.IsKeyDown(KeyboardKey.Up)) input.Y -= 1;
+        if (Raylib.IsKeyDown(settings.GetKey(GameAction.MoveDown)) || Raylib.IsKeyDown(KeyboardKey.Down)) input.Y += 1;
+        if (Raylib.IsKeyDown(settings.GetKey(GameAction.MoveLeft)) || Raylib.IsKeyDown(KeyboardKey.Left)) input.X -= 1;
+        if (Raylib.IsKeyDown(settings.GetKey(GameAction.MoveRight)) || Raylib.IsKeyDown(KeyboardKey.Right)) input.X += 1;
 
         // Gamepad left stick
         if (GamepadAvailable)
@@ -54,7 +55,8 @@ public static class InputHelper
 
     public static bool IsDashPressed()
     {
-        if (Raylib.IsKeyPressed(KeyboardKey.Space)) return true;
+        var dashKey = GameSettings.Current.GetKey(GameAction.Dash);
+        if (dashKey != KeyboardKey.Null && Raylib.IsKeyPressed(dashKey)) return true;
         if (GamepadAvailable && Raylib.IsGamepadButtonPressed(0, GamepadButton.LeftTrigger1)) return true;
         return false;
     }
@@ -62,14 +64,14 @@ public static class InputHelper
     public static bool IsFireDown()
     {
         if (Raylib.IsMouseButtonDown(MouseButton.Left)) return true;
-        if (GamepadAvailable && Raylib.IsGamepadButtonDown(0, GamepadButton.RightTrigger1)) return true;
+        if (GamepadAvailable && Raylib.IsGamepadButtonDown(0, GamepadButton.RightTrigger2)) return true;
         return false;
     }
 
     public static bool IsFirePressed()
     {
         if (Raylib.IsMouseButtonPressed(MouseButton.Left)) return true;
-        if (GamepadAvailable && Raylib.IsGamepadButtonPressed(0, GamepadButton.RightTrigger1)) return true;
+        if (GamepadAvailable && Raylib.IsGamepadButtonPressed(0, GamepadButton.RightTrigger2)) return true;
         return false;
     }
 
@@ -84,6 +86,14 @@ public static class InputHelper
     {
         if (Raylib.IsKeyPressed(KeyboardKey.Escape)) return true;
         if (GamepadAvailable && Raylib.IsGamepadButtonPressed(0, GamepadButton.RightFaceRight)) return true; // B button
+        return false;
+    }
+
+    public static bool IsPausePressed()
+    {
+        var pauseKey = GameSettings.Current.GetKey(GameAction.Pause);
+        if (pauseKey != KeyboardKey.Null && Raylib.IsKeyPressed(pauseKey)) return true;
+        if (GamepadAvailable && Raylib.IsGamepadButtonPressed(0, GamepadButton.MiddleRight)) return true; // Start
         return false;
     }
 

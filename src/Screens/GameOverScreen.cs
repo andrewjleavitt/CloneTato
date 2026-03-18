@@ -9,6 +9,7 @@ public class GameOverScreen
 {
     private bool _tokensAwarded;
     private int _tokensEarned;
+    private int _selected; // 0=retry, 1=menu
 
     public void Update(float dt, GameState state, GameStateManager manager)
     {
@@ -23,13 +24,27 @@ public class GameOverScreen
             manager.Meta.CheckUnlocks();
             manager.Meta.Save();
             _tokensAwarded = true;
+            _selected = 0;
         }
+
+        int vDir = InputHelper.GetMenuVertical();
+        if (vDir != 0)
+            _selected = (_selected + vDir + 2) % 2;
 
         if (InputHelper.IsConfirmPressed())
         {
-            _tokensAwarded = false;
-            manager.TransitionTo(GameScreen.CharacterSelect);
+            if (_selected == 0)
+            {
+                _tokensAwarded = false;
+                manager.TransitionTo(GameScreen.CharacterSelect);
+            }
+            else
+            {
+                _tokensAwarded = false;
+                manager.TransitionTo(GameScreen.MainMenu);
+            }
         }
+
         if (InputHelper.IsCancelPressed())
         {
             _tokensAwarded = false;
@@ -105,14 +120,14 @@ public class GameOverScreen
         // Buttons
         int btnW = 80, btnH = 18;
         if (UIRenderer.DrawButton("RETRY", Constants.LogicalWidth / 2 - btnW / 2, 232, btnW, btnH,
-            new Color(60, 100, 60, 255)))
+            new Color(60, 100, 60, 255), _selected == 0))
         {
             _tokensAwarded = false;
             manager.TransitionTo(GameScreen.CharacterSelect);
         }
 
         if (UIRenderer.DrawButton("MENU", Constants.LogicalWidth / 2 - btnW / 2, 253, btnW, btnH,
-            new Color(100, 60, 60, 255)))
+            new Color(100, 60, 60, 255), _selected == 1))
         {
             _tokensAwarded = false;
             manager.TransitionTo(GameScreen.MainMenu);

@@ -9,6 +9,7 @@ public class VictoryScreen
 {
     private bool _tokensAwarded;
     private int _tokensEarned;
+    private int _selected; // 0=play again, 1=menu
 
     public void Update(float dt, GameState state, GameStateManager manager)
     {
@@ -24,13 +25,27 @@ public class VictoryScreen
             manager.Meta.CheckUnlocks();
             manager.Meta.Save();
             _tokensAwarded = true;
+            _selected = 0;
         }
+
+        int vDir = InputHelper.GetMenuVertical();
+        if (vDir != 0)
+            _selected = (_selected + vDir + 2) % 2;
 
         if (InputHelper.IsConfirmPressed())
         {
-            _tokensAwarded = false;
-            manager.TransitionTo(GameScreen.CharacterSelect);
+            if (_selected == 0)
+            {
+                _tokensAwarded = false;
+                manager.TransitionTo(GameScreen.CharacterSelect);
+            }
+            else
+            {
+                _tokensAwarded = false;
+                manager.TransitionTo(GameScreen.MainMenu);
+            }
         }
+
         if (InputHelper.IsCancelPressed())
         {
             _tokensAwarded = false;
@@ -59,20 +74,23 @@ public class VictoryScreen
 
         int btnW = 80, btnH = 18;
         if (UIRenderer.DrawButton("PLAY AGAIN", Constants.LogicalWidth / 2 - btnW / 2, 195, btnW, btnH,
-            new Color(60, 100, 60, 255)))
+            new Color(60, 100, 60, 255), _selected == 0))
         {
             _tokensAwarded = false;
             manager.TransitionTo(GameScreen.CharacterSelect);
         }
 
         if (UIRenderer.DrawButton("MENU", Constants.LogicalWidth / 2 - btnW / 2, 220, btnW, btnH,
-            new Color(100, 60, 60, 255)))
+            new Color(100, 60, 60, 255), _selected == 1))
         {
             _tokensAwarded = false;
             manager.TransitionTo(GameScreen.MainMenu);
         }
 
-        UIRenderer.DrawTextSmall("Enter = Play Again, Esc = Menu", Constants.LogicalWidth / 2 - 65,
+        string hint = InputHelper.GamepadAvailable
+            ? "D-Pad navigate, A select"
+            : "Up/Down navigate, Enter select";
+        UIRenderer.DrawTextSmall(hint, Constants.LogicalWidth / 2 - hint.Length * 5 / 2,
             Constants.LogicalHeight - 15, Color.Gray);
     }
 }

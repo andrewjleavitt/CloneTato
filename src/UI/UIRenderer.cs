@@ -140,23 +140,31 @@ public static class UIRenderer
         Raylib.DrawText(text, x, y, 20, color);
     }
 
-    public static bool DrawButton(string text, int x, int y, int w, int h, Color bgColor)
+    public static bool DrawButton(string text, int x, int y, int w, int h, Color bgColor, bool selected = false)
     {
-        // Convert mouse from window coords to logical coords
-        var mouse = Raylib.GetMousePosition();
-        mouse.X /= Constants.WindowScale;
-        mouse.Y /= Constants.WindowScale;
+        var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
         bool hovered = mouse.X >= x && mouse.X <= x + w && mouse.Y >= y && mouse.Y <= y + h;
         bool clicked = hovered && Raylib.IsMouseButtonPressed(MouseButton.Left);
 
-        Color bg = hovered ? new Color(bgColor.R + 30, bgColor.G + 30, bgColor.B + 30, bgColor.A) : bgColor;
+        bool highlighted = hovered || selected;
+        Color bg = highlighted
+            ? new Color((byte)Math.Min(255, bgColor.R + 30), (byte)Math.Min(255, bgColor.G + 30),
+                (byte)Math.Min(255, bgColor.B + 30), bgColor.A)
+            : bgColor;
         Raylib.DrawRectangle(x, y, w, h, bg);
-        Raylib.DrawRectangleLines(x, y, w, h, Color.White);
+
+        Color borderColor = selected ? Color.Gold : Color.White;
+        Raylib.DrawRectangleLines(x, y, w, h, borderColor);
 
         int textW = text.Length * 5; // approximate
         DrawTextSmall(text, x + w / 2 - textW / 2, y + h / 2 - 4, Color.White);
 
         return clicked;
+    }
+
+    public static Vector2 GetLogicalMouse()
+    {
+        return Display.ScreenToLogical(Raylib.GetMousePosition());
     }
 }

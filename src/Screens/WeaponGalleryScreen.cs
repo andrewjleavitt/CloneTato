@@ -18,9 +18,12 @@ public class WeaponGalleryScreen
         if (InputHelper.IsCancelPressed())
             manager.TransitionTo(GameScreen.MainMenu);
 
-        // Scroll
+        // Scroll with mouse wheel or gamepad vertical nav
         int wheel = (int)Raylib.GetMouseWheelMove();
         _scrollOffset -= wheel * 20;
+
+        int vDir = InputHelper.GetMenuVertical();
+        _scrollOffset += vDir * 20;
 
         int totalRows = (WeaponDatabase.Weapons.Length + CardsPerRow - 1) / CardsPerRow;
         int contentHeight = totalRows * (CardH + CardPadding) + 40;

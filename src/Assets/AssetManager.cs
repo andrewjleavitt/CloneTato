@@ -61,7 +61,7 @@ public class AssetManager
         if (variants.Count == 0) return;
         string pick = variants[Random.Shared.Next(variants.Count)];
         var sound = _sounds[pick];
-        Raylib.SetSoundVolume(sound, volumeScale);
+        Raylib.SetSoundVolume(sound, volumeScale * Core.GameSettings.Current.SFXVolume);
         Raylib.PlaySound(sound);
     }
 

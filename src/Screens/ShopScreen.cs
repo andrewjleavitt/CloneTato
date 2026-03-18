@@ -11,6 +11,10 @@ public class ShopScreen
     private bool _initialized;
     private int _rerollCost = 5;
 
+    // Gamepad navigation: 0=upgrades row, 1=items row, 2=buttons row
+    private int _navRow;
+    private int _navCol;
+
     public void Update(float dt, GameState state, GameStateManager manager)
     {
         if (!_initialized)
@@ -18,10 +22,103 @@ public class ShopScreen
             GenerateShopItems(state);
             _initialized = true;
             _rerollCost = 5 + state.CurrentWave;
+            _navRow = 2;
+            _navCol = 1; // default to Next Wave
         }
 
-        if (Raylib.IsKeyPressed(KeyboardKey.Enter) || Raylib.IsKeyPressed(KeyboardKey.Space))
-            NextWave(state, manager);
+        // Gamepad/keyboard navigation
+        int vDir = InputHelper.GetMenuVertical();
+        if (vDir != 0)
+            _navRow = Math.Clamp(_navRow + vDir, 0, 2);
+
+        int hDir = InputHelper.GetMenuHorizontal();
+        if (hDir != 0)
+        {
+            int maxCol = _navRow switch
+            {
+                0 => Math.Max(0, state.EquippedWeapons.Count - 1),
+                1 => Math.Max(0, _shopItems.Count - 1),
+                2 => 1, // reroll, next wave
+                _ => 0,
+            };
+            _navCol = Math.Clamp(_navCol + hDir, 0, maxCol);
+        }
+
+        if (InputHelper.IsConfirmPressed())
+            ActivateSelected(state, manager);
+    }
+
+    private void ActivateSelected(GameState state, GameStateManager manager)
+    {
+        switch (_navRow)
+        {
+            case 0: // Upgrade weapon
+                if (_navCol < state.EquippedWeapons.Count)
+                {
+                    var weapon = state.EquippedWeapons[_navCol];
+                    if (weapon.CanUpgrade && state.Gold >= weapon.UpgradeCost)
+                    {
+                        state.Gold -= weapon.UpgradeCost;
+                        weapon.UpgradeLevel++;
+                        state.Assets.PlaySoundVariant("select", 0.5f);
+                    }
+                }
+                break;
+            case 1: // Buy item
+                if (_navCol < _shopItems.Count)
+                    TryBuyItem(state, _navCol);
+                break;
+            case 2: // Buttons
+                if (_navCol == 0) // Reroll
+                {
+                    if (state.Gold >= _rerollCost)
+                    {
+                        state.Gold -= _rerollCost;
+                        _rerollCost += 3;
+                        GenerateShopItems(state);
+                        state.Assets.PlaySoundVariant("select", 0.5f);
+                    }
+                }
+                else // Next wave
+                {
+                    NextWave(state, manager);
+                }
+                break;
+        }
+    }
+
+    private void TryBuyItem(GameState state, int index)
+    {
+        if (index >= _shopItems.Count) return;
+
+        if (_shopItems[index] is WeaponDef weapon)
+        {
+            bool canAfford = state.Gold >= weapon.Cost;
+            bool hasSlot = state.EquippedWeapons.Count < Constants.MaxWeaponSlots;
+            if (canAfford && hasSlot)
+            {
+                state.Gold -= weapon.Cost;
+                var newWeapon = new WeaponInstance(weapon);
+                state.EquippedWeapons.Add(newWeapon);
+                state.WeaponCooldowns.Add(0f);
+                state.WeaponClipAmmo.Add(newWeapon.ClipSize);
+                state.WeaponReloadTimers.Add(0f);
+                state.WeaponOrbitAngles.Add(0f);
+                _shopItems.RemoveAt(index);
+                state.Assets.PlaySoundVariant("select", 0.5f);
+            }
+        }
+        else if (_shopItems[index] is ItemDef item)
+        {
+            if (state.Gold >= item.Cost)
+            {
+                state.Gold -= item.Cost;
+                state.OwnedItems.Add(item);
+                _shopItems.RemoveAt(index);
+                state.RecomputePlayerStats();
+                state.Assets.PlaySoundVariant("coin", 0.5f);
+            }
+        }
     }
 
     private void GenerateShopItems(GameState state)
@@ -71,9 +168,7 @@ public class ShopScreen
 
         UIRenderer.DrawTextMedium($"Gold: ${state.Gold}", Constants.LogicalWidth / 2 - 30, 22, Color.Gold);
 
-        var mouse = Raylib.GetMousePosition();
-        mouse.X /= Constants.WindowScale;
-        mouse.Y /= Constants.WindowScale;
+        var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
         // === WEAPON UPGRADES (top section) ===
         if (state.EquippedWeapons.Count > 0)
@@ -87,10 +182,20 @@ public class ShopScreen
                 var weapon = state.EquippedWeapons[i];
                 int ux = 8 + i * (ugW + 4);
                 bool hovered = mouse.X >= ux && mouse.X <= ux + ugW && mouse.Y >= ugY && mouse.Y <= ugY + ugH;
+                bool selected = _navRow == 0 && _navCol == i;
 
-                Color bg = hovered ? new Color(70, 55, 35, 255) : new Color(45, 32, 22, 255);
+                if (hovered && Raylib.IsMouseButtonDown(MouseButton.Left))
+                {
+                    _navRow = 0;
+                    _navCol = i;
+                }
+
+                Color bg = (hovered || selected) ? new Color(70, 55, 35, 255) : new Color(45, 32, 22, 255);
                 Raylib.DrawRectangle(ux, ugY, ugW, ugH, bg);
-                Color border = weapon.CanUpgrade ? (hovered ? Color.Gold : Color.Orange) : Color.Gray;
+                Color border = weapon.CanUpgrade
+                    ? (selected ? Color.Gold : hovered ? Color.Orange : Color.Orange)
+                    : Color.Gray;
+                if (selected) border = Color.Gold;
                 Raylib.DrawRectangleLines(ux, ugY, ugW, ugH, border);
 
                 // Weapon icon
@@ -132,10 +237,18 @@ public class ShopScreen
         {
             int cx = startX + i * (cardW + 6);
             bool hovered = mouse.X >= cx && mouse.X <= cx + cardW && mouse.Y >= cardY && mouse.Y <= cardY + cardH;
+            bool selected = _navRow == 1 && _navCol == i;
 
-            Color bg = hovered ? new Color(70, 50, 35, 255) : new Color(50, 35, 25, 255);
+            if (hovered && Raylib.IsMouseButtonDown(MouseButton.Left))
+            {
+                _navRow = 1;
+                _navCol = i;
+            }
+
+            Color bg = (hovered || selected) ? new Color(70, 50, 35, 255) : new Color(50, 35, 25, 255);
             Raylib.DrawRectangle(cx, cardY, cardW, cardH, bg);
-            Raylib.DrawRectangleLines(cx, cardY, cardW, cardH, hovered ? Color.Gold : Color.Gray);
+            Color cardBorder = selected ? Color.Gold : hovered ? Color.Gold : Color.Gray;
+            Raylib.DrawRectangleLines(cx, cardY, cardW, cardH, cardBorder);
 
             if (_shopItems[i] is WeaponDef weapon)
             {
@@ -182,8 +295,9 @@ public class ShopScreen
         }
 
         // Reroll button
+        bool rerollSelected = _navRow == 2 && _navCol == 0;
         if (UIRenderer.DrawButton($"REROLL (${_rerollCost})",
-            Constants.LogicalWidth / 2 - 50, cardY + cardH + 8, 100, 16, new Color(80, 60, 40, 255)))
+            Constants.LogicalWidth / 2 - 50, cardY + cardH + 8, 100, 16, new Color(80, 60, 40, 255), rerollSelected))
         {
             if (state.Gold >= _rerollCost)
             {
@@ -195,14 +309,18 @@ public class ShopScreen
         }
 
         // Next wave button
+        bool nextWaveSelected = _navRow == 2 && _navCol == 1;
         if (UIRenderer.DrawButton("NEXT WAVE",
-            Constants.LogicalWidth / 2 - 45, Constants.LogicalHeight - 30, 90, 20, new Color(60, 100, 60, 255)))
+            Constants.LogicalWidth / 2 - 45, Constants.LogicalHeight - 30, 90, 20, new Color(60, 100, 60, 255), nextWaveSelected))
         {
             NextWave(state, manager);
         }
 
-        UIRenderer.DrawTextSmall("You heal 10% HP between waves",
-            Constants.LogicalWidth / 2 - 70, Constants.LogicalHeight - 8, Color.Gray);
+        string hint = InputHelper.GamepadAvailable
+            ? "D-Pad navigate, A select/buy"
+            : "Arrows navigate, Enter select/buy";
+        UIRenderer.DrawTextSmall(hint,
+            Constants.LogicalWidth / 2 - hint.Length * 5 / 2, Constants.LogicalHeight - 8, Color.Gray);
     }
 
     private static void Shuffle<T>(List<T> list)

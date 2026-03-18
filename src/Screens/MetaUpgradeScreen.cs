@@ -49,9 +49,7 @@ public class MetaUpgradeScreen
         int rowH = 26;
         int leftX = 30;
 
-        var mouse = Raylib.GetMousePosition();
-        mouse.X /= Constants.WindowScale;
-        mouse.Y /= Constants.WindowScale;
+        var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
         for (int i = 0; i < MetaProgression.Upgrades.Length; i++)
         {
