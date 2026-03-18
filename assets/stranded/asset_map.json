@@ -1,0 +1,292 @@
+{
+  "version": 1,
+  "basePath": "assets/stranded",
+  "description": "Maps game entities to STRANDED sprite sheets. All paths relative to basePath.",
+
+  "hero": {
+    "gun": {
+      "description": "Hero without sword (for gun-based gameplay)",
+      "frameWidth": 64,
+      "frameHeight": 65,
+      "masterSheet": "hero/Without Sword (for gun)/hero sprite not sword.png",
+      "animations": {
+        "idle_right": { "file": "hero/Without Sword (for gun)/left right/R.png", "frames": 12, "fps": 8 },
+        "idle_up":    { "file": "hero/Without Sword (for gun)/Up/04 Stranded - Pack 4 back up-Idle Up.png", "frames": 12, "fps": 8 },
+        "idle_down":  { "file": "hero/Without Sword (for gun)/Down/04 Stranded - Pack 4 back up-Idle Down.png", "frames": 12, "fps": 8 },
+        "run_right":  { "file": "hero/Without Sword (for gun)/left right/R Run.png", "frames": 8, "fps": 10 },
+        "run_up":     { "file": "hero/Without Sword (for gun)/Up/04 Stranded - Pack 4 back up-Run UP.png", "frames": 8, "fps": 10 },
+        "run_down":   { "file": "hero/Without Sword (for gun)/Down/04 Stranded - Pack 4 back up-Run Down.png", "frames": 8, "fps": 10 },
+        "move_right": { "file": "hero/Without Sword (for gun)/left right/R move.png", "frames": 8, "fps": 10 },
+        "move_up":    { "file": "hero/Without Sword (for gun)/Up/04 Stranded - Pack 4 back up-Move Up.png", "frames": 8, "fps": 10 },
+        "move_down":  { "file": "hero/Without Sword (for gun)/Down/04 Stranded - Pack 4 back up-Move Down.png", "frames": 8, "fps": 10 },
+        "roll_right": { "file": "hero/Without Sword (for gun)/left right/R Roll.png", "frames": 6, "fps": 12 },
+        "roll_up":    { "file": "hero/Without Sword (for gun)/Up/04 Stranded - Pack 4 back up-Roll Up.png", "frames": 8, "fps": 12 },
+        "roll_down":  { "file": "hero/Without Sword (for gun)/Down/04 Stranded - Pack 4 back up-Roll Down.png", "frames": 8, "fps": 12 },
+        "death":      { "file": "hero/Without Sword (for gun)/04 Stranded - Pack 4 back up-Death.png", "frames": 13, "fps": 10 }
+      }
+    },
+    "sword": {
+      "description": "Hero with sword (for melee gameplay)",
+      "frameWidth": 64,
+      "frameHeight": 65,
+      "masterSheet": "hero/With Sword/Sci-fi hero 64x65.png",
+      "animations": {
+        "idle_right":   { "file": "hero/With Sword/Right Left/Idle left right.png", "frames": 12, "fps": 8 },
+        "idle_up":      { "file": "hero/With Sword/Up/04 Stranded - Pack 4 back up-Idle Up.png", "frames": 12, "fps": 8 },
+        "idle_down":    { "file": "hero/With Sword/Down/04 Stranded - Pack 4 back up-Idle Down.png", "frames": 12, "fps": 8 },
+        "run_right":    { "file": "hero/With Sword/Right Left/R Run.png", "frames": 8, "fps": 10 },
+        "run_up":       { "file": "hero/With Sword/Up/04 Stranded - Pack 4 back up-Run UP.png", "frames": 8, "fps": 10 },
+        "run_down":     { "file": "hero/With Sword/Down/04 Stranded - Pack 4 back up-Run Down.png", "frames": 8, "fps": 10 },
+        "move_right":   { "file": "hero/With Sword/Right Left/R move.png", "frames": 8, "fps": 10 },
+        "move_up":      { "file": "hero/With Sword/Up/04 Stranded - Pack 4 back up-Move Up.png", "frames": 8, "fps": 10 },
+        "move_down":    { "file": "hero/With Sword/Down/04 Stranded - Pack 4 back up-Move Down.png", "frames": 8, "fps": 10 },
+        "roll_right":   { "file": "hero/With Sword/Right Left/R Roll.png", "frames": 6, "fps": 12 },
+        "roll_up":      { "file": "hero/With Sword/Up/04 Stranded - Pack 4 back up-Roll Up.png", "frames": 8, "fps": 12 },
+        "roll_down":    { "file": "hero/With Sword/Down/04 Stranded - Pack 4 back up-Roll Down.png", "frames": 8, "fps": 12 },
+        "slash_right":  { "file": "hero/With Sword/Right Left/R Slash.png", "frames": 5, "fps": 12 },
+        "slash_up":     { "file": "hero/With Sword/Up/attack slash up.png", "frames": 7, "fps": 12 },
+        "slash_down":   { "file": "hero/With Sword/Down/04 Stranded - Pack 4 back up-Slash Down.png", "frames": 7, "fps": 12 },
+        "chop_right":   { "file": "hero/With Sword/Right Left/R CHop.png", "frames": 4, "fps": 10 },
+        "chop_up":      { "file": "hero/With Sword/Up/04 Stranded - Pack 4 back up-Chop Up.png", "frames": 4, "fps": 10 },
+        "chop_down":    { "file": "hero/With Sword/Down/04 Stranded - Pack 4 back up-Chop Down.png", "frames": 4, "fps": 10 },
+        "death":        { "file": "hero/With Sword/04 Stranded - Pack 4 back up-Death.png", "frames": 13, "fps": 10 }
+      },
+      "buffs": {
+        "buff":    { "file": "hero/With Sword/Buffs/04 Stranded - Pack 4 back up-Buff.png", "frameHeight": 27 },
+        "defence": { "file": "hero/With Sword/Buffs/04 Stranded - Pack 4 back up-Defence.png", "frameHeight": 27 },
+        "flames":  { "file": "hero/With Sword/Buffs/04 Stranded - Pack 4 back up-Flames.png", "frameHeight": 27 },
+        "heal":    { "file": "hero/With Sword/Buffs/04 Stranded - Pack 4 back up-Heal.png", "frameHeight": 27 }
+      }
+    },
+    "gunIcons": [
+      "hero/Guns/gun1.png", "hero/Guns/gun2.png", "hero/Guns/gun3.png",
+      "hero/Guns/gun4.png", "hero/Guns/gun5.png", "hero/Guns/gun6.png"
+    ]
+  },
+
+  "enemies": {
+    "tribe_hunter": {
+      "description": "Small ranged enemy, good for early waves",
+      "frameWidth": 32,
+      "frameHeight": 37,
+      "masterSheet": "enemies/tribe/Tribe Hunter/Tribe Hunter 32x37.png",
+      "animations": {
+        "idle_right": { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-idle.png", "frames": 6, "fps": 6 },
+        "idle_up":    { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-Idle Up.png", "frames": 6, "fps": 6 },
+        "idle_down":  { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-Idle Down.png", "frames": 6, "fps": 6 },
+        "walk_right": { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-walk.png", "frames": 10, "fps": 8 },
+        "walk_up":    { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-Walk Up.png", "frames": 10, "fps": 8 },
+        "walk_down":  { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-Walk Down.png", "frames": 10, "fps": 8 },
+        "shoot_right": { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-Shoot.png", "frames": 7, "fps": 10 },
+        "shoot_up":    { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-Shoot Up.png", "frames": 7, "fps": 10 },
+        "shoot_down":  { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-Shoot down.png", "frames": 7, "fps": 10 },
+        "death":       { "file": "enemies/tribe/Tribe Hunter/Tribe Hunter-death.png", "frames": 17, "fps": 10 }
+      }
+    },
+    "tribe_warrior": {
+      "description": "Medium melee enemy, mid-tier waves",
+      "frameWidth": 62,
+      "frameHeight": 69,
+      "masterSheet": "enemies/tribe/Tribe Warrior/Tribe Warrior 62x69.png",
+      "animations": {
+        "idle_right":   { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-Idle.png", "frames": 6, "fps": 6 },
+        "idle_up":      { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-idle up.png", "frames": 6, "fps": 6 },
+        "idle_down":    { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-idle down.png", "frames": 6, "fps": 6 },
+        "walk_right":   { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-Walk.png", "frames": 12, "fps": 8 },
+        "walk_up":      { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-Walk up.png", "frames": 12, "fps": 8 },
+        "walk_down":    { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-Walk Down.png", "frames": 12, "fps": 8 },
+        "attack_right": { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-attack.png", "frames": 11, "fps": 10 },
+        "attack_up":    { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-Attack Up.png", "frames": 11, "fps": 10 },
+        "attack_down":  { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-attack down.png", "frames": 11, "fps": 10 },
+        "death":        { "file": "enemies/tribe/Tribe Warrior/Tribe Warrior-death.png", "frames": 16, "fps": 10 }
+      }
+    },
+    "tribe_beast": {
+      "description": "Large fast enemy, charges at player",
+      "frameWidth": 76,
+      "frameHeight": 67,
+      "masterSheet": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast 76x67.png",
+      "animations": {
+        "idle_right":   { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast-Idle.png", "frames": 6, "fps": 6 },
+        "idle_up":      { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast-Up Idle.png", "frames": 6, "fps": 6 },
+        "idle_down":    { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast-Down Idle.png", "frames": 6, "fps": 6 },
+        "move_right":   { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast-move lr.png", "frames": 6, "fps": 8 },
+        "move_up":      { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast-Move Up.png", "frames": 6, "fps": 8 },
+        "move_down":    { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast-Move Down.png", "frames": 6, "fps": 8 },
+        "attack_right": { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast - Attack Left Right.png", "frames": 18, "fps": 12 },
+        "attack_up":    { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast-Attack Up.png", "frames": 18, "fps": 12 },
+        "attack_down":  { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast-Attack Down.png", "frames": 18, "fps": 12 },
+        "death":        { "file": "enemies/tribe/Tribe Tamed Beast/Tribe Tamed Beast-death.png", "frames": 19, "fps": 10 }
+      }
+    },
+    "small_bug": {
+      "description": "Tiny swarm enemy, spawns in groups",
+      "frameWidth": 20,
+      "frameHeight": 28,
+      "animations": {
+        "idle":   { "file": "enemies/insects/Small Bug 20x28/Small Bug-idle.png", "frames": 4, "fps": 6 },
+        "move":   { "file": "enemies/insects/Small Bug 20x28/Small Bug-move.png", "frames": 4, "fps": 8 },
+        "attack": { "file": "enemies/insects/Small Bug 20x28/Small Bug-attack.png", "frames": 6, "fps": 10 },
+        "death":  { "file": "enemies/insects/Small Bug 20x28/Small Bug-death.png", "frames": 10, "fps": 10 }
+      }
+    },
+    "medium_insect": {
+      "description": "Medium insect, tougher than bugs",
+      "frameWidth": 34,
+      "frameHeight": 37,
+      "animations": {
+        "idle":   { "file": "enemies/insects/Medium Insect 34x37/Medium Insect-idle.png", "frames": 8, "fps": 6 },
+        "move":   { "file": "enemies/insects/Medium Insect 34x37/Medium Insect-move.png", "frames": 8, "fps": 8 },
+        "attack": { "file": "enemies/insects/Medium Insect 34x37/Medium Insect-attack.png", "frames": 10, "fps": 10 },
+        "death":  { "file": "enemies/insects/Medium Insect 34x37/Medium Insect-death.png", "frames": 10, "fps": 10 }
+      }
+    },
+    "big_insect": {
+      "description": "Large insect, mini-boss tier",
+      "frameWidth": 72,
+      "frameHeight": 44,
+      "animations": {
+        "idle":   { "file": "enemies/insects/Big Insect 72x44/Big Insect-idle.png", "frames": 8, "fps": 6 },
+        "move":   { "file": "enemies/insects/Big Insect 72x44/Big Insect-move.png", "frames": 8, "fps": 8 },
+        "attack": { "file": "enemies/insects/Big Insect 72x44/Big Insect-attack.png", "frames": 6, "fps": 10 },
+        "death":  { "file": "enemies/insects/Big Insect 72x44/Big Insect-death.png", "frames": 13, "fps": 10 }
+      }
+    },
+    "relic_minion_1": {
+      "description": "Relic guardian minion, melee",
+      "frameWidth": 33,
+      "frameHeight": 36,
+      "animations": {
+        "idle":   { "file": "enemies/minions/Relic Minion 1 33x36/Relic Minion 1 33x36-idle.png", "frames": 8, "fps": 6 },
+        "run":    { "file": "enemies/minions/Relic Minion 1 33x36/Relic Minion 1 33x36-run.png", "frames": 8, "fps": 10 },
+        "attack": { "file": "enemies/minions/Relic Minion 1 33x36/Relic Minion 1 33x36-attack.png", "frames": 10, "fps": 10 },
+        "death":  { "file": "enemies/minions/Relic Minion 1 33x36/Relic Minion 1 33x36-death.png", "frames": 8, "fps": 10 }
+      }
+    },
+    "relic_minion_2": {
+      "description": "Relic guardian minion, exploding",
+      "frameWidth": 13,
+      "frameHeight": 15,
+      "animations": {
+        "idle":        { "file": "enemies/minions/Relic minion 2 13x15/Relic minion 2 13x15-idle.png", "frames": 8, "fps": 6 },
+        "run":         { "file": "enemies/minions/Relic minion 2 13x15/Relic minion 2 13x15-run.png", "frames": 8, "fps": 10 },
+        "prep_explode": { "file": "enemies/minions/Relic minion 2 13x15/Relic minion 2 13x15-prep explode.png", "frames": 4, "fps": 8 }
+      }
+    }
+  },
+
+  "bosses": {
+    "dust_warrior": {
+      "description": "Wave 5 boss - spinning melee warrior",
+      "frameWidth": 67,
+      "frameHeight": 45,
+      "animations": {
+        "idle":        { "file": "bosses/dust_warrior/Dust Warrior-idle.png", "frames": 12, "fps": 8 },
+        "run":         { "file": "bosses/dust_warrior/Dust Warrior-run.png", "frames": 8, "fps": 10 },
+        "prep_attack": { "file": "bosses/dust_warrior/Dust Warrior-Prep attack.png", "frames": 3, "fps": 6 },
+        "attack":      { "file": "bosses/dust_warrior/Dust Warrior-attack.png", "frames": 8, "fps": 10 },
+        "spin_start":  { "file": "bosses/dust_warrior/Dust Warrior-spin start.png", "frames": 4, "fps": 10 },
+        "spin_end":    { "file": "bosses/dust_warrior/Dust Warrior-spin end.png", "frames": 9, "fps": 10 },
+        "death":       { "file": "bosses/dust_warrior/Dust Warrior-death.png", "frames": 13, "fps": 8 }
+      }
+    },
+    "relic_guardian_1": {
+      "description": "Wave 10 boss - large beam/melee guardian",
+      "frameWidth": 123,
+      "frameHeight": 134,
+      "animations": {
+        "idle":        { "file": "bosses/relic_guardian_1/Relic Guardian 1-idle.png", "frames": 10, "fps": 8 },
+        "move":        { "file": "bosses/relic_guardian_1/Relic Guardian 1-move.png", "frames": 11, "fps": 8 },
+        "attack":      { "file": "bosses/relic_guardian_1/Relic Guardian 1-Attack.png", "frames": 16, "fps": 10 },
+        "attack_beam": { "file": "bosses/relic_guardian_1/Relic Guardian 1-Attack Beam.png", "frames": 28, "fps": 12 },
+        "death":       { "file": "bosses/relic_guardian_1/Relic Guardian 1-death.png", "frames": 14, "fps": 8 }
+      }
+    },
+    "relic_guardian_2": {
+      "description": "Wave 15 boss - flame/projectile guardian",
+      "frameWidth": 95,
+      "frameHeight": 71,
+      "animations": {
+        "idle":    { "file": "bosses/relic_guardian_2/Relic Guardian 2-idle.png", "frames": 12, "fps": 8 },
+        "move":    { "file": "bosses/relic_guardian_2/Relic Guardian 2-Move Sideways.png", "frames": 10, "fps": 8 },
+        "slam":    { "file": "bosses/relic_guardian_2/Relic Guardian 2-AOE slam.png", "frames": 25, "fps": 10 },
+        "flame":   { "file": "bosses/relic_guardian_2/Relic Guardian 2-Flame being.png", "frames": 14, "fps": 10 },
+        "death":   { "file": "bosses/relic_guardian_2/Relic Guardian 2-death.png", "frames": 35, "fps": 10 }
+      }
+    },
+    "relic_guardian_3": {
+      "description": "Wave 20 final boss - sword/dagger summoner",
+      "frameWidth": 95,
+      "frameHeight": 65,
+      "animations": {
+        "idle":           { "file": "bosses/relic_guardian_3/Relic Guardian 3-idle.png", "frames": 10, "fps": 8 },
+        "move":           { "file": "bosses/relic_guardian_3/Relic Guardian 3-Move.png", "frames": 4, "fps": 8 },
+        "cast_sword":     { "file": "bosses/relic_guardian_3/Relic Guardian 3 - Cast sword.png", "frames": 35, "fps": 10 },
+        "summon_daggers": { "file": "bosses/relic_guardian_3/Relic Guardian 3 - Summon daggers.png", "frames": 23, "fps": 10 },
+        "buff":           { "file": "bosses/relic_guardian_3/Relic Guardian 3-Buff.png", "frames": 19, "fps": 10 },
+        "death":          { "file": "bosses/relic_guardian_3/Relic Guardian 3-Death.png", "frames": 19, "fps": 8 }
+      }
+    }
+  },
+
+  "ui": {
+    "icons": {
+      "sheet": "ui/icons/Icon Pack 16x16.png",
+      "frameWidth": 16,
+      "frameHeight": 16,
+      "cols": 12,
+      "rows": 19,
+      "individualDir": "ui/icons/"
+    },
+    "gunIcons": {
+      "dir": "ui/pack/Gun Icons/",
+      "frameWidth": 32,
+      "frameHeight": 16,
+      "count": 12
+    },
+    "reticles": {
+      "dir": "ui/pack/Reticles/",
+      "frameWidth": 16,
+      "frameHeight": 16,
+      "count": 10
+    },
+    "hpBars": {
+      "main": "ui/pack/HP Bars/HP Bar 51x9.png",
+      "frameWidth": 51,
+      "frameHeight": 9
+    },
+    "ninePatch": {
+      "dir": "ui/pack/9 Patch/",
+      "frameWidth": 48,
+      "frameHeight": 48
+    }
+  },
+
+  "terrain": {
+    "blood_desert": {
+      "description": "Desert props, trees, rocks, skulls",
+      "dir": "terrain/blood_desert/"
+    },
+    "trees": {
+      "description": "7 tree/vegetation tilesets at 256x256",
+      "dir": "terrain/trees/"
+    },
+    "town_builder": {
+      "description": "16px grid tiles for buildings/floors",
+      "dir": "terrain/town_builder/"
+    }
+  },
+
+  "weapons_vfx": {
+    "fireball":        { "dir": "weapons/Fireball 53x42/", "frameWidth": 53, "frameHeight": 42 },
+    "chain_lightning":  { "dir": "weapons/Chain Lightning 32x48/", "frameWidth": 32, "frameHeight": 48 },
+    "boomerang_axe":   { "dir": "weapons/Boomerang Axe 36x32/", "frameWidth": 36, "frameHeight": 32 },
+    "ice_spikes":      { "dir": "weapons/Ice Spikes 31x22/", "frameWidth": 31, "frameHeight": 22 },
+    "missile":         { "dir": "weapons/Missile 122x101/", "frameWidth": 122, "frameHeight": 101 },
+    "techno_blade":    { "dir": "weapons/Techno blade 32x22/", "frameWidth": 32, "frameHeight": 22 },
+    "poison_bottle":   { "dir": "weapons/Poison Bottle 63x53/", "frameWidth": 63, "frameHeight": 53 },
+    "flame_bottle":    { "dir": "weapons/Flame Bottle 63x54/", "frameWidth": 63, "frameHeight": 54 },
+    "lightning_bolt":  { "dir": "weapons/Lightning Bolt 42x70/", "frameWidth": 42, "frameHeight": 70 },
+    "aoe_rune":        { "dir": "weapons/AOE Rune Spell 79x46/", "frameWidth": 79, "frameHeight": 46 }
+  }
+}

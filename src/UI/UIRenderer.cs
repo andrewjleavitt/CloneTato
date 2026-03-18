@@ -11,8 +11,8 @@ public static class UIRenderer
     public static void DrawHUD(GameState state)
     {
         // Health bar (top left)
-        int barX = 8, barY = 6;
-        int barW = 80, barH = 8;
+        int barX = 10, barY = 8;
+        int barW = 100, barH = 10;
         float hpPct = (float)state.Player.CurrentHP / state.Player.ComputedStats.MaxHP;
         hpPct = Math.Clamp(hpPct, 0f, 1f);
 

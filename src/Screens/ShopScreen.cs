@@ -163,24 +163,24 @@ public class ShopScreen
         Raylib.ClearBackground(new Color(35, 25, 20, 255));
 
         string title = $"SHOP - Wave {state.CurrentWave} Complete!";
-        int titleW = Raylib.MeasureText(title, 14);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 6, 14, Color.Gold);
+        int titleW = Raylib.MeasureText(title, 16);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 8, 16, Color.Gold);
 
-        UIRenderer.DrawTextMedium($"Gold: ${state.Gold}", Constants.LogicalWidth / 2 - 30, 22, Color.Gold);
+        UIRenderer.DrawTextMedium($"Gold: ${state.Gold}", Constants.LogicalWidth / 2 - 30, 28, Color.Gold);
 
         var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
         // === WEAPON UPGRADES (top section) ===
         if (state.EquippedWeapons.Count > 0)
         {
-            UIRenderer.DrawTextSmall("UPGRADE WEAPONS", 8, 38, Color.Orange);
+            UIRenderer.DrawTextSmall("UPGRADE WEAPONS", 20, 48, Color.Orange);
 
-            int ugW = 105, ugH = 38;
-            int ugY = 48;
+            int ugW = 120, ugH = 44;
+            int ugY = 60;
             for (int i = 0; i < state.EquippedWeapons.Count; i++)
             {
                 var weapon = state.EquippedWeapons[i];
-                int ux = 8 + i * (ugW + 4);
+                int ux = 20 + i * (ugW + 6);
                 bool hovered = mouse.X >= ux && mouse.X <= ux + ugW && mouse.Y >= ugY && mouse.Y <= ugY + ugH;
                 bool selected = _navRow == 0 && _navCol == i;
 
@@ -226,16 +226,16 @@ public class ShopScreen
         }
 
         // === BUY NEW WEAPONS & ITEMS (bottom section) ===
-        UIRenderer.DrawTextSmall("BUY", 8, 94, Color.SkyBlue);
+        UIRenderer.DrawTextSmall("BUY", 20, 116, Color.SkyBlue);
 
-        int cardW = 100, cardH = 65;
-        int totalW = _shopItems.Count > 0 ? _shopItems.Count * (cardW + 6) - 6 : 0;
+        int cardW = 120, cardH = 75;
+        int totalW = _shopItems.Count > 0 ? _shopItems.Count * (cardW + 8) - 8 : 0;
         int startX = Constants.LogicalWidth / 2 - totalW / 2;
-        int cardY = 104;
+        int cardY = 128;
 
         for (int i = 0; i < _shopItems.Count; i++)
         {
-            int cx = startX + i * (cardW + 6);
+            int cx = startX + i * (cardW + 8);
             bool hovered = mouse.X >= cx && mouse.X <= cx + cardW && mouse.Y >= cardY && mouse.Y <= cardY + cardH;
             bool selected = _navRow == 1 && _navCol == i;
 
@@ -297,7 +297,7 @@ public class ShopScreen
         // Reroll button
         bool rerollSelected = _navRow == 2 && _navCol == 0;
         if (UIRenderer.DrawButton($"REROLL (${_rerollCost})",
-            Constants.LogicalWidth / 2 - 50, cardY + cardH + 8, 100, 16, new Color(80, 60, 40, 255), rerollSelected))
+            Constants.LogicalWidth / 2 - 60, cardY + cardH + 10, 120, 20, new Color(80, 60, 40, 255), rerollSelected))
         {
             if (state.Gold >= _rerollCost)
             {
@@ -311,7 +311,7 @@ public class ShopScreen
         // Next wave button
         bool nextWaveSelected = _navRow == 2 && _navCol == 1;
         if (UIRenderer.DrawButton("NEXT WAVE",
-            Constants.LogicalWidth / 2 - 45, Constants.LogicalHeight - 30, 90, 20, new Color(60, 100, 60, 255), nextWaveSelected))
+            Constants.LogicalWidth / 2 - 55, Constants.LogicalHeight - 40, 110, 24, new Color(60, 100, 60, 255), nextWaveSelected))
         {
             NextWave(state, manager);
         }

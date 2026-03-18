@@ -8,10 +8,10 @@ namespace CloneTato.Screens;
 public class WeaponGalleryScreen
 {
     private int _scrollOffset;
-    private const int CardsPerRow = 3;
-    private const int CardW = 130;
-    private const int CardH = 52;
-    private const int CardPadding = 6;
+    private const int CardsPerRow = 4;
+    private const int CardW = 140;
+    private const int CardH = 56;
+    private const int CardPadding = 8;
 
     public void Update(float dt, GameState state, GameStateManager manager)
     {
@@ -37,10 +37,10 @@ public class WeaponGalleryScreen
 
         // Title
         string title = "WEAPON GALLERY";
-        int titleW = Raylib.MeasureText(title, 14);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 6, 14, Color.Gold);
+        int titleW = Raylib.MeasureText(title, 18);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 8, 18, Color.Gold);
 
-        int startY = 24 - _scrollOffset;
+        int startY = 32 - _scrollOffset;
         int totalW = CardsPerRow * (CardW + CardPadding) - CardPadding;
         int startX = Constants.LogicalWidth / 2 - totalW / 2;
 

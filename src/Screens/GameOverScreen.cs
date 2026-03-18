@@ -57,15 +57,15 @@ public class GameOverScreen
         Raylib.ClearBackground(new Color(30, 15, 15, 255));
 
         string title = "GAME OVER";
-        int titleW = Raylib.MeasureText(title, 24);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 40, 24, Color.Red);
+        int titleW = Raylib.MeasureText(title, 28);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 40, 28, Color.Red);
 
         var stats = state.Player.ComputedStats;
-        int leftX = 30;
-        int rightX = Constants.LogicalWidth / 2 + 20;
+        int leftX = 60;
+        int rightX = Constants.LogicalWidth / 2 + 40;
 
         // Left column: run summary
-        int y = 68;
+        int y = 80;
         UIRenderer.DrawTextSmall("-- RUN --", leftX, y, Color.Gold);
         y += 12;
         UIRenderer.DrawTextSmall($"Wave: {state.CurrentWave}/{Constants.MaxWaves}", leftX, y, Color.White); y += 10;
@@ -88,7 +88,7 @@ public class GameOverScreen
         }
 
         // Right column: all stats
-        y = 68;
+        y = 80;
         UIRenderer.DrawTextSmall("-- STATS --", rightX, y, Color.Gold);
         y += 12;
 
@@ -118,15 +118,15 @@ public class GameOverScreen
             DrawStat("Post-Dash Inv", $"{stats.PostDashInvuln:F1}s", rightX, ref y, Color.Gold);
 
         // Buttons
-        int btnW = 80, btnH = 18;
-        if (UIRenderer.DrawButton("RETRY", Constants.LogicalWidth / 2 - btnW / 2, 232, btnW, btnH,
+        int btnW = 100, btnH = 22;
+        if (UIRenderer.DrawButton("RETRY", Constants.LogicalWidth / 2 - btnW / 2, 310, btnW, btnH,
             new Color(60, 100, 60, 255), _selected == 0))
         {
             _tokensAwarded = false;
             manager.TransitionTo(GameScreen.CharacterSelect);
         }
 
-        if (UIRenderer.DrawButton("MENU", Constants.LogicalWidth / 2 - btnW / 2, 253, btnW, btnH,
+        if (UIRenderer.DrawButton("MENU", Constants.LogicalWidth / 2 - btnW / 2, 336, btnW, btnH,
             new Color(100, 60, 60, 255), _selected == 1))
         {
             _tokensAwarded = false;

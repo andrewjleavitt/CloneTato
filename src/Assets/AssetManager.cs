@@ -10,6 +10,9 @@ public class AssetManager
     public SpriteAtlas Tiles { get; private set; } = null!;
     public SpriteAtlas Interface { get; private set; } = null!;
 
+    // STRANDED animated sprites
+    public AnimatedSprite? HeroSprite { get; private set; }
+
     private readonly Dictionary<string, Sound> _sounds = new();
 
     public void LoadAll()
@@ -37,6 +40,16 @@ public class AssetManager
             0, Constants.InterfaceCols, Constants.InterfaceRows);
 
         LoadSounds();
+        LoadStrandedAssets();
+    }
+
+    private void LoadStrandedAssets()
+    {
+        string strandedPath = "assets/stranded";
+        if (Directory.Exists(strandedPath + "/hero"))
+        {
+            HeroSprite = AnimationLoader.LoadHeroGun(strandedPath);
+        }
     }
 
     private void LoadSounds()
@@ -72,6 +85,7 @@ public class AssetManager
         Raylib.UnloadTexture(Weapons.Texture);
         Raylib.UnloadTexture(Tiles.Texture);
         Raylib.UnloadTexture(Interface.Texture);
+        HeroSprite?.UnloadAll();
         foreach (var sound in _sounds.Values)
             Raylib.UnloadSound(sound);
     }

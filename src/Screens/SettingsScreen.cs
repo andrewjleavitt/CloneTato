@@ -166,20 +166,20 @@ public class SettingsScreen
         Raylib.DrawRectangle(0, 0, Constants.LogicalWidth, Constants.LogicalHeight, new Color(0, 0, 0, 180));
 
         string title = "SETTINGS";
-        int titleW = Raylib.MeasureText(title, 16);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 20, 16, Color.White);
+        int titleW = Raylib.MeasureText(title, 20);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 30, 20, Color.White);
 
         var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
         // Tabs
-        int tabW = 70, tabH = 14;
-        int tabTotalW = TabCount * (tabW + 4) - 4;
+        int tabW = 90, tabH = 18;
+        int tabTotalW = TabCount * (tabW + 6) - 6;
         int tabStartX = Constants.LogicalWidth / 2 - tabTotalW / 2;
-        int tabY = 42;
+        int tabY = 58;
 
         for (int i = 0; i < TabCount; i++)
         {
-            int tx = tabStartX + i * (tabW + 4);
+            int tx = tabStartX + i * (tabW + 6);
             bool active = i == _currentTab;
             bool tabHovered = mouse.X >= tx && mouse.X <= tx + tabW && mouse.Y >= tabY && mouse.Y <= tabY + tabH;
 
@@ -194,12 +194,12 @@ public class SettingsScreen
             Raylib.DrawRectangle(tx, tabY, tabW, tabH, bg);
             Raylib.DrawRectangleLines(tx, tabY, tabW, tabH, active ? Color.Gold : Color.Gray);
             int textW = TabNames[i].Length * 5;
-            UIRenderer.DrawTextSmall(TabNames[i], tx + tabW / 2 - textW / 2, tabY + 3, active ? Color.White : Color.Gray);
+            UIRenderer.DrawTextSmall(TabNames[i], tx + tabW / 2 - textW / 2, tabY + 5, active ? Color.White : Color.Gray);
         }
 
         // Content
-        int contentY = tabY + tabH + 12;
-        int contentX = Constants.LogicalWidth / 2 - 120;
+        int contentY = tabY + tabH + 16;
+        int contentX = Constants.LogicalWidth / 2 - 150;
 
         switch (_currentTab)
         {

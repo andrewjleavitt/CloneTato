@@ -64,25 +64,25 @@ public class MainMenuScreen
 
         // Title
         string title = "CLONETATO";
-        int titleW = Raylib.MeasureText(title, 24);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2 + 1, 41, 24, Color.Black);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 40, 24, Color.Gold);
+        int titleW = Raylib.MeasureText(title, 32);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2 + 1, 51, 32, Color.Black);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 50, 32, Color.Gold);
 
         string subtitle = "Desert Survivor";
-        int subW = Raylib.MeasureText(subtitle, 10);
-        Raylib.DrawText(subtitle, Constants.LogicalWidth / 2 - subW / 2, 68, 10, Color.Orange);
+        int subW = Raylib.MeasureText(subtitle, 12);
+        Raylib.DrawText(subtitle, Constants.LogicalWidth / 2 - subW / 2, 88, 12, Color.Orange);
 
         // Character sprites as decoration
         for (int i = 0; i < 4; i++)
         {
-            state.Assets.Players.DrawScaled(i * 4, Constants.LogicalWidth / 2 - 50 + i * 30, 100, 1.5f, Color.White);
+            state.Assets.Players.DrawScaled(i * 4, Constants.LogicalWidth / 2 - 50 + i * 30, 130, 1.5f, Color.White);
         }
 
         // Buttons
-        int btnW = 80, btnH = 18;
+        int btnW = 100, btnH = 22;
         int btnX = Constants.LogicalWidth / 2 - btnW / 2;
-        int startY = 120;
-        int spacing = 22;
+        int startY = 160;
+        int spacing = 28;
 
         string[] labels = { "START RUN", "UPGRADES", "WEAPONS", "SETTINGS", "QUIT" };
         Color[] colors =

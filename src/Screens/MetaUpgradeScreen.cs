@@ -38,16 +38,16 @@ public class MetaUpgradeScreen
         Raylib.ClearBackground(new Color(25, 20, 30, 255));
 
         string title = "UPGRADES";
-        int titleW = Raylib.MeasureText(title, 14);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 8, 14, Color.Gold);
+        int titleW = Raylib.MeasureText(title, 18);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 12, 18, Color.Gold);
 
         // Token display
         string tokenStr = $"Tokens: {manager.Meta.Tokens}";
-        UIRenderer.DrawTextSmall(tokenStr, Constants.LogicalWidth - tokenStr.Length * 5 - 8, 10, Color.Gold);
+        UIRenderer.DrawTextSmall(tokenStr, Constants.LogicalWidth - tokenStr.Length * 5 - 12, 14, Color.Gold);
 
-        int startY = 28;
-        int rowH = 26;
-        int leftX = 30;
+        int startY = 40;
+        int rowH = 30;
+        int leftX = 60;
 
         var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
@@ -59,7 +59,7 @@ public class MetaUpgradeScreen
             bool maxed = level >= MetaProgression.MaxUpgradeLevel;
             int y = startY + i * rowH;
 
-            bool hovered = mouse.Y >= y && mouse.Y < y + rowH && mouse.X >= leftX && mouse.X < Constants.LogicalWidth - 30;
+            bool hovered = mouse.Y >= y && mouse.Y < y + rowH && mouse.X >= leftX && mouse.X < Constants.LogicalWidth - 60;
             if (hovered && Raylib.IsMouseButtonPressed(MouseButton.Left))
             {
                 _selectedIndex = i;
@@ -76,17 +76,17 @@ public class MetaUpgradeScreen
             bool selected = i == _selectedIndex;
             Color bg = selected ? new Color(50, 40, 55, 255) :
                 hovered ? new Color(40, 35, 45, 255) : new Color(30, 25, 35, 255);
-            Raylib.DrawRectangle(leftX - 4, y, Constants.LogicalWidth - 52, rowH - 2, bg);
+            Raylib.DrawRectangle(leftX - 4, y, Constants.LogicalWidth - 112, rowH - 2, bg);
 
             if (selected)
-                Raylib.DrawRectangleLines(leftX - 4, y, Constants.LogicalWidth - 52, rowH - 2, Color.Gold);
+                Raylib.DrawRectangleLines(leftX - 4, y, Constants.LogicalWidth - 112, rowH - 2, Color.Gold);
 
             // Name + stat
             UIRenderer.DrawTextSmall(upgrade.Name, leftX, y + 3, Color.White);
             UIRenderer.DrawTextSmall(upgrade.Description, leftX, y + 13, Color.LightGray);
 
             // Level bar
-            int barX = leftX + 150;
+            int barX = leftX + 180;
             int barW = 100;
             int barH = 6;
             int barY = y + 5;

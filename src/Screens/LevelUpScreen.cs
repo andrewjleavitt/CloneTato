@@ -93,21 +93,21 @@ public class LevelUpScreen
         Raylib.DrawRectangle(0, 0, Constants.LogicalWidth, Constants.LogicalHeight, new Color(0, 0, 0, 180));
 
         string title = $"LEVEL UP! (Lv {state.Level})";
-        int titleW = Raylib.MeasureText(title, 14);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 50, 14, Color.Gold);
+        int titleW = Raylib.MeasureText(title, 16);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 80, 16, Color.Gold);
 
-        UIRenderer.DrawTextSmall("Choose an upgrade:", Constants.LogicalWidth / 2 - 40, 70, Color.White);
+        UIRenderer.DrawTextSmall("Choose an upgrade:", Constants.LogicalWidth / 2 - 40, 105, Color.White);
 
-        int cardW = 120, cardH = 40;
-        int totalW = 3 * (cardW + 10) - 10;
+        int cardW = 150, cardH = 50;
+        int totalW = 3 * (cardW + 12) - 12;
         int startX = Constants.LogicalWidth / 2 - totalW / 2;
-        int cardY = 90;
+        int cardY = 120;
 
         var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
         for (int i = 0; i < 3; i++)
         {
-            int cx = startX + i * (cardW + 10);
+            int cx = startX + i * (cardW + 12);
             bool hovered = mouse.X >= cx && mouse.X <= cx + cardW && mouse.Y >= cardY && mouse.Y <= cardY + cardH;
             bool selected = _selected == i;
 

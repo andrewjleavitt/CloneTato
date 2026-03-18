@@ -2,14 +2,14 @@ namespace CloneTato;
 
 public static class Constants
 {
-    public const int LogicalWidth = 480;
-    public const int LogicalHeight = 270;
+    public const int LogicalWidth = 640;
+    public const int LogicalHeight = 360;
     public const int WindowScale = 3;
     public const int WindowWidth = LogicalWidth * WindowScale;
     public const int WindowHeight = LogicalHeight * WindowScale;
 
-    public const int ArenaWidth = 1200;
-    public const int ArenaHeight = 900;
+    public const int ArenaWidth = 1600;
+    public const int ArenaHeight = 1200;
 
     public const int TileSize = 16;
     public const int SpriteSize = 24;

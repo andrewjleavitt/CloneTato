@@ -22,6 +22,9 @@ public class PlayingScreen
         state.MouseWorldPosition = Raylib.GetScreenToWorld2D(mouseLogical, _camera.Camera);
         state.IsFiring = InputHelper.IsFireDown();
 
+        // Update hero animation state
+        UpdateHeroAnimation(dt, state);
+
         // Update all systems
         PlayerSystem.Update(dt, state);
         WeaponSystem.Update(dt, state);
@@ -548,7 +551,97 @@ public class PlayingScreen
             }
     }
 
+    private void UpdateHeroAnimation(float dt, GameState state)
+    {
+        var hero = state.Assets.HeroSprite;
+        if (hero == null) return;
+
+        var player = state.Player;
+        var vel = player.Velocity;
+        bool moving = vel.LengthSquared() > 1f;
+
+        // Determine direction suffix based on velocity (or aim if idle)
+        string dir;
+        if (moving)
+        {
+            // Use dominant axis of movement
+            if (MathF.Abs(vel.Y) > MathF.Abs(vel.X))
+                dir = vel.Y < 0 ? "up" : "down";
+            else
+                dir = "right"; // left is handled by FlipH
+        }
+        else
+        {
+            // Idle: use aim direction
+            var aim = state.MouseWorldPosition - player.Position;
+            if (MathF.Abs(aim.Y) > MathF.Abs(aim.X))
+                dir = aim.Y < 0 ? "up" : "down";
+            else
+                dir = "right";
+        }
+
+        // Pick animation based on state
+        string anim;
+        if (player.CurrentHP <= 0)
+            anim = "death";
+        else if (player.IsDashing)
+            anim = $"roll_{dir}";
+        else if (moving)
+            anim = $"run_{dir}";
+        else
+            anim = $"idle_{dir}";
+
+        // FlipH for leftward facing (right animations are mirrored)
+        hero.FlipH = player.FacingLeft;
+
+        hero.Play(anim);
+        hero.Update(dt);
+    }
+
     private void DrawPlayer(GameState state)
+    {
+        var player = state.Player;
+        var hero = state.Assets.HeroSprite;
+
+        // Use STRANDED animated sprite if available, otherwise fall back to Kenney
+        if (hero != null)
+        {
+            DrawPlayerAnimated(state, hero);
+            return;
+        }
+
+        DrawPlayerLegacy(state);
+    }
+
+    private void DrawPlayerAnimated(GameState state, Assets.AnimatedSprite hero)
+    {
+        var player = state.Player;
+
+        // Dash afterimage trail
+        if (player.IsDashing)
+        {
+            float t = player.DashTimer / Constants.DashDuration;
+            for (int g = 1; g <= 2; g++)
+            {
+                Vector2 ghostPos = player.Position - player.DashDirection * (g * 14f);
+                byte ghostAlpha = (byte)(80 * t / g);
+                var ghostTint = new Color((byte)150, (byte)200, (byte)255, ghostAlpha);
+                hero.DrawCentered(ghostPos.X, ghostPos.Y, ghostTint);
+            }
+        }
+
+        // Invincibility flicker
+        if (player.InvincibilityTimer > 0 && !player.IsDashing && ((int)(player.InvincibilityTimer * 10) % 2 == 0))
+            return;
+
+        Color tint = player.IsDashing
+            ? new Color((byte)180, (byte)220, (byte)255, (byte)255)
+            : player.FlashTimer > 0 ? Color.Red : Color.White;
+
+        hero.DrawCentered(player.Position.X, player.Position.Y, tint);
+    }
+
+    private void DrawPlayerLegacy(GameState state)
     {
         var player = state.Player;
 
@@ -560,7 +653,6 @@ public class PlayingScreen
             var src = state.Assets.Players.GetSourceRect(spriteIdx);
             if (player.FacingLeft) src.Width = -src.Width;
 
-            // Draw 2 ghost images behind the player
             for (int g = 1; g <= 2; g++)
             {
                 Vector2 ghostPos = player.Position - player.DashDirection * (g * 10f);
@@ -576,7 +668,7 @@ public class PlayingScreen
             return;
 
         Color tint = player.IsDashing
-            ? new Color((byte)180, (byte)220, (byte)255, (byte)255) // Bright blue tint while dashing
+            ? new Color((byte)180, (byte)220, (byte)255, (byte)255)
             : player.FlashTimer > 0 ? Color.Red : Color.White;
         int sprIdx = player.GetDisplaySprite();
 

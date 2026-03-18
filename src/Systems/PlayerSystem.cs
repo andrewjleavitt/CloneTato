@@ -90,9 +90,10 @@ public static class PlayerSystem
             }
         }
 
-        // Face toward aim
+        // Face toward aim (with deadzone to prevent flicker)
         Vector2 faceDir = state.MouseWorldPosition - player.Position;
-        player.FacingLeft = faceDir.X < 0;
+        if (MathF.Abs(faceDir.X) > 8f)
+            player.FacingLeft = faceDir.X < 0;
 
         // Post-dash move speed buff
         float moveSpeed = player.ComputedStats.MoveSpeed;

@@ -58,16 +58,16 @@ public class PauseScreen
         Raylib.DrawRectangle(0, 0, Constants.LogicalWidth, Constants.LogicalHeight, new Color(0, 0, 0, 160));
 
         string title = "PAUSED";
-        int titleW = Raylib.MeasureText(title, 20);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 60, 20, Color.White);
+        int titleW = Raylib.MeasureText(title, 24);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 80, 24, Color.White);
 
-        int btnW = 100, btnH = 20;
+        int btnW = 120, btnH = 24;
         int btnX = Constants.LogicalWidth / 2 - btnW / 2;
-        int startY = 100;
+        int startY = 130;
 
         for (int i = 0; i < ItemCount; i++)
         {
-            int btnY = startY + i * 28;
+            int btnY = startY + i * 32;
             if (UIRenderer.DrawButton(MenuItems[i], btnX, btnY, btnW, btnH, MenuColors[i], _selected == i))
                 ActivateItem(i, state, manager);
         }

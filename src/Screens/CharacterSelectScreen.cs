@@ -40,21 +40,21 @@ public class CharacterSelectScreen
         Raylib.ClearBackground(new Color(35, 25, 20, 255));
 
         string title = "SELECT CHARACTER";
-        int titleW = Raylib.MeasureText(title, 14);
-        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 15, 14, Color.Gold);
+        int titleW = Raylib.MeasureText(title, 18);
+        Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 20, 18, Color.Gold);
 
         // Character cards
-        int cardW = 90, cardH = 110;
-        int totalW = CharacterDatabase.Characters.Length * (cardW + 8) - 8;
+        int cardW = 110, cardH = 140;
+        int totalW = CharacterDatabase.Characters.Length * (cardW + 10) - 10;
         int startX = Constants.LogicalWidth / 2 - totalW / 2;
-        int cardY = 40;
+        int cardY = 50;
 
         var mouse = Display.ScreenToLogical(Raylib.GetMousePosition());
 
         for (int i = 0; i < CharacterDatabase.Characters.Length; i++)
         {
             var ch = CharacterDatabase.Characters[i];
-            int cx = startX + i * (cardW + 8);
+            int cx = startX + i * (cardW + 10);
             bool selected = i == _selectedIndex;
             bool unlocked = manager.Meta.CharacterUnlocked.Length > i && manager.Meta.CharacterUnlocked[i];
 
@@ -67,21 +67,21 @@ public class CharacterSelectScreen
 
             if (unlocked)
             {
-                state.Assets.Players.DrawScaled(ch.SpriteIndex, cx + cardW / 2, cardY + 28, 2f, Color.White);
-                UIRenderer.DrawTextSmall(ch.Name, cx + 4, cardY + 48, Color.White);
-                UIRenderer.DrawTextSmall(ch.Description, cx + 4, cardY + 58, Color.LightGray);
+                state.Assets.Players.DrawScaled(ch.SpriteIndex, cx + cardW / 2, cardY + 32, 2f, Color.White);
+                UIRenderer.DrawTextSmall(ch.Name, cx + 4, cardY + 56, Color.White);
+                UIRenderer.DrawTextSmall(ch.Description, cx + 4, cardY + 68, Color.LightGray);
 
                 var s = ch.BaseStats;
-                UIRenderer.DrawTextSmall($"HP: {s.MaxHP}", cx + 4, cardY + 70, Color.Green);
-                UIRenderer.DrawTextSmall($"SPD: {s.MoveSpeed:F0}", cx + 4, cardY + 80, Color.SkyBlue);
-                UIRenderer.DrawTextSmall($"ARM: {s.Armor}", cx + 4, cardY + 90, Color.Orange);
-                UIRenderer.DrawTextSmall($"DDG: {s.DodgeChance * 100:F0}%", cx + 4, cardY + 100, Color.Yellow);
+                UIRenderer.DrawTextSmall($"HP: {s.MaxHP}", cx + 4, cardY + 82, Color.Green);
+                UIRenderer.DrawTextSmall($"SPD: {s.MoveSpeed:F0}", cx + 4, cardY + 94, Color.SkyBlue);
+                UIRenderer.DrawTextSmall($"ARM: {s.Armor}", cx + 4, cardY + 106, Color.Orange);
+                UIRenderer.DrawTextSmall($"DDG: {s.DodgeChance * 100:F0}%", cx + 4, cardY + 118, Color.Yellow);
             }
             else
             {
-                state.Assets.Players.DrawScaled(ch.SpriteIndex, cx + cardW / 2, cardY + 28, 2f,
+                state.Assets.Players.DrawScaled(ch.SpriteIndex, cx + cardW / 2, cardY + 32, 2f,
                     new Color((byte)30, (byte)30, (byte)30, (byte)255));
-                UIRenderer.DrawTextSmall("LOCKED", cx + cardW / 2 - 14, cardY + 50, Color.Gray);
+                UIRenderer.DrawTextSmall("LOCKED", cx + cardW / 2 - 14, cardY + 60, Color.Gray);
                 string hint = i switch
                 {
                     1 => "Reach wave 5",
@@ -89,7 +89,7 @@ public class CharacterSelectScreen
                     3 => "Reach wave 10",
                     _ => "???",
                 };
-                UIRenderer.DrawTextSmall(hint, cx + 4, cardY + 65, new Color(120, 100, 80, 255));
+                UIRenderer.DrawTextSmall(hint, cx + 4, cardY + 80, new Color(120, 100, 80, 255));
             }
 
             // Click to select or double-click to start
@@ -105,9 +105,9 @@ public class CharacterSelectScreen
             }
         }
 
-        int btnW = 80, btnH = 18;
+        int btnW = 100, btnH = 22;
         if (UIRenderer.DrawButton("START", Constants.LogicalWidth / 2 - btnW / 2,
-            Constants.LogicalHeight - 35, btnW, btnH, new Color(60, 100, 60, 255)))
+            Constants.LogicalHeight - 45, btnW, btnH, new Color(60, 100, 60, 255)))
         {
             StartRun(state, manager);
         }
