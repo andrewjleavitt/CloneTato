@@ -76,10 +76,19 @@ public class MainMenuScreen
         int subW = Raylib.MeasureText(subtitle, 12);
         Raylib.DrawText(subtitle, Constants.LogicalWidth / 2 - subW / 2, 88, 12, Color.Orange);
 
-        // Character sprites as decoration
-        for (int i = 0; i < 4; i++)
+        // Character sprite decoration
+        var hero = state.Assets.HeroSprite;
+        if (hero != null)
         {
-            state.Assets.Players.DrawScaled(i * 4, Constants.LogicalWidth / 2 - 50 + i * 30, 130, 1.5f, Color.White);
+            // Animated hero preview below title
+            hero.DrawAnimationFrame("idle_down", ((int)(Raylib.GetTime() * 6)) % hero.GetFrameCount("idle_down"),
+                false, Constants.LogicalWidth / 2f, 128, Color.White, 1.5f);
+        }
+        else
+        {
+            // Kenney fallback
+            for (int i = 0; i < 4; i++)
+                state.Assets.Players.DrawScaled(i * 4, Constants.LogicalWidth / 2 - 50 + i * 30, 130, 1.5f, Color.White);
         }
 
         // Buttons

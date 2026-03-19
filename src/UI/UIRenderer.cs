@@ -8,20 +8,43 @@ namespace CloneTato.UI;
 
 public static class UIRenderer
 {
+    private const int HPBarFrameW = 51;
+    private const int HPBarFrameH = 9;
+    private const int HPBarFrameCount = 11;
+
     public static void DrawHUD(GameState state)
     {
         // Health bar (top left)
         int barX = 10, barY = 8;
-        int barW = 100, barH = 10;
         float hpPct = (float)state.Player.CurrentHP / state.Player.ComputedStats.MaxHP;
         hpPct = Math.Clamp(hpPct, 0f, 1f);
 
-        Raylib.DrawRectangle(barX - 1, barY - 1, barW + 2, barH + 2, Color.Black);
-        Raylib.DrawRectangle(barX, barY, barW, barH, Color.DarkGray);
-        Color hpColor = hpPct > 0.5f ? Color.Green : hpPct > 0.25f ? Color.Orange : Color.Red;
-        Raylib.DrawRectangle(barX, barY, (int)(barW * hpPct), barH, hpColor);
-        DrawTextSmall($"{state.Player.CurrentHP}/{state.Player.ComputedStats.MaxHP}",
-            barX + barW + 4, barY, Color.White);
+        if (state.Assets.HPBarSheet.Id != 0)
+        {
+            // STRANDED HP bar — pick frame from spritesheet (frame 0 = full, frame 10 = empty)
+            int frameIdx = (int)((1f - hpPct) * (HPBarFrameCount - 1));
+            frameIdx = Math.Clamp(frameIdx, 0, HPBarFrameCount - 1);
+            var src = new Rectangle(0, frameIdx * HPBarFrameH, HPBarFrameW, HPBarFrameH);
+            // Scale up 2x for visibility
+            var dest = new Rectangle(barX, barY, HPBarFrameW * 2, HPBarFrameH * 2);
+            Raylib.DrawTexturePro(state.Assets.HPBarSheet, src, dest, Vector2.Zero, 0f, Color.White);
+            DrawTextSmall($"{state.Player.CurrentHP}/{state.Player.ComputedStats.MaxHP}",
+                barX + HPBarFrameW * 2 + 4, barY + 4, Color.White);
+        }
+        else
+        {
+            // Legacy rectangle HP bar
+            Raylib.DrawRectangle(barX - 1, barY - 1, 102, 12, Color.Black);
+            Raylib.DrawRectangle(barX, barY, 100, 10, Color.DarkGray);
+            Color hpColor = hpPct > 0.5f ? Color.Green : hpPct > 0.25f ? Color.Orange : Color.Red;
+            Raylib.DrawRectangle(barX, barY, (int)(100 * hpPct), 10, hpColor);
+            DrawTextSmall($"{state.Player.CurrentHP}/{state.Player.ComputedStats.MaxHP}",
+                barX + 104, barY, Color.White);
+        }
+
+        // Compute bar dimensions based on which HP bar style is active
+        int barW = state.Assets.HPBarSheet.Id != 0 ? HPBarFrameW * 2 : 100;
+        int barH = state.Assets.HPBarSheet.Id != 0 ? HPBarFrameH * 2 : 10;
 
         // XP bar (below health)
         int xpY = barY + barH + 3;
@@ -43,9 +66,22 @@ public static class UIRenderer
             DrawTextSmall(timerText, Constants.LogicalWidth / 2 - timerW / 2, 14, Color.Gold);
         }
 
-        // Gold (top right)
+        // Gold (top right) — use coin icon if available
         string goldText = $"${state.Gold}";
-        DrawTextSmall(goldText, Constants.LogicalWidth - goldText.Length * 5 - 8, 4, Color.Gold);
+        if (state.Assets.CoinIcon.Id != 0)
+        {
+            int coinX = Constants.LogicalWidth - goldText.Length * 5 - 22;
+            var coinTex = state.Assets.CoinIcon;
+            Raylib.DrawTexturePro(coinTex,
+                new Rectangle(0, 0, coinTex.Width, coinTex.Height),
+                new Rectangle(coinX, 2, 12, 12),
+                Vector2.Zero, 0f, Color.White);
+            DrawTextSmall(goldText, coinX + 14, 4, Color.Gold);
+        }
+        else
+        {
+            DrawTextSmall(goldText, Constants.LogicalWidth - goldText.Length * 5 - 8, 4, Color.Gold);
+        }
 
         // Enemies remaining
         int remaining = state.ActiveEnemyCount();
@@ -56,7 +92,7 @@ public static class UIRenderer
         }
 
         // Dash cooldown indicator (below XP bar)
-        int dashY = barY + barH + 3 + 6;
+        int dashY = xpY + 6;
         float dashCD = Math.Max(0.15f, Constants.DashCooldown - state.Player.ComputedStats.DashCooldownReduction);
         if (state.Player.IsDashing)
         {

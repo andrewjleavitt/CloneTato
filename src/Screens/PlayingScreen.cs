@@ -138,7 +138,7 @@ public class PlayingScreen
 
     public void Draw(GameState state)
     {
-        Raylib.ClearBackground(new Color(45, 30, 20, 255));
+        Raylib.ClearBackground(new Color(18, 10, 12, 255));
 
         Raylib.BeginMode2D(_camera.Camera);
 
@@ -156,29 +156,32 @@ public class PlayingScreen
             {
                 if (strandedTerrain)
                 {
-                    // STRANDED: stylized circular zones
+                    // Blood Desert palette: dark muted tones
                     if (zone.Type == TerrainType.Sand)
                     {
+                        // Darker sand patches — subtle lighter areas on the dark ground
                         Raylib.DrawCircleV(zone.Position, zone.Radius,
-                            new Color(42, 30, 20, 120));
+                            new Color(35, 22, 18, 100));
                         Raylib.DrawCircleLinesV(zone.Position, zone.Radius,
-                            new Color(70, 50, 30, 100));
-                        Raylib.DrawCircleLinesV(zone.Position, zone.Radius - 2f,
-                            new Color(50, 35, 22, 60));
+                            new Color(50, 30, 25, 80));
+                        // Inner shadow ring
+                        Raylib.DrawCircleLinesV(zone.Position, zone.Radius - 3f,
+                            new Color(40, 25, 20, 50));
                     }
                     else
                     {
+                        // Decorative patches — dark organic variation
                         Color fill = zone.DecoTileSet switch
                         {
-                            0 => new Color(35, 55, 30, 80),
-                            1 => new Color(50, 30, 55, 70),
-                            _ => new Color(55, 55, 50, 60),
+                            0 => new Color(30, 20, 25, 70),  // dark crimson
+                            1 => new Color(25, 18, 30, 60),  // dark purple
+                            _ => new Color(35, 30, 25, 55),  // dark earth
                         };
                         Color edge = zone.DecoTileSet switch
                         {
-                            0 => new Color(50, 80, 40, 100),
-                            1 => new Color(70, 40, 75, 90),
-                            _ => new Color(80, 80, 70, 80),
+                            0 => new Color(60, 25, 30, 90),
+                            1 => new Color(40, 25, 50, 80),
+                            _ => new Color(50, 40, 30, 70),
                         };
                         Raylib.DrawCircleV(zone.Position, zone.Radius, fill);
                         Raylib.DrawCircleLinesV(zone.Position, zone.Radius, edge);
@@ -258,7 +261,7 @@ public class PlayingScreen
         }
 
         // Arena boundary
-        Color borderColor = strandedTerrain ? new Color(35, 25, 15, 200) : Color.Brown;
+        Color borderColor = strandedTerrain ? new Color(80, 30, 25, 220) : Color.Brown;
         float borderWidth = strandedTerrain ? 3f : 2f;
         Raylib.DrawRectangleLinesEx(
             new Rectangle(0, 0, Constants.ArenaWidth, Constants.ArenaHeight),
@@ -290,12 +293,26 @@ public class PlayingScreen
             Raylib.DrawCircleV(orb.Position, 1.5f, Color.White);
         }
 
-        // Health pickups — tile (6,12) = 12*18+6 = 222
+        // Health pickups
         for (int i = 0; i < state.HealthPickups.Count; i++)
         {
             var pickup = state.HealthPickups[i];
             if (!pickup.Active) continue;
-            state.Assets.Tiles.DrawCentered(12 * 18 + 6, pickup.Position.X, pickup.Position.Y, Color.White);
+
+            if (state.Assets.HasStrandedUI)
+            {
+                var tex = state.Assets.HealthPickupIcon;
+                // Gentle bob animation
+                float bob = MathF.Sin((float)Raylib.GetTime() * 3f + i) * 2f;
+                var src = new Rectangle(0, 0, tex.Width, tex.Height);
+                var dest = new Rectangle(pickup.Position.X, pickup.Position.Y + bob, tex.Width, tex.Height);
+                var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
+                Raylib.DrawTexturePro(tex, src, dest, origin, 0f, Color.White);
+            }
+            else
+            {
+                state.Assets.Tiles.DrawCentered(12 * 18 + 6, pickup.Position.X, pickup.Position.Y, Color.White);
+            }
         }
 
         // Obstacles
@@ -601,40 +618,80 @@ public class PlayingScreen
         Raylib.DrawLineV(player.Position, reticlePos, new Color((byte)255, (byte)60, (byte)60, (byte)40));
     }
 
+    // Ground tile source rect from Blood Desert Tileset (top-left ground pattern region)
+    private static readonly Rectangle _groundTileSrc = new(0, 0, 96, 64);
+    // Lighter ground variant (shifted right in tileset)
+    private static readonly Rectangle _groundTileSrcAlt = new(0, 64, 96, 64);
+
     private void DrawArenaFloor(GameState state)
     {
         if (state.Assets.HasStrandedTerrain)
         {
-            // STRANDED: solid desert ground color + scattered props drawn separately
+            // Blood Desert palette: very dark base
             Raylib.DrawRectangle(0, 0, Constants.ArenaWidth, Constants.ArenaHeight,
-                new Color(58, 40, 28, 255));
+                new Color(22, 12, 14, 255));
 
-            // Subtle color variation using tiled rectangles
             float camLeft = _camera.Camera.Target.X - Constants.LogicalWidth / 2f;
             float camTop = _camera.Camera.Target.Y - Constants.LogicalHeight / 2f;
             float camRight = camLeft + Constants.LogicalWidth;
             float camBottom = camTop + Constants.LogicalHeight;
-            int tileSize = 32;
-            int startCol = Math.Max(0, (int)(camLeft / tileSize) - 1);
-            int startRow = Math.Max(0, (int)(camTop / tileSize) - 1);
-            int endCol = Math.Min(Constants.ArenaWidth / tileSize, (int)(camRight / tileSize) + 2);
-            int endRow = Math.Min(Constants.ArenaHeight / tileSize, (int)(camBottom / tileSize) + 2);
 
-            for (int row = startRow; row < endRow; row++)
-                for (int col = startCol; col < endCol; col++)
-                {
-                    int h = col * 374761393 + row * 668265263;
-                    h = (h ^ (h >> 13)) * 1274126177;
-                    int shade = (h & 0xF) - 8; // -8 to +7
-                    if (shade != 0)
+            if (state.Assets.HasBloodDesertTileset)
+            {
+                // Tile the ground using Blood Desert tileset ground pattern
+                int tileW = 96, tileH = 64;
+                int startCol = Math.Max(0, (int)(camLeft / tileW) - 1);
+                int startRow = Math.Max(0, (int)(camTop / tileH) - 1);
+                int endCol = Math.Min(Constants.ArenaWidth / tileW + 1, (int)(camRight / tileW) + 2);
+                int endRow = Math.Min(Constants.ArenaHeight / tileH + 1, (int)(camBottom / tileH) + 2);
+
+                for (int row = startRow; row < endRow; row++)
+                    for (int col = startCol; col < endCol; col++)
                     {
-                        byte a = (byte)Math.Abs(shade * 3);
-                        var c = shade > 0
-                            ? new Color((byte)70, (byte)50, (byte)35, a)
-                            : new Color((byte)40, (byte)28, (byte)18, a);
-                        Raylib.DrawRectangle(col * tileSize, row * tileSize, tileSize, tileSize, c);
+                        int h = col * 374761393 + row * 668265263;
+                        h = (h ^ (h >> 13)) * 1274126177;
+                        // Alternate between ground tile variants and flip for variety
+                        var src = (h & 0x1) == 0 ? _groundTileSrc : _groundTileSrcAlt;
+                        bool flipH = (h & 0x2) != 0;
+                        bool flipV = (h & 0x4) != 0;
+                        var drawSrc = new Rectangle(
+                            src.X, src.Y,
+                            flipH ? -src.Width : src.Width,
+                            flipV ? -src.Height : src.Height);
+                        var dest = new Rectangle(col * tileW, row * tileH, tileW, tileH);
+                        // Subdued — let the dark base show through
+                        Raylib.DrawTexturePro(state.Assets.BloodDesertTileset, drawSrc, dest,
+                            Vector2.Zero, 0f, new Color((byte)255, (byte)255, (byte)255, (byte)100));
                     }
-                }
+
+                // Sparse red dot particles
+                DrawRedDotParticles(camLeft, camTop, camRight, camBottom);
+            }
+            else
+            {
+                // Fallback: subtle color variation rectangles
+                int tileSize = 32;
+                int startCol = Math.Max(0, (int)(camLeft / tileSize) - 1);
+                int startRow = Math.Max(0, (int)(camTop / tileSize) - 1);
+                int endCol = Math.Min(Constants.ArenaWidth / tileSize, (int)(camRight / tileSize) + 2);
+                int endRow = Math.Min(Constants.ArenaHeight / tileSize, (int)(camBottom / tileSize) + 2);
+
+                for (int row = startRow; row < endRow; row++)
+                    for (int col = startCol; col < endCol; col++)
+                    {
+                        int h = col * 374761393 + row * 668265263;
+                        h = (h ^ (h >> 13)) * 1274126177;
+                        int shade = (h & 0xF) - 8;
+                        if (shade != 0)
+                        {
+                            byte a = (byte)Math.Abs(shade * 3);
+                            var c = shade > 0
+                                ? new Color((byte)45, (byte)28, (byte)22, a)
+                                : new Color((byte)18, (byte)10, (byte)10, a);
+                            Raylib.DrawRectangle(col * tileSize, row * tileSize, tileSize, tileSize, c);
+                        }
+                    }
+            }
 
             // Draw ground scatter props
             for (int i = 0; i < state.GroundScatterProps.Count; i++)
@@ -648,8 +705,7 @@ public class PlayingScreen
                 var src = new Rectangle(0, 0, scatter.FlipH ? -tex.Width : tex.Width, tex.Height);
                 var dest = new Rectangle(scatter.Position.X, scatter.Position.Y, tex.Width, tex.Height);
                 var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
-                // Small scatter is subtle, large accent props are more visible
-                byte alpha = scatter.IsLarge ? (byte)140 : (byte)160;
+                byte alpha = scatter.IsLarge ? (byte)180 : (byte)200;
                 Raylib.DrawTexturePro(tex, src, dest, origin, 0f, new Color((byte)255, (byte)255, (byte)255, alpha));
             }
         }
@@ -677,6 +733,36 @@ public class PlayingScreen
                     state.Assets.Tiles.Draw(tileIdx, col * Constants.TileSize, row * Constants.TileSize, Color.White);
                 }
         }
+    }
+
+    /// <summary>
+    /// Draw deterministic red dot particles matching the Blood Desert reference aesthetic.
+    /// Uses spatial hashing so dots are stable (no flicker) and camera-culled.
+    /// </summary>
+    private static void DrawRedDotParticles(float camLeft, float camTop, float camRight, float camBottom)
+    {
+        // Sparse grid — ~1 dot per 48x48 cell, only ~15% of cells
+        int cellSize = 48;
+        int startCol = (int)(camLeft / cellSize) - 1;
+        int startRow = (int)(camTop / cellSize) - 1;
+        int endCol = (int)(camRight / cellSize) + 2;
+        int endRow = (int)(camBottom / cellSize) + 2;
+
+        for (int row = startRow; row <= endRow; row++)
+            for (int col = startCol; col <= endCol; col++)
+            {
+                int h = col * 374761393 + row * 668265263;
+                h = (h ^ (h >> 13)) * 1274126177;
+                if ((h & 0xFF) > 38) continue; // ~15%
+
+                float x = col * cellSize + ((h >> 8) & 0x1F);
+                float y = row * cellSize + ((h >> 13) & 0x1F);
+
+                if (x < 0 || x > Constants.ArenaWidth || y < 0 || y > Constants.ArenaHeight) continue;
+
+                byte r = (byte)(160 + ((h >> 18) & 0x3F));
+                Raylib.DrawRectangle((int)x, (int)y, 1, 1, new Color(r, (byte)30, (byte)20, (byte)140));
+            }
     }
 
     private void UpdateHeroAnimation(float dt, GameState state)

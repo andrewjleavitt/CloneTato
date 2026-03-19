@@ -25,6 +25,16 @@ public class AssetManager
     public Texture2D[] LargeScatterTextures { get; private set; } = Array.Empty<Texture2D>(); // larger accent props
     public bool HasStrandedTerrain => ObstacleTextures.Length > 0;
 
+    // STRANDED terrain tileset (Blood Desert floor tiles)
+    public Texture2D BloodDesertTileset { get; private set; }
+    public bool HasBloodDesertTileset => BloodDesertTileset.Id != 0;
+
+    // STRANDED UI icons
+    public Texture2D HealthPickupIcon { get; private set; }
+    public Texture2D CoinIcon { get; private set; }
+    public Texture2D HPBarSheet { get; private set; }
+    public bool HasStrandedUI { get; private set; }
+
     private readonly Dictionary<string, Sound> _sounds = new();
 
     public void LoadAll()
@@ -69,6 +79,34 @@ public class AssetManager
         BossSprite = AnimationLoader.LoadBossSprite(strandedPath);
 
         LoadStrandedTerrain(strandedPath);
+        LoadStrandedUI(strandedPath);
+
+        // Blood Desert ground tileset
+        string bdTilesetPath = strandedPath + "/terrain/blood_desert/Blood Desert Tileset.png";
+        if (File.Exists(bdTilesetPath))
+            BloodDesertTileset = Raylib.LoadTexture(bdTilesetPath);
+    }
+
+    private void LoadStrandedUI(string strandedPath)
+    {
+        string iconsDir = strandedPath + "/ui/pack/16x16 Icons";
+        if (!Directory.Exists(iconsDir)) return;
+
+        // Icon1 = heart (health pickup), Icon6 = coin
+        string heartPath = $"{iconsDir}/16x16 Icons1.png";
+        string coinPath = $"{iconsDir}/16x16 Icons6.png";
+
+        if (File.Exists(heartPath))
+            HealthPickupIcon = Raylib.LoadTexture(heartPath);
+        if (File.Exists(coinPath))
+            CoinIcon = Raylib.LoadTexture(coinPath);
+
+        // HP bar spritesheet
+        string hpBarPath = strandedPath + "/ui/pack/HP Bars/HP Bar 51x9.png";
+        if (File.Exists(hpBarPath))
+            HPBarSheet = Raylib.LoadTexture(hpBarPath);
+
+        HasStrandedUI = HealthPickupIcon.Id != 0;
     }
 
     private void LoadStrandedTerrain(string strandedPath)
@@ -163,6 +201,10 @@ public class AssetManager
             Raylib.UnloadTexture(tex);
         foreach (var tex in LargeScatterTextures)
             Raylib.UnloadTexture(tex);
+        if (BloodDesertTileset.Id != 0) Raylib.UnloadTexture(BloodDesertTileset);
+        if (HealthPickupIcon.Id != 0) Raylib.UnloadTexture(HealthPickupIcon);
+        if (CoinIcon.Id != 0) Raylib.UnloadTexture(CoinIcon);
+        if (HPBarSheet.Id != 0) Raylib.UnloadTexture(HPBarSheet);
         foreach (var sound in _sounds.Values)
             Raylib.UnloadSound(sound);
     }

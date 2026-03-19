@@ -220,13 +220,21 @@ public class SpriteGalleryScreen
         entry.Sprite.DrawAnimationFrame(animName, frame, flipH,
             previewX, previewY, Color.White, previewScale);
 
-        // Hitbox circle
+        // Hitbox circle (offset to show where entity position is relative to sprite)
         if (_showHitbox)
         {
+            // Entity position is at (previewX, previewY) — the sprite is offset by pivot
             Raylib.DrawCircleLines((int)previewX, (int)previewY, entry.Radius * previewScale / entry.DrawScale,
                 new Color(0, 255, 0, 180));
-            // Center dot
-            Raylib.DrawCircleV(new System.Numerics.Vector2(previewX, previewY), 1f, Color.Red);
+            // Entity position dot
+            Raylib.DrawCircleV(new System.Numerics.Vector2(previewX, previewY), 2f, Color.Red);
+            // Cross at entity position
+            Raylib.DrawLineV(
+                new System.Numerics.Vector2(previewX - 6, previewY),
+                new System.Numerics.Vector2(previewX + 6, previewY), Color.Red);
+            Raylib.DrawLineV(
+                new System.Numerics.Vector2(previewX, previewY - 6),
+                new System.Numerics.Vector2(previewX, previewY + 6), Color.Red);
         }
 
         // Info text

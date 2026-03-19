@@ -301,7 +301,9 @@ public static class AnimationLoader
 
         // Character art is ~14.5px left of frame center in the right-facing sprites.
         // Shift draw position right so character visual center = entity position.
+        // Y offset shifts sprite up so entity position aligns with character's feet/shadow.
         sprite.PivotOffsetX = 14.5f;
+        sprite.PivotOffsetY = -8f;
 
         sprite.Play("idle_down");
         return sprite;
@@ -338,9 +340,8 @@ public static class AnimationLoader
         // Death
         sprite.AddAnimation("death", LoadStrip($"{sword}/04 Stranded - Pack 4 back up-Death.png", 64, 65, 10, false));
 
-        // Character art is ~14.5px left of frame center in the right-facing sprites.
-        // Shift draw position right so character visual center = entity position.
         sprite.PivotOffsetX = 14.5f;
+        sprite.PivotOffsetY = -8f;
 
         sprite.Play("idle_down");
         return sprite;
@@ -362,6 +363,9 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Tribe Hunter-Walk Down.png", 34, 37, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Tribe Hunter-death.png", 34, 37, 10, false));
 
+        // Hunter body is centered horizontally; feet near bottom of 37px frame
+        sprite.PivotOffsetY = -4f;
+
         sprite.Play("idle_down");
         return sprite;
     }
@@ -382,6 +386,9 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Tribe Warrior-Walk Down.png", 62, 69, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Tribe Warrior-death.png", 62, 69, 10, false));
 
+        // Large frame (62x69) — warrior body is in upper portion, weapon extends left
+        sprite.PivotOffsetY = -10f;
+
         sprite.Play("idle_down");
         return sprite;
     }
@@ -401,6 +408,9 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Small insect - idle move.png", 20, 28, 6));
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Small insect - idle move.png", 20, 28, 6));
 
+        // Small bug (20x28) — body near top of frame, legs extend down
+        sprite.PivotOffsetY = -3f;
+
         sprite.Play("idle_right");
         return sprite;
     }
@@ -418,6 +428,9 @@ public static class AnimationLoader
         sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Medium Insect-idleMove.png", 34, 37, 6));
         sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Medium Insect-idleMove.png", 34, 37, 8));
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Medium Insect-idleMove.png", 34, 37, 8));
+
+        // Medium bug (34x37) — body slightly above center
+        sprite.PivotOffsetY = -4f;
 
         sprite.Play("idle_right");
         return sprite;
@@ -442,6 +455,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         // death: 35-42 but grid only has 40 cells (8x5), cap at frame 39
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 35, 5, 8, false));
+        // Grid sheet (32x32) — character feet near bottom
+        sprite.PivotOffsetY = -4f;
         sprite.Play("idle_down");
         return sprite;
     }
@@ -464,6 +479,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_up", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 29, 16, 10, false));
+        // Stocky guard — slightly above center in 32x32 frame
+        sprite.PivotOffsetY = -3f;
         sprite.Play("idle_down");
         return sprite;
     }
@@ -486,6 +503,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_up", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 33, 8, 10, false));
+        // Warrior — feet near bottom of 32x32 frame
+        sprite.PivotOffsetY = -4f;
         sprite.Play("idle_down");
         return sprite;
     }
@@ -520,6 +539,9 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Warrior-Run .png", 67, 45, 8));
         sprite.AddAnimation("attack", LoadStrip($"{dir}/Warrior-Attack.png", 67, 45, 10, false));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Warrior-Death.png", 67, 45, 8, false));
+
+        // Wide frame (67x45) — warrior body above center
+        sprite.PivotOffsetY = -6f;
 
         sprite.Play("idle_down");
         return sprite;
