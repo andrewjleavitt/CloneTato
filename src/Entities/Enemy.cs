@@ -33,6 +33,20 @@ public class Enemy : Entity
     public bool IsBoss;
     public float Scale = 1f;
 
+    // Boss melee attack fields
+    public bool HasMeleeAttack;
+    public float MeleeAttackCooldown;
+    public float MeleeAttackTimer;
+    public bool IsAttacking;
+    public float AttackAnimTimer;
+    public float AttackAnimDuration;
+    public float MeleeAttackRange;
+    public int MeleeAttackDamage;
+    public bool MeleeAttackHit; // prevent multi-hit per swing
+
+    // Index into EnemyDatabase.Enemies (for STRANDED sprite lookup)
+    public int DefIndex;
+
     public void Init(EnemyDef def, Vector2 spawnPos, float scaleFactor = 1f)
     {
         Position = spawnPos;
@@ -61,6 +75,15 @@ public class Enemy : Entity
         ProjectileDamage = 0;
         ProjectileSpeed = 0;
         PreferredRange = 0;
+        HasMeleeAttack = false;
+        MeleeAttackCooldown = 0;
+        MeleeAttackTimer = 0;
+        IsAttacking = false;
+        AttackAnimTimer = 0;
+        AttackAnimDuration = 0;
+        MeleeAttackRange = 0;
+        MeleeAttackDamage = 0;
+        MeleeAttackHit = false;
     }
 
     public void ArmWithWeapon(WeaponDef weapon, float scaleFactor)
@@ -85,6 +108,14 @@ public class Enemy : Entity
         Radius = def.Radius * Scale;
         XPValue = def.XPValue * 5;
         GoldValue = def.GoldValue * 5;
+
+        // Boss melee attack (sword swing)
+        HasMeleeAttack = true;
+        MeleeAttackCooldown = 1.8f;
+        MeleeAttackTimer = 1f; // initial delay before first attack
+        MeleeAttackRange = 45f;
+        MeleeAttackDamage = (int)(def.BaseDamage * scaleFactor * 2.5f);
+        AttackAnimDuration = 0.5f; // 8 frames at ~16fps
     }
 
     public void StartDeath()

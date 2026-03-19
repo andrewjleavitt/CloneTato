@@ -15,6 +15,7 @@ public enum GameScreen
     Victory,
     WeaponGallery,
     MetaUpgrades,
+    SpriteGallery,
 }
 
 public enum OverlayScreen
@@ -43,6 +44,7 @@ public class GameStateManager
     private readonly VictoryScreen _victory = new();
     private readonly WeaponGalleryScreen _weaponGallery = new();
     private readonly MetaUpgradeScreen _metaUpgrades = new();
+    private readonly SpriteGalleryScreen _spriteGallery = new();
     private readonly PauseScreen _pause = new();
     private readonly SettingsScreen _settings = new();
 
@@ -125,6 +127,7 @@ public class GameStateManager
             case GameScreen.Victory: _victory.Update(dt, State, this); break;
             case GameScreen.WeaponGallery: _weaponGallery.Update(dt, State, this); break;
             case GameScreen.MetaUpgrades: _metaUpgrades.Update(dt, State, this); break;
+            case GameScreen.SpriteGallery: _spriteGallery.Update(dt, State, this); break;
         }
     }
 
@@ -142,6 +145,7 @@ public class GameStateManager
             case GameScreen.Victory: _victory.Draw(State, this); break;
             case GameScreen.WeaponGallery: _weaponGallery.Draw(State, this); break;
             case GameScreen.MetaUpgrades: _metaUpgrades.Draw(State, this); break;
+            case GameScreen.SpriteGallery: _spriteGallery.Draw(State, this); break;
         }
 
         // Draw overlay on top

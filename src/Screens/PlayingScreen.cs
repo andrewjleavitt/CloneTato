@@ -1,4 +1,5 @@
 using System.Numerics;
+using CloneTato.Assets;
 using CloneTato.Core;
 using CloneTato.Entities;
 using CloneTato.Systems;
@@ -144,27 +145,8 @@ public class PlayingScreen
         DrawArenaFloor(state);
 
         // Terrain zones (draw under everything)
-        // Edge tile sets: [TL, T, TR, L, M, R, BL, B, BR, InnerTL, InnerTR, InnerBL, InnerBR]
-        // Outer edges at (startCol, startRow) 3x3, inner corners at (startCol+3, startRow) 2x2
-        int[] MakeEdgeSet(int startCol, int startRow)
-        {
-            return new[]
-            {
-                (startRow) * 18 + startCol,     (startRow) * 18 + startCol + 1,     (startRow) * 18 + startCol + 2,
-                (startRow + 1) * 18 + startCol, (startRow + 1) * 18 + startCol + 1, (startRow + 1) * 18 + startCol + 2,
-                (startRow + 2) * 18 + startCol, (startRow + 2) * 18 + startCol + 1, (startRow + 2) * 18 + startCol + 2,
-                // Inner corners: TL+3, TL+4, then one row down
-                (startRow) * 18 + startCol + 3,     (startRow) * 18 + startCol + 4,
-                (startRow + 1) * 18 + startCol + 3, (startRow + 1) * 18 + startCol + 4,
-            };
-        }
-        // 0=TL 1=T 2=TR 3=L 4=M 5=R 6=BL 7=B 8=BR 9=InnerTL 10=InnerTR 11=InnerBL 12=InnerBR
-        int[] sandSet = MakeEdgeSet(10, 8);
-        int[] greenGrassSet = MakeEdgeSet(5, 5);
-        int[] purpleGrassSet = MakeEdgeSet(0, 5);
-        int[] metallicSet = MakeEdgeSet(10, 5);
-
         float time = (float)Raylib.GetTime();
+        bool strandedTerrain = state.Assets.HasStrandedTerrain;
         for (int i = 0; i < state.TerrainZones.Count; i++)
         {
             var zone = state.TerrainZones[i];
@@ -172,56 +154,88 @@ public class PlayingScreen
 
             if (zone.Type == TerrainType.Sand || zone.Type == TerrainType.Decorative)
             {
-                // Pick the right tile set
-                int[] tileSet = zone.Type == TerrainType.Sand ? sandSet :
-                    zone.DecoTileSet switch { 0 => greenGrassSet, 1 => purpleGrassSet, _ => metallicSet };
-
-                int tileSize = Constants.TileSize;
-                int left = (int)((zone.Position.X - zone.Radius) / tileSize) - 1;
-                int right = (int)((zone.Position.X + zone.Radius) / tileSize) + 1;
-                int top = (int)((zone.Position.Y - zone.Radius) / tileSize) - 1;
-                int bottom = (int)((zone.Position.Y + zone.Radius) / tileSize) + 1;
-
-                for (int row = top; row <= bottom; row++)
+                if (strandedTerrain)
                 {
+                    // STRANDED: stylized circular zones
+                    if (zone.Type == TerrainType.Sand)
+                    {
+                        Raylib.DrawCircleV(zone.Position, zone.Radius,
+                            new Color(42, 30, 20, 120));
+                        Raylib.DrawCircleLinesV(zone.Position, zone.Radius,
+                            new Color(70, 50, 30, 100));
+                        Raylib.DrawCircleLinesV(zone.Position, zone.Radius - 2f,
+                            new Color(50, 35, 22, 60));
+                    }
+                    else
+                    {
+                        Color fill = zone.DecoTileSet switch
+                        {
+                            0 => new Color(35, 55, 30, 80),
+                            1 => new Color(50, 30, 55, 70),
+                            _ => new Color(55, 55, 50, 60),
+                        };
+                        Color edge = zone.DecoTileSet switch
+                        {
+                            0 => new Color(50, 80, 40, 100),
+                            1 => new Color(70, 40, 75, 90),
+                            _ => new Color(80, 80, 70, 80),
+                        };
+                        Raylib.DrawCircleV(zone.Position, zone.Radius, fill);
+                        Raylib.DrawCircleLinesV(zone.Position, zone.Radius, edge);
+                    }
+                }
+                else
+                {
+                    // Legacy Kenney edge-tiled zones
+                    int[] MakeEdgeSet(int startCol, int startRow) => new[]
+                    {
+                        startRow * 18 + startCol,     startRow * 18 + startCol + 1,     startRow * 18 + startCol + 2,
+                        (startRow+1) * 18 + startCol, (startRow+1) * 18 + startCol + 1, (startRow+1) * 18 + startCol + 2,
+                        (startRow+2) * 18 + startCol, (startRow+2) * 18 + startCol + 1, (startRow+2) * 18 + startCol + 2,
+                        startRow * 18 + startCol + 3,     startRow * 18 + startCol + 4,
+                        (startRow+1) * 18 + startCol + 3, (startRow+1) * 18 + startCol + 4,
+                    };
+                    int[] tileSet = zone.Type == TerrainType.Sand ? MakeEdgeSet(10, 8) :
+                        zone.DecoTileSet switch { 0 => MakeEdgeSet(5, 5), 1 => MakeEdgeSet(0, 5), _ => MakeEdgeSet(10, 5) };
+
+                    int tileSize = Constants.TileSize;
+                    int left = (int)((zone.Position.X - zone.Radius) / tileSize) - 1;
+                    int right = (int)((zone.Position.X + zone.Radius) / tileSize) + 1;
+                    int top = (int)((zone.Position.Y - zone.Radius) / tileSize) - 1;
+                    int bottom = (int)((zone.Position.Y + zone.Radius) / tileSize) + 1;
+
+                    for (int row = top; row <= bottom; row++)
                     for (int col = left; col <= right; col++)
                     {
                         float tx = col * tileSize + tileSize / 2f;
                         float ty = row * tileSize + tileSize / 2f;
                         if (Vector2.Distance(new Vector2(tx, ty), zone.Position) > zone.Radius)
                             continue;
-
                         bool nOut = Vector2.Distance(new Vector2(tx, ty - tileSize), zone.Position) > zone.Radius;
                         bool sOut = Vector2.Distance(new Vector2(tx, ty + tileSize), zone.Position) > zone.Radius;
                         bool wOut = Vector2.Distance(new Vector2(tx - tileSize, ty), zone.Position) > zone.Radius;
                         bool eOut = Vector2.Distance(new Vector2(tx + tileSize, ty), zone.Position) > zone.Radius;
-
                         int idx;
-                        // Outer corners (convex)
-                        if (nOut && wOut) idx = 0;       // TL
-                        else if (nOut && eOut) idx = 2;  // TR
-                        else if (sOut && wOut) idx = 6;  // BL
-                        else if (sOut && eOut) idx = 8;  // BR
-                        // Outer edges
-                        else if (nOut) idx = 1;          // T
-                        else if (sOut) idx = 7;          // B
-                        else if (wOut) idx = 3;          // L
-                        else if (eOut) idx = 5;          // R
+                        if (nOut && wOut) idx = 0;
+                        else if (nOut && eOut) idx = 2;
+                        else if (sOut && wOut) idx = 6;
+                        else if (sOut && eOut) idx = 8;
+                        else if (nOut) idx = 1;
+                        else if (sOut) idx = 7;
+                        else if (wOut) idx = 3;
+                        else if (eOut) idx = 5;
                         else
                         {
-                            // All cardinal neighbors inside — check diagonals for inner corners (concave)
                             bool nwOut = Vector2.Distance(new Vector2(tx - tileSize, ty - tileSize), zone.Position) > zone.Radius;
                             bool neOut = Vector2.Distance(new Vector2(tx + tileSize, ty - tileSize), zone.Position) > zone.Radius;
                             bool swOut = Vector2.Distance(new Vector2(tx - tileSize, ty + tileSize), zone.Position) > zone.Radius;
                             bool seOut = Vector2.Distance(new Vector2(tx + tileSize, ty + tileSize), zone.Position) > zone.Radius;
-
-                            if (nwOut) idx = 9;       // Inner TL
-                            else if (neOut) idx = 10;  // Inner TR
-                            else if (swOut) idx = 11;  // Inner BL
-                            else if (seOut) idx = 12;  // Inner BR
-                            else idx = 4;              // M (center)
+                            if (nwOut) idx = 9;
+                            else if (neOut) idx = 10;
+                            else if (swOut) idx = 11;
+                            else if (seOut) idx = 12;
+                            else idx = 4;
                         }
-
                         state.Assets.Tiles.Draw(tileSet[idx], col * tileSize, row * tileSize, Color.White);
                     }
                 }
@@ -243,9 +257,12 @@ public class PlayingScreen
             }
         }
 
+        // Arena boundary
+        Color borderColor = strandedTerrain ? new Color(35, 25, 15, 200) : Color.Brown;
+        float borderWidth = strandedTerrain ? 3f : 2f;
         Raylib.DrawRectangleLinesEx(
             new Rectangle(0, 0, Constants.ArenaWidth, Constants.ArenaHeight),
-            2f, Color.Brown);
+            borderWidth, borderColor);
 
         // Mines
         for (int i = 0; i < state.Mines.Count; i++)
@@ -281,15 +298,26 @@ public class PlayingScreen
             state.Assets.Tiles.DrawCentered(12 * 18 + 6, pickup.Position.X, pickup.Position.Y, Color.White);
         }
 
-        // Obstacles (trees — 2 tiles tall, position is at trunk/bottom)
+        // Obstacles
         for (int i = 0; i < state.Obstacles.Count; i++)
         {
             var obs = state.Obstacles[i];
             if (!obs.Active) continue;
-            // Bottom tile (trunk) centered on position
-            state.Assets.Tiles.DrawCentered(obs.SpriteIndex + 18, obs.Position.X, obs.Position.Y, Color.White);
-            // Top tile (canopy) 16px above
-            state.Assets.Tiles.DrawCentered(obs.SpriteIndex, obs.Position.X, obs.Position.Y - 16, Color.White);
+
+            if (obs.UseStranded && obs.TextureIndex < state.Assets.ObstacleTextures.Length)
+            {
+                var tex = state.Assets.ObstacleTextures[obs.TextureIndex];
+                var src = new Rectangle(0, 0, tex.Width, tex.Height);
+                var dest = new Rectangle(obs.Position.X, obs.Position.Y, tex.Width, tex.Height);
+                var origin = new Vector2(tex.Width / 2f, tex.Height * 0.7f); // anchor near base
+                Raylib.DrawTexturePro(tex, src, dest, origin, 0f, Color.White);
+            }
+            else
+            {
+                // Legacy Kenney (2 tiles tall)
+                state.Assets.Tiles.DrawCentered(obs.SpriteIndex + 18, obs.Position.X, obs.Position.Y, Color.White);
+                state.Assets.Tiles.DrawCentered(obs.SpriteIndex, obs.Position.X, obs.Position.Y - 16, Color.White);
+            }
         }
 
         // Barrels
@@ -306,21 +334,74 @@ public class PlayingScreen
         }
 
         // Enemies
+        var enemySprites = state.Assets.EnemySprites;
         for (int i = 0; i < state.Enemies.Count; i++)
         {
             var enemy = state.Enemies[i];
             if (!enemy.Active) continue;
 
-            int spriteIdx = enemy.GetDisplaySprite();
             byte alpha = (byte)(enemy.DeathAlpha * 255);
             Color tint = enemy.FlashTimer > 0
-                ? new Color((byte)255, (byte)80, (byte)80, alpha) // Red flash on hit
+                ? new Color((byte)255, (byte)80, (byte)80, alpha)
                 : new Color((byte)229, (byte)229, (byte)229, alpha);
 
-            if (enemy.Scale > 1f)
-                state.Assets.Enemies.DrawScaled(spriteIdx, enemy.Position.X, enemy.Position.Y, enemy.Scale, tint);
+            // Try STRANDED animated sprite — bosses use dedicated boss sprite
+            AnimatedSprite? eSprite = enemy.IsBoss && state.Assets.BossSprite != null
+                ? state.Assets.BossSprite
+                : (enemy.DefIndex < enemySprites.Length ? enemySprites[enemy.DefIndex] : null);
+
+            if (eSprite != null)
+            {
+                // Pick animation based on enemy state
+                string animName;
+                if (enemy.IsDying)
+                    animName = "death";
+                else if (enemy.IsAttacking && eSprite.HasAnimation("attack"))
+                    animName = "attack";
+                else
+                {
+                    var vel = enemy.Velocity;
+                    bool moving = vel.LengthSquared() > 1f;
+                    string dir;
+                    if (moving)
+                        dir = MathF.Abs(vel.Y) > MathF.Abs(vel.X)
+                            ? (vel.Y < 0 ? "up" : "down") : "right";
+                    else
+                        dir = "down";
+
+                    animName = moving ? $"walk_{dir}" : $"idle_{dir}";
+                }
+
+                // Compute frame from enemy's AnimTimer
+                int frameCount = eSprite.GetFrameCount(animName);
+                float frameDur = eSprite.GetFrameDuration(animName);
+                int frame = frameCount > 0 ? (int)(enemy.AnimTimer / frameDur) % frameCount : 0;
+                if (enemy.IsDying)
+                    frame = Math.Min((int)((1f - enemy.DeathAlpha) * frameCount), frameCount - 1);
+                else if (enemy.IsAttacking)
+                {
+                    // Map attack anim timer to frame progression
+                    float progress = 1f - (enemy.AttackAnimTimer / enemy.AttackAnimDuration);
+                    frame = Math.Min((int)(progress * frameCount), frameCount - 1);
+                }
+
+                bool flipH = !enemy.IsDying && enemy.Velocity.X < -1f;
+
+                // Boss STRANDED sprites are already large; don't double-scale them
+                float drawScale = (enemy.IsBoss && state.Assets.BossSprite != null)
+                    ? 1.5f : enemy.Scale;
+                eSprite.DrawAnimationFrame(animName, frame, flipH,
+                    enemy.Position.X, enemy.Position.Y, tint, drawScale);
+            }
             else
-                state.Assets.Enemies.DrawCentered(spriteIdx, enemy.Position.X, enemy.Position.Y, tint);
+            {
+                // Legacy Kenney fallback
+                int spriteIdx = enemy.GetDisplaySprite();
+                if (enemy.Scale > 1f)
+                    state.Assets.Enemies.DrawScaled(spriteIdx, enemy.Position.X, enemy.Position.Y, enemy.Scale, tint);
+                else
+                    state.Assets.Enemies.DrawCentered(spriteIdx, enemy.Position.X, enemy.Position.Y, tint);
+            }
 
             // Draw weapon on armed enemies
             if (enemy.IsArmed && !enemy.IsDying)
@@ -329,23 +410,18 @@ public class PlayingScreen
                 float weapAngle = toPlayer.LengthSquared() > 1f
                     ? MathF.Atan2(toPlayer.Y, toPlayer.X)
                     : 0f;
-                float weapDist = 10f * enemy.Scale;
+                float weapDist = 10f;
                 Vector2 weapOffset = new(MathF.Cos(weapAngle) * weapDist, MathF.Sin(weapAngle) * weapDist);
                 var weapTint = new Color((byte)229, (byte)229, (byte)229, alpha);
-                if (enemy.Scale > 1f)
-                    state.Assets.Weapons.DrawScaled(enemy.WeaponSpriteIndex,
-                        enemy.Position.X + weapOffset.X, enemy.Position.Y + weapOffset.Y,
-                        enemy.Scale, weapTint);
-                else
-                    state.Assets.Weapons.DrawCentered(enemy.WeaponSpriteIndex,
-                        enemy.Position.X + weapOffset.X, enemy.Position.Y + weapOffset.Y, weapTint);
+                state.Assets.Weapons.DrawCentered(enemy.WeaponSpriteIndex,
+                    enemy.Position.X + weapOffset.X, enemy.Position.Y + weapOffset.Y, weapTint);
             }
 
             if (!enemy.IsDying && enemy.CurrentHP < enemy.MaxHP)
             {
                 float pct = (float)enemy.CurrentHP / enemy.MaxHP;
                 int bw = enemy.IsBoss ? 40 : 20;
-                int yOff = (int)(16 * enemy.Scale);
+                int yOff = (enemy.IsBoss && state.Assets.BossSprite != null) ? 38 : (int)(16 * enemy.Scale);
                 Raylib.DrawRectangle((int)enemy.Position.X - bw / 2, (int)enemy.Position.Y - yOff, bw, 3, Color.DarkGray);
                 Raylib.DrawRectangle((int)enemy.Position.X - bw / 2, (int)enemy.Position.Y - yOff,
                     (int)(bw * pct), 3, enemy.IsBoss ? Color.Yellow : Color.Red);
@@ -527,28 +603,80 @@ public class PlayingScreen
 
     private void DrawArenaFloor(GameState state)
     {
-        float camLeft = _camera.Camera.Target.X - Constants.LogicalWidth / 2f;
-        float camTop = _camera.Camera.Target.Y - Constants.LogicalHeight / 2f;
-        float camRight = camLeft + Constants.LogicalWidth;
-        float camBottom = camTop + Constants.LogicalHeight;
+        if (state.Assets.HasStrandedTerrain)
+        {
+            // STRANDED: solid desert ground color + scattered props drawn separately
+            Raylib.DrawRectangle(0, 0, Constants.ArenaWidth, Constants.ArenaHeight,
+                new Color(58, 40, 28, 255));
 
-        int startCol = Math.Max(0, (int)(camLeft / Constants.TileSize) - 1);
-        int startRow = Math.Max(0, (int)(camTop / Constants.TileSize) - 1);
-        int endCol = Math.Min(Constants.ArenaWidth / Constants.TileSize, (int)(camRight / Constants.TileSize) + 2);
-        int endRow = Math.Min(Constants.ArenaHeight / Constants.TileSize, (int)(camBottom / Constants.TileSize) + 2);
+            // Subtle color variation using tiled rectangles
+            float camLeft = _camera.Camera.Target.X - Constants.LogicalWidth / 2f;
+            float camTop = _camera.Camera.Target.Y - Constants.LogicalHeight / 2f;
+            float camRight = camLeft + Constants.LogicalWidth;
+            float camBottom = camTop + Constants.LogicalHeight;
+            int tileSize = 32;
+            int startCol = Math.Max(0, (int)(camLeft / tileSize) - 1);
+            int startRow = Math.Max(0, (int)(camTop / tileSize) - 1);
+            int endCol = Math.Min(Constants.ArenaWidth / tileSize, (int)(camRight / tileSize) + 2);
+            int endRow = Math.Min(Constants.ArenaHeight / tileSize, (int)(camBottom / tileSize) + 2);
 
-        // Base ground tiles: mostly (10,3), sprinkle in (11,3) for variety
-        int baseTile0 = 3 * 18 + 10;
-        int baseTile1 = 3 * 18 + 11;
-        for (int row = startRow; row < endRow; row++)
-            for (int col = startCol; col < endCol; col++)
+            for (int row = startRow; row < endRow; row++)
+                for (int col = startCol; col < endCol; col++)
+                {
+                    int h = col * 374761393 + row * 668265263;
+                    h = (h ^ (h >> 13)) * 1274126177;
+                    int shade = (h & 0xF) - 8; // -8 to +7
+                    if (shade != 0)
+                    {
+                        byte a = (byte)Math.Abs(shade * 3);
+                        var c = shade > 0
+                            ? new Color((byte)70, (byte)50, (byte)35, a)
+                            : new Color((byte)40, (byte)28, (byte)18, a);
+                        Raylib.DrawRectangle(col * tileSize, row * tileSize, tileSize, tileSize, c);
+                    }
+                }
+
+            // Draw ground scatter props
+            for (int i = 0; i < state.GroundScatterProps.Count; i++)
             {
-                // Pseudo-random scatter using bit mixing (avoids visible patterns)
-                int h = col * 374761393 + row * 668265263;
-                h = (h ^ (h >> 13)) * 1274126177;
-                int tileIdx = ((h & 0xFF) < 40) ? baseTile1 : baseTile0;
-                state.Assets.Tiles.Draw(tileIdx, col * Constants.TileSize, row * Constants.TileSize, Color.White);
+                var scatter = state.GroundScatterProps[i];
+                var texArray = scatter.IsLarge
+                    ? state.Assets.LargeScatterTextures
+                    : state.Assets.GroundScatterTextures;
+                if (scatter.TextureIndex >= texArray.Length) continue;
+                var tex = texArray[scatter.TextureIndex];
+                var src = new Rectangle(0, 0, scatter.FlipH ? -tex.Width : tex.Width, tex.Height);
+                var dest = new Rectangle(scatter.Position.X, scatter.Position.Y, tex.Width, tex.Height);
+                var origin = new Vector2(tex.Width / 2f, tex.Height / 2f);
+                // Small scatter is subtle, large accent props are more visible
+                byte alpha = scatter.IsLarge ? (byte)140 : (byte)160;
+                Raylib.DrawTexturePro(tex, src, dest, origin, 0f, new Color((byte)255, (byte)255, (byte)255, alpha));
             }
+        }
+        else
+        {
+            // Legacy Kenney tiles
+            float camLeft = _camera.Camera.Target.X - Constants.LogicalWidth / 2f;
+            float camTop = _camera.Camera.Target.Y - Constants.LogicalHeight / 2f;
+            float camRight = camLeft + Constants.LogicalWidth;
+            float camBottom = camTop + Constants.LogicalHeight;
+
+            int startCol = Math.Max(0, (int)(camLeft / Constants.TileSize) - 1);
+            int startRow = Math.Max(0, (int)(camTop / Constants.TileSize) - 1);
+            int endCol = Math.Min(Constants.ArenaWidth / Constants.TileSize, (int)(camRight / Constants.TileSize) + 2);
+            int endRow = Math.Min(Constants.ArenaHeight / Constants.TileSize, (int)(camBottom / Constants.TileSize) + 2);
+
+            int baseTile0 = 3 * 18 + 10;
+            int baseTile1 = 3 * 18 + 11;
+            for (int row = startRow; row < endRow; row++)
+                for (int col = startCol; col < endCol; col++)
+                {
+                    int h = col * 374761393 + row * 668265263;
+                    h = (h ^ (h >> 13)) * 1274126177;
+                    int tileIdx = ((h & 0xFF) < 40) ? baseTile1 : baseTile0;
+                    state.Assets.Tiles.Draw(tileIdx, col * Constants.TileSize, row * Constants.TileSize, Color.White);
+                }
+        }
     }
 
     private void UpdateHeroAnimation(float dt, GameState state)
@@ -613,7 +741,7 @@ public class PlayingScreen
         DrawPlayerLegacy(state);
     }
 
-    private void DrawPlayerAnimated(GameState state, Assets.AnimatedSprite hero)
+    private void DrawPlayerAnimated(GameState state, AnimatedSprite hero)
     {
         var player = state.Player;
 

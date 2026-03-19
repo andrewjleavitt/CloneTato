@@ -21,6 +21,9 @@ public class GameState
     public List<Barrel> Barrels = new();
     public List<TerrainZone> TerrainZones = new();
 
+    // Visual-only ground decorations (no collision)
+    public List<GroundScatter> GroundScatterProps = new();
+
     public List<WeaponInstance> EquippedWeapons = new();
     public List<float> WeaponCooldowns = new();
     public List<int> WeaponClipAmmo = new();     // current ammo in clip per weapon
@@ -250,50 +253,108 @@ public class GameState
         }
     }
 
+    // Hitbox radii for STRANDED obstacle textures (matching ObstacleTextures load order)
+    // Tree1-5(106x72), Big Rock(107x53), Skull(139x89), Skull Grassy(139x92), statue(53x54)
+    private static readonly float[] StrandedObstacleRadii = { 20f, 20f, 20f, 20f, 20f, 22f, 25f, 25f, 12f };
+
     private void GenerateArena()
     {
         Obstacles.Clear();
         Barrels.Clear();
         TerrainZones.Clear();
+        GroundScatterProps.Clear();
 
         var rng = Random.Shared;
         float centerX = Constants.ArenaWidth / 2f;
         float centerY = Constants.ArenaHeight / 2f;
         float safeRadius = 80f; // keep spawn area clear
 
-        // Place 8-14 obstacles (trees, 2 tiles tall)
-        // Tree tops at (3,3) and (8,3) → store top tile index, bottom is +18
+        bool useStranded = Assets.HasStrandedTerrain;
         int obstacleCount = rng.Next(8, 15);
-        int[] treeSprites = { 3 * 18 + 3, 3 * 18 + 8 }; // top tile indices
+
         for (int i = 0; i < obstacleCount; i++)
         {
             for (int attempt = 0; attempt < 20; attempt++)
             {
                 float x = rng.NextSingle() * (Constants.ArenaWidth - 80) + 40;
                 float y = rng.NextSingle() * (Constants.ArenaHeight - 80) + 40;
-                float radius = 7f; // ~16px tile, circle slightly smaller
 
-                // Don't place near center
+                int texIdx = useStranded ? rng.Next(Assets.ObstacleTextures.Length) : 0;
+                float radius = useStranded ? StrandedObstacleRadii[texIdx] : 7f;
+
                 if (Vector2.Distance(new Vector2(x, y), new Vector2(centerX, centerY)) < safeRadius + radius)
                     continue;
 
-                // Don't overlap other obstacles
                 bool overlaps = false;
                 foreach (var other in Obstacles)
                 {
-                    if (Vector2.Distance(new Vector2(x, y), other.Position) < radius + other.Radius + 12f)
+                    if (Vector2.Distance(new Vector2(x, y), other.Position) < radius + other.Radius + 20f)
                     { overlaps = true; break; }
                 }
                 if (overlaps) continue;
 
-                Obstacles.Add(new Obstacle
+                if (useStranded)
                 {
-                    Position = new Vector2(x, y),
-                    Radius = radius,
-                    SpriteIndex = treeSprites[rng.Next(treeSprites.Length)],
-                    Active = true,
-                });
+                    Obstacles.Add(new Obstacle
+                    {
+                        Position = new Vector2(x, y),
+                        Radius = radius,
+                        TextureIndex = texIdx,
+                        UseStranded = true,
+                        Active = true,
+                    });
+                }
+                else
+                {
+                    int[] treeSprites = { 3 * 18 + 3, 3 * 18 + 8 };
+                    Obstacles.Add(new Obstacle
+                    {
+                        Position = new Vector2(x, y),
+                        Radius = radius,
+                        SpriteIndex = treeSprites[rng.Next(treeSprites.Length)],
+                        Active = true,
+                    });
+                }
                 break;
+            }
+        }
+
+        // Ground scatter decorations (non-collidable)
+        if (useStranded)
+        {
+            // Small subtle scatter (grass, pebbles, gravel) — dense
+            if (Assets.GroundScatterTextures.Length > 0)
+            {
+                int scatterCount = rng.Next(40, 70);
+                for (int i = 0; i < scatterCount; i++)
+                {
+                    float x = rng.NextSingle() * Constants.ArenaWidth;
+                    float y = rng.NextSingle() * Constants.ArenaHeight;
+                    GroundScatterProps.Add(new GroundScatter
+                    {
+                        Position = new Vector2(x, y),
+                        TextureIndex = rng.Next(Assets.GroundScatterTextures.Length),
+                        FlipH = rng.NextSingle() < 0.5f,
+                    });
+                }
+            }
+
+            // Large accent props (swords, hands, poles) — sparse
+            if (Assets.LargeScatterTextures.Length > 0)
+            {
+                int accentCount = rng.Next(5, 12);
+                for (int i = 0; i < accentCount; i++)
+                {
+                    float x = rng.NextSingle() * (Constants.ArenaWidth - 40) + 20;
+                    float y = rng.NextSingle() * (Constants.ArenaHeight - 40) + 20;
+                    GroundScatterProps.Add(new GroundScatter
+                    {
+                        Position = new Vector2(x, y),
+                        TextureIndex = rng.Next(Assets.LargeScatterTextures.Length),
+                        FlipH = rng.NextSingle() < 0.5f,
+                        IsLarge = true,
+                    });
+                }
             }
         }
 

@@ -13,6 +13,18 @@ public class AssetManager
     // STRANDED animated sprites
     public AnimatedSprite? HeroSprite { get; private set; }
 
+    // Enemy animated sprites keyed by EnemyDef index (0=Scorpion→TribeHunter, etc.)
+    public AnimatedSprite?[] EnemySprites { get; private set; } = Array.Empty<AnimatedSprite?>();
+
+    // Boss animated sprite (Dust Warrior)
+    public AnimatedSprite? BossSprite { get; private set; }
+
+    // STRANDED terrain props (obstacle textures and ground scatter)
+    public Texture2D[] ObstacleTextures { get; private set; } = Array.Empty<Texture2D>();
+    public Texture2D[] GroundScatterTextures { get; private set; } = Array.Empty<Texture2D>();
+    public Texture2D[] LargeScatterTextures { get; private set; } = Array.Empty<Texture2D>(); // larger accent props
+    public bool HasStrandedTerrain => ObstacleTextures.Length > 0;
+
     private readonly Dictionary<string, Sound> _sounds = new();
 
     public void LoadAll()
@@ -46,10 +58,66 @@ public class AssetManager
     private void LoadStrandedAssets()
     {
         string strandedPath = "assets/stranded";
+        if (!Directory.Exists(strandedPath)) return;
+
         if (Directory.Exists(strandedPath + "/hero"))
-        {
             HeroSprite = AnimationLoader.LoadHeroGun(strandedPath);
+
+        if (Directory.Exists(strandedPath + "/enemies"))
+            EnemySprites = AnimationLoader.LoadEnemySprites(strandedPath);
+
+        BossSprite = AnimationLoader.LoadBossSprite(strandedPath);
+
+        LoadStrandedTerrain(strandedPath);
+    }
+
+    private void LoadStrandedTerrain(string strandedPath)
+    {
+        string propsDir = strandedPath + "/terrain/blood_desert/Separate Sprites";
+        if (!Directory.Exists(propsDir)) return;
+
+        // Large obstacle props (collidable) — trees, rocks, skulls, statue
+        string[] obstacleFiles =
+        {
+            "Tree1.png", "Tree2.png", "Tree3.png", "Tree4.png", "Tree5.png",
+            "Big Rock.png", "Skull.png", "Skull Grassy.png", "statue.png",
+        };
+        var obsList = new List<Texture2D>();
+        foreach (var f in obstacleFiles)
+        {
+            string path = $"{propsDir}/{f}";
+            if (File.Exists(path))
+                obsList.Add(Raylib.LoadTexture(path));
         }
+        ObstacleTextures = obsList.ToArray();
+
+        // Small ground scatter from ground_scatter/ directory (grass, pebbles, gravel — subtle)
+        string scatterDir = strandedPath + "/terrain/blood_desert/ground_scatter";
+        if (Directory.Exists(scatterDir))
+        {
+            var scatterFiles = Directory.GetFiles(scatterDir, "*.png");
+            Array.Sort(scatterFiles);
+            var scatList = new List<Texture2D>();
+            foreach (var f in scatterFiles)
+                scatList.Add(Raylib.LoadTexture(f));
+            GroundScatterTextures = scatList.ToArray();
+        }
+
+        // Larger accent props from Separate Sprites (swords, hands, poles — occasional)
+        string[] largeScatterFiles =
+        {
+            "small rocks.png", "sword 1.png", "swoord 2.png", "sword 3.png",
+            "forest pole 1.png", "forest pole 2.png", "forest pole 3.png",
+            "Hand.png", "Hand grassy.png",
+        };
+        var lgList = new List<Texture2D>();
+        foreach (var f in largeScatterFiles)
+        {
+            string path = $"{propsDir}/{f}";
+            if (File.Exists(path))
+                lgList.Add(Raylib.LoadTexture(path));
+        }
+        LargeScatterTextures = lgList.ToArray();
     }
 
     private void LoadSounds()
@@ -86,6 +154,15 @@ public class AssetManager
         Raylib.UnloadTexture(Tiles.Texture);
         Raylib.UnloadTexture(Interface.Texture);
         HeroSprite?.UnloadAll();
+        BossSprite?.UnloadAll();
+        foreach (var es in EnemySprites)
+            es?.UnloadAll();
+        foreach (var tex in ObstacleTextures)
+            Raylib.UnloadTexture(tex);
+        foreach (var tex in GroundScatterTextures)
+            Raylib.UnloadTexture(tex);
+        foreach (var tex in LargeScatterTextures)
+            Raylib.UnloadTexture(tex);
         foreach (var sound in _sounds.Values)
             Raylib.UnloadSound(sound);
     }

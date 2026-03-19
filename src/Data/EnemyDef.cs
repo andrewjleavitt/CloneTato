@@ -46,5 +46,27 @@ public static class EnemyDatabase
             XPValue = 5, GoldValue = 3, Radius = 12f,
             Behavior = Entities.EnemyBehavior.Tank,
         },
+        // Starter Pack enemies (index 4-6)
+        new()
+        {
+            Name = "Archer", SpriteIndex = 0,
+            BaseHP = 20, BaseSpeed = 40f, BaseDamage = 10,
+            XPValue = 3, GoldValue = 2, Radius = 10f,
+            Behavior = Entities.EnemyBehavior.Erratic, // kites at range
+        },
+        new()
+        {
+            Name = "Guard", SpriteIndex = 0,
+            BaseHP = 45, BaseSpeed = 35f, BaseDamage = 12,
+            XPValue = 4, GoldValue = 2, Radius = 12f,
+            Behavior = Entities.EnemyBehavior.Chase,
+        },
+        new()
+        {
+            Name = "Warrior", SpriteIndex = 0,
+            BaseHP = 55, BaseSpeed = 38f, BaseDamage = 14,
+            XPValue = 4, GoldValue = 3, Radius = 11f,
+            Behavior = Entities.EnemyBehavior.Chase,
+        },
     };
 }

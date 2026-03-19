@@ -113,6 +113,46 @@ public static class EnemySystem
                 }
             }
 
+            // Boss melee attack
+            if (enemy.HasMeleeAttack)
+            {
+                if (enemy.IsAttacking)
+                {
+                    enemy.AttackAnimTimer -= dt;
+                    enemy.Velocity *= 0.3f; // slow down during swing
+
+                    // Deal damage at the midpoint of the swing
+                    if (!enemy.MeleeAttackHit && enemy.AttackAnimTimer < enemy.AttackAnimDuration * 0.5f)
+                    {
+                        enemy.MeleeAttackHit = true;
+                        if (dist < enemy.MeleeAttackRange && state.Player.InvincibilityTimer <= 0)
+                        {
+                            int dmg = Math.Max(1, enemy.MeleeAttackDamage - state.Player.ComputedStats.Armor);
+                            state.Player.CurrentHP -= dmg;
+                            state.Player.InvincibilityTimer = Constants.PlayerInvincibilityTime;
+                            state.Player.FlashTimer = 0.15f;
+                            var dmgNum = state.GetInactiveDamageNumber();
+                            dmgNum?.Init(state.Player.Position, dmg.ToString(), Raylib_cs.Color.Red);
+                            state.Assets.PlaySoundVariant("hurt", 0.5f);
+                        }
+                    }
+
+                    if (enemy.AttackAnimTimer <= 0)
+                        enemy.IsAttacking = false;
+                }
+                else
+                {
+                    enemy.MeleeAttackTimer -= dt;
+                    if (enemy.MeleeAttackTimer <= 0 && dist < enemy.MeleeAttackRange)
+                    {
+                        enemy.IsAttacking = true;
+                        enemy.AttackAnimTimer = enemy.AttackAnimDuration;
+                        enemy.MeleeAttackTimer = enemy.MeleeAttackCooldown;
+                        enemy.MeleeAttackHit = false;
+                    }
+                }
+            }
+
             // Terrain zone speed modifier for enemies too
             float terrainMult = CollisionSystem.GetTerrainSpeedMultiplier(state, enemy.Position);
             if (terrainMult < 1f)
@@ -174,16 +214,12 @@ public static class EnemySystem
         {
             scaleFactor *= 4f;
             enemy.InitAsBoss(def, spawnPos, scaleFactor);
-            // Bosses always get a weapon
-            if (EnemyWeaponPool.Length > 0)
-            {
-                int weapIdx = EnemyWeaponPool[Random.Shared.Next(EnemyWeaponPool.Length)];
-                enemy.ArmWithWeapon(WeaponDatabase.Weapons[weapIdx], scaleFactor);
-            }
+            enemy.DefIndex = typeIndex;
         }
         else
         {
             enemy.Init(def, spawnPos, scaleFactor);
+            enemy.DefIndex = typeIndex;
 
             // Chance to arm with a weapon — starts at wave 4, increases over time
             if (waveNumber >= 4 && EnemyWeaponPool.Length > 0)

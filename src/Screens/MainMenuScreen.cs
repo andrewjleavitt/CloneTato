@@ -7,7 +7,7 @@ namespace CloneTato.Screens;
 public class MainMenuScreen
 {
     private int _selected;
-    private const int ItemCount = 5;
+    private const int ItemCount = 6;
 
     public void Update(float dt, GameState state, GameStateManager manager)
     {
@@ -39,10 +39,14 @@ public class MainMenuScreen
                 state.Assets.PlaySoundVariant("select", 0.5f);
                 break;
             case 3:
-                manager.OpenSettings();
+                manager.TransitionTo(GameScreen.SpriteGallery);
                 state.Assets.PlaySoundVariant("select", 0.5f);
                 break;
             case 4:
+                manager.OpenSettings();
+                state.Assets.PlaySoundVariant("select", 0.5f);
+                break;
+            case 5:
                 manager.QuitRequested = true;
                 break;
         }
@@ -84,12 +88,13 @@ public class MainMenuScreen
         int startY = 160;
         int spacing = 28;
 
-        string[] labels = { "START RUN", "UPGRADES", "WEAPONS", "SETTINGS", "QUIT" };
+        string[] labels = { "START RUN", "UPGRADES", "WEAPONS", "SPRITES", "SETTINGS", "QUIT" };
         Color[] colors =
         {
             new(60, 100, 60, 255),
             new(70, 50, 90, 255),
             new(80, 70, 50, 255),
+            new(90, 70, 60, 255),
             new(60, 70, 100, 255),
             new(100, 60, 60, 255),
         };

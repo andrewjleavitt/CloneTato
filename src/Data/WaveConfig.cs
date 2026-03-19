@@ -23,10 +23,13 @@ public class WaveConfig
         // Progressively unlock enemy types
         config.EnemyTypeIndices = wave switch
         {
-            <= 3 => [0],                  // Scorpion only
-            <= 7 => [0, 1],              // + Snake
-            <= 12 => [0, 1, 2],          // + Bat
-            _ => [0, 1, 2, 3],           // + Beetle
+            <= 3 => [0],                  // Tribe Hunter only
+            <= 5 => [0, 1],              // + Small Bug
+            <= 8 => [0, 1, 2],           // + Medium Insect
+            <= 11 => [0, 1, 2, 3],       // + Tribe Warrior
+            <= 14 => [0, 1, 2, 3, 4],    // + Archer
+            <= 17 => [0, 1, 2, 3, 4, 5], // + Guard
+            _ => [0, 1, 2, 3, 4, 5, 6],  // + Warrior
         };
 
         // Boss waves get more enemies and are longer
