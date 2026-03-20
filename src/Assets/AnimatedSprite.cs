@@ -348,7 +348,8 @@ public static class AnimationLoader
     }
 
     /// <summary>
-    /// Build an AnimatedSprite for the Starter Pack hero (grid sheet 20x32, 16 cols × 6 rows).
+    /// Build an AnimatedSprite for the Starter Pack hero (grid sheet 32x32, 10 cols × 6 rows).
+    /// 320x192 image from Starter Pack v1.
     /// </summary>
     public static AnimatedSprite? LoadStarterHero(string basePath)
     {
@@ -356,23 +357,23 @@ public static class AnimationLoader
         if (!File.Exists(path)) return null;
         var tex = Raylib.LoadTexture(path);
         var sprite = new AnimatedSprite();
-        int cols = 16; // 320 / 20 = 16
+        int cols = 10; // 320 / 32 = 10
 
-        // Row 0: idle/walk down (8 frames)
-        sprite.AddAnimation("idle_down", FromGrid(tex, 20, 32, cols, 0, 8, 8));
-        sprite.AddAnimation("run_down", FromGrid(tex, 20, 32, cols, 0, 8, 10));
+        // Row 0: idle/walk down (7 frames visible, use 7)
+        sprite.AddAnimation("idle_down", FromGrid(tex, 32, 32, cols, 0, 7, 8));
+        sprite.AddAnimation("run_down", FromGrid(tex, 32, 32, cols, 0, 7, 10));
         // Row 1: idle/walk right (8 frames)
-        sprite.AddAnimation("idle_right", FromGrid(tex, 20, 32, cols, 16, 8, 8));
-        sprite.AddAnimation("run_right", FromGrid(tex, 20, 32, cols, 16, 8, 10));
+        sprite.AddAnimation("idle_right", FromGrid(tex, 32, 32, cols, 10, 8, 8));
+        sprite.AddAnimation("run_right", FromGrid(tex, 32, 32, cols, 10, 8, 10));
         // Row 2: idle/walk up (8 frames)
-        sprite.AddAnimation("idle_up", FromGrid(tex, 20, 32, cols, 32, 8, 8));
-        sprite.AddAnimation("run_up", FromGrid(tex, 20, 32, cols, 32, 8, 10));
-        // Row 3: hit/transition (4 frames)
-        sprite.AddAnimation("roll_down", FromGrid(tex, 20, 32, cols, 48, 4, 10, false));
-        sprite.AddAnimation("roll_right", FromGrid(tex, 20, 32, cols, 48, 4, 10, false));
-        sprite.AddAnimation("roll_up", FromGrid(tex, 20, 32, cols, 48, 4, 10, false));
-        // Rows 4-5: death (blue sparkle effect, ~16 frames across 2 rows)
-        sprite.AddAnimation("death", FromGrid(tex, 20, 32, cols, 64, 16, 10, false));
+        sprite.AddAnimation("idle_up", FromGrid(tex, 32, 32, cols, 20, 8, 8));
+        sprite.AddAnimation("run_up", FromGrid(tex, 32, 32, cols, 20, 8, 10));
+        // Row 3: hit/dodge (4 frames)
+        sprite.AddAnimation("roll_down", FromGrid(tex, 32, 32, cols, 30, 4, 10, false));
+        sprite.AddAnimation("roll_right", FromGrid(tex, 32, 32, cols, 30, 4, 10, false));
+        sprite.AddAnimation("roll_up", FromGrid(tex, 32, 32, cols, 30, 4, 10, false));
+        // Rows 4-5: death (blue sparkle effect, ~14 frames across 2 rows)
+        sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 40, 14, 10, false));
 
         sprite.PivotOffsetY = -4f;
         sprite.Play("idle_down");
@@ -380,7 +381,8 @@ public static class AnimationLoader
     }
 
     /// <summary>
-    /// Build an AnimatedSprite for the Starter Pack companion (grid sheet 20x32, 16 cols × 4 rows).
+    /// Build an AnimatedSprite for the Starter Pack companion (grid sheet 32x32, 10 cols × 4 rows).
+    /// 320x128 image. Companion follows the Drifter hero.
     /// </summary>
     public static AnimatedSprite? LoadCompanion(string basePath)
     {
@@ -388,16 +390,16 @@ public static class AnimationLoader
         if (!File.Exists(path)) return null;
         var tex = Raylib.LoadTexture(path);
         var sprite = new AnimatedSprite();
-        int cols = 16; // 320 / 32 = 10? Actually 320/20 = 16
+        int cols = 10; // 320 / 32 = 10
 
         // Row 0: idle bob (4 frames)
-        sprite.AddAnimation("idle", FromGrid(tex, 20, 32, cols, 0, 4, 6));
+        sprite.AddAnimation("idle", FromGrid(tex, 32, 32, cols, 0, 4, 6));
         // Row 1: move (4 frames)
-        sprite.AddAnimation("move", FromGrid(tex, 20, 32, cols, 16, 4, 8));
+        sprite.AddAnimation("move", FromGrid(tex, 32, 32, cols, 10, 4, 8));
         // Row 2: pulse/gather (4 frames)
-        sprite.AddAnimation("gather", FromGrid(tex, 20, 32, cols, 32, 4, 8));
+        sprite.AddAnimation("gather", FromGrid(tex, 32, 32, cols, 20, 4, 8));
         // Row 3: attack/activate (longer animation)
-        sprite.AddAnimation("attack", FromGrid(tex, 20, 32, cols, 48, 10, 10));
+        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 30, 10, 10));
 
         sprite.Play("idle");
         return sprite;

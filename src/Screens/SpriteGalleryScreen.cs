@@ -84,16 +84,7 @@ public class SpriteGalleryScreen
                 Radius = 8f, DrawScale = 1.5f,
             });
         }
-        if (state.Assets.CompanionSprite != null)
-        {
-            list.Add(new GalleryEntry
-            {
-                Name = "Companion", Category = "HERO",
-                Sprite = state.Assets.CompanionSprite,
-                AnimationNames = new[] { "idle", "move", "gather", "attack" },
-                Radius = 4f, DrawScale = 2f,
-            });
-        }
+        // Companion is part of the Drifter hero, not a standalone entry
 
         // Enemy definitions with categories
         var enemyInfo = new (string name, string category, float radius)[]
