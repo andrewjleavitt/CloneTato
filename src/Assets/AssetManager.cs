@@ -42,7 +42,6 @@ public class AssetManager
     public bool HasStrandedUI { get; private set; }
 
     // Shaders
-    public Shader OutlineShader { get; private set; }
     public Shader ColorGradeShader { get; private set; }
 
     private readonly Dictionary<string, Sound> _sounds = new();
@@ -186,10 +185,6 @@ public class AssetManager
 
     private void LoadShaders()
     {
-        string outlinePath = "assets/shaders/outline.fs";
-        if (File.Exists(outlinePath))
-            OutlineShader = Raylib.LoadShader(null, outlinePath);
-
         string colorGradePath = "assets/shaders/color_grade.fs";
         if (File.Exists(colorGradePath))
             ColorGradeShader = Raylib.LoadShader(null, colorGradePath);
@@ -247,7 +242,6 @@ public class AssetManager
         if (HealthPickupIcon.Id != 0) Raylib.UnloadTexture(HealthPickupIcon);
         if (CoinIcon.Id != 0) Raylib.UnloadTexture(CoinIcon);
         if (HPBarSheet.Id != 0) Raylib.UnloadTexture(HPBarSheet);
-        if (OutlineShader.Id != 0) Raylib.UnloadShader(OutlineShader);
         if (ColorGradeShader.Id != 0) Raylib.UnloadShader(ColorGradeShader);
         foreach (var sound in _sounds.Values)
             Raylib.UnloadSound(sound);

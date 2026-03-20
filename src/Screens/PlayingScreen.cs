@@ -315,10 +315,6 @@ public class PlayingScreen
             }
         }
 
-        // Enable outline shader for entities (obstacles, enemies, player, weapons)
-        bool useOutline = state.Assets.OutlineShader.Id != 0;
-        if (useOutline) Raylib.BeginShaderMode(state.Assets.OutlineShader);
-
         // Obstacles
         for (int i = 0; i < state.Obstacles.Count; i++)
         {
@@ -471,9 +467,6 @@ public class PlayingScreen
 
         // Orbiting weapons
         DrawWeapons(state);
-
-        // End outline shader before non-entity draws
-        if (useOutline) Raylib.EndShaderMode();
 
         // Projectiles
         for (int i = 0; i < state.Projectiles.Count; i++)
