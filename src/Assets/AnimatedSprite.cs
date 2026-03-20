@@ -245,7 +245,7 @@ public static class AnimationLoader
     /// <summary>Load a texture with point filtering for crisp pixel art.</summary>
     private static Texture2D LoadTexturePoint(string path)
     {
-        var tex = LoadTexturePoint(path);
+        var tex = Raylib.LoadTexture(path);
         Raylib.SetTextureFilter(tex, TextureFilter.Point);
         return tex;
     }
