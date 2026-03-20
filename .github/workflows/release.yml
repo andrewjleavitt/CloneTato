@@ -11,19 +11,19 @@ jobs:
         include:
           - os: ubuntu-latest
             rid: linux-x64
-            artifact: CloneTato-linux-x64
+            artifact: Drift-linux-x64
             itch_channel: linux
           - os: windows-latest
             rid: win-x64
-            artifact: CloneTato-win-x64
+            artifact: Drift-win-x64
             itch_channel: windows
           - os: macos-latest
             rid: osx-arm64
-            artifact: CloneTato-macos-arm64
+            artifact: Drift-macos-arm64
             itch_channel: osx-arm64
           - os: macos-13
             rid: osx-x64
-            artifact: CloneTato-macos-x64
+            artifact: Drift-macos-x64
             itch_channel: osx-x64
 
     runs-on: ${{ matrix.os }}
@@ -38,7 +38,7 @@ jobs:
 
       - name: Publish
         run: >
-          dotnet publish CloneTato.csproj
+          dotnet publish Drift.csproj
           -c Release
           -r ${{ matrix.rid }}
           --self-contained
@@ -83,10 +83,10 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            artifacts/CloneTato-linux-x64/*.tar.gz
-            artifacts/CloneTato-win-x64/*.zip
-            artifacts/CloneTato-macos-arm64/*.tar.gz
-            artifacts/CloneTato-macos-x64/*.tar.gz
+            artifacts/Drift-linux-x64/*.tar.gz
+            artifacts/Drift-win-x64/*.zip
+            artifacts/Drift-macos-arm64/*.tar.gz
+            artifacts/Drift-macos-x64/*.tar.gz
 
   publish-itch:
     needs: build
@@ -96,13 +96,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - artifact: CloneTato-linux-x64
+          - artifact: Drift-linux-x64
             channel: linux
-          - artifact: CloneTato-win-x64
+          - artifact: Drift-win-x64
             channel: windows
-          - artifact: CloneTato-macos-arm64
+          - artifact: Drift-macos-arm64
             channel: osx-arm64
-          - artifact: CloneTato-macos-x64
+          - artifact: Drift-macos-x64
             channel: osx-x64
 
     steps:

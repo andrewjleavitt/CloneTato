@@ -1,7 +1,7 @@
-# CloneTato — Game Vision & Feature Roadmap
+# Drift — Game Vision & Feature Roadmap
 
 ## Identity Statement
-CloneTato is a **twin-stick desert survivor** where the environment is as dangerous as the enemies. Skilled aiming, terrain tactics, and meaningful choices between waves make every run feel distinct. The Blood Desert isn't a backdrop — it's a character.
+Drift is a **twin-stick desert survivor** where the environment is as dangerous as the enemies. Skilled aiming, terrain tactics, and meaningful choices between waves make every run feel distinct. The Blood Desert isn't a backdrop — it's a character.
 
 ---
 

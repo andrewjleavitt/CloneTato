@@ -71,7 +71,7 @@ public class MainMenuScreen
         }
 
         // Title
-        string title = "CLONETATO";
+        string title = "DRIFT";
         int titleW = Raylib.MeasureText(title, 32);
         Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2 + 1, 51, 32, Color.Black);
         Raylib.DrawText(title, Constants.LogicalWidth / 2 - titleW / 2, 50, 32, Color.Gold);

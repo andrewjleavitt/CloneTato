@@ -112,7 +112,7 @@ public class MetaProgression
     // Save/Load
     private static readonly string SavePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "CloneTato", "save.json");
+        "Drift", "save.json");
 
     public void Save()
     {

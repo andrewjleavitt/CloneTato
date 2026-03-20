@@ -7,7 +7,7 @@ using Raylib_cs;
 var settings = GameSettings.Load();
 
 Raylib.SetConfigFlags(ConfigFlags.VSyncHint);
-Raylib.InitWindow(Constants.WindowWidth, Constants.WindowHeight, "CloneTato - Desert Survivor");
+Raylib.InitWindow(Constants.WindowWidth, Constants.WindowHeight, "DRIFT — Desert Survivor");
 Raylib.SetExitKey(KeyboardKey.Null); // disable ESC auto-close, we handle it ourselves
 Raylib.SetTargetFPS(60);
 Raylib.InitAudioDevice();
