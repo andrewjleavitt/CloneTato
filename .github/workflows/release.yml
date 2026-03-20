@@ -92,7 +92,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: Itch
-    if: ${{ vars.ITCH_GAME != '' }}
 
     strategy:
       matrix:
