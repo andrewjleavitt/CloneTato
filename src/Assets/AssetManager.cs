@@ -43,27 +43,34 @@ public class AssetManager
 
     private readonly Dictionary<string, Sound> _sounds = new();
 
+    private static Texture2D LoadTexturePoint(string path)
+    {
+        var tex = Raylib.LoadTexture(path);
+        Raylib.SetTextureFilter(tex, TextureFilter.Point);
+        return tex;
+    }
+
     public void LoadAll()
     {
         string basePath = Constants.AssetBasePath + "/PNG";
 
-        var playersTex = Raylib.LoadTexture(basePath + "/Players/Tilemap/tilemap_packed.png");
+        var playersTex = LoadTexturePoint(basePath + "/Players/Tilemap/tilemap_packed.png");
         Players = new SpriteAtlas(playersTex, Constants.SpriteSize, Constants.SpriteSize,
             0, Constants.PlayersCols, Constants.PlayersRows);
 
-        var enemiesTex = Raylib.LoadTexture(basePath + "/Enemies/Tilemap/tilemap_packed.png");
+        var enemiesTex = LoadTexturePoint(basePath + "/Enemies/Tilemap/tilemap_packed.png");
         Enemies = new SpriteAtlas(enemiesTex, Constants.SpriteSize, Constants.SpriteSize,
             0, Constants.EnemiesCols, Constants.EnemiesRows);
 
-        var weaponsTex = Raylib.LoadTexture(basePath + "/Weapons/Tilemap/tilemap_packed.png");
+        var weaponsTex = LoadTexturePoint(basePath + "/Weapons/Tilemap/tilemap_packed.png");
         Weapons = new SpriteAtlas(weaponsTex, Constants.SpriteSize, Constants.SpriteSize,
             0, Constants.WeaponsCols, Constants.WeaponsRows);
 
-        var tilesTex = Raylib.LoadTexture(basePath + "/Tiles/Tilemap/tilemap_packed.png");
+        var tilesTex = LoadTexturePoint(basePath + "/Tiles/Tilemap/tilemap_packed.png");
         Tiles = new SpriteAtlas(tilesTex, Constants.TileSize, Constants.TileSize,
             0, Constants.TilesCols, Constants.TilesRows);
 
-        var interfaceTex = Raylib.LoadTexture(basePath + "/Interface/Tilemap/tilemap_packed.png");
+        var interfaceTex = LoadTexturePoint(basePath + "/Interface/Tilemap/tilemap_packed.png");
         Interface = new SpriteAtlas(interfaceTex, Constants.TileSize, Constants.TileSize,
             0, Constants.InterfaceCols, Constants.InterfaceRows);
 
@@ -98,7 +105,7 @@ public class AssetManager
         // Blood Desert ground tileset
         string bdTilesetPath = strandedPath + "/terrain/blood_desert/Blood Desert Tileset.png";
         if (File.Exists(bdTilesetPath))
-            BloodDesertTileset = Raylib.LoadTexture(bdTilesetPath);
+            BloodDesertTileset = LoadTexturePoint(bdTilesetPath);
     }
 
     private void LoadStrandedUI(string strandedPath)
@@ -111,14 +118,14 @@ public class AssetManager
         string coinPath = $"{iconsDir}/16x16 Icons6.png";
 
         if (File.Exists(heartPath))
-            HealthPickupIcon = Raylib.LoadTexture(heartPath);
+            HealthPickupIcon = LoadTexturePoint(heartPath);
         if (File.Exists(coinPath))
-            CoinIcon = Raylib.LoadTexture(coinPath);
+            CoinIcon = LoadTexturePoint(coinPath);
 
         // HP bar spritesheet
         string hpBarPath = strandedPath + "/ui/pack/HP Bars/HP Bar 51x9.png";
         if (File.Exists(hpBarPath))
-            HPBarSheet = Raylib.LoadTexture(hpBarPath);
+            HPBarSheet = LoadTexturePoint(hpBarPath);
 
         HasStrandedUI = HealthPickupIcon.Id != 0;
     }
@@ -139,7 +146,7 @@ public class AssetManager
         {
             string path = $"{propsDir}/{f}";
             if (File.Exists(path))
-                obsList.Add(Raylib.LoadTexture(path));
+                obsList.Add(LoadTexturePoint(path));
         }
         ObstacleTextures = obsList.ToArray();
 
@@ -151,7 +158,7 @@ public class AssetManager
             Array.Sort(scatterFiles);
             var scatList = new List<Texture2D>();
             foreach (var f in scatterFiles)
-                scatList.Add(Raylib.LoadTexture(f));
+                scatList.Add(LoadTexturePoint(f));
             GroundScatterTextures = scatList.ToArray();
         }
 
@@ -167,7 +174,7 @@ public class AssetManager
         {
             string path = $"{propsDir}/{f}";
             if (File.Exists(path))
-                lgList.Add(Raylib.LoadTexture(path));
+                lgList.Add(LoadTexturePoint(path));
         }
         LargeScatterTextures = lgList.ToArray();
     }

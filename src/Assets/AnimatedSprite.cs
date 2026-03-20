@@ -117,8 +117,9 @@ public class AnimatedSprite
 
         float w = _current.FrameWidth * scale;
         float h = _current.FrameHeight * scale;
-        var dest = new Rectangle(x + ox * scale, y + oy * scale, w, h);
-        var origin = new Vector2(w / 2f, h / 2f);
+        // Snap to integer pixels to prevent subpixel blur on pixel art
+        var dest = new Rectangle(MathF.Round(x + ox * scale), MathF.Round(y + oy * scale), w, h);
+        var origin = new Vector2(MathF.Round(w / 2f), MathF.Round(h / 2f));
         Raylib.DrawTexturePro(_current.Texture, src, dest, origin, 0f, tint);
     }
 
@@ -132,7 +133,7 @@ public class AnimatedSprite
 
         float w = _current.FrameWidth * scale;
         float h = _current.FrameHeight * scale;
-        var dest = new Rectangle(x, y, w, h);
+        var dest = new Rectangle(MathF.Round(x), MathF.Round(y), w, h);
         Raylib.DrawTexturePro(_current.Texture, src, dest, Vector2.Zero, 0f, tint);
     }
 
@@ -169,8 +170,9 @@ public class AnimatedSprite
 
         float w = anim.FrameWidth * scale;
         float h = anim.FrameHeight * scale;
-        var dest = new Rectangle(x + ox * scale, y + oy * scale, w, h);
-        var origin = new Vector2(w / 2f, h / 2f);
+        // Snap to integer pixels to prevent subpixel blur on pixel art
+        var dest = new Rectangle(MathF.Round(x + ox * scale), MathF.Round(y + oy * scale), w, h);
+        var origin = new Vector2(MathF.Round(w / 2f), MathF.Round(h / 2f));
         Raylib.DrawTexturePro(anim.Texture, src, dest, origin, 0f, tint);
     }
 
@@ -240,6 +242,14 @@ public class GridSpriteAnimation : SpriteAnimation
 /// </summary>
 public static class AnimationLoader
 {
+    /// <summary>Load a texture with point filtering for crisp pixel art.</summary>
+    private static Texture2D LoadTexturePoint(string path)
+    {
+        var tex = LoadTexturePoint(path);
+        Raylib.SetTextureFilter(tex, TextureFilter.Point);
+        return tex;
+    }
+
     /// <summary>
     /// Create an animation from a grid-based sprite sheet.
     /// Frames are laid out left-to-right, top-to-bottom in a grid.
@@ -256,7 +266,7 @@ public static class AnimationLoader
     /// </summary>
     public static SpriteAnimation LoadStrip(string path, int frameWidth, int frameHeight, float fps, bool loop = true)
     {
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         int frameCount = tex.Width / frameWidth;
         return new SpriteAnimation(tex, frameWidth, frameHeight, frameCount, fps) { Loop = loop };
     }
@@ -267,7 +277,7 @@ public static class AnimationLoader
     /// </summary>
     public static SpriteAnimation LoadStripAutoCount(string path, int frameWidth, float fps, bool loop = true)
     {
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         int frameCount = tex.Width / frameWidth;
         return new SpriteAnimation(tex, frameWidth, tex.Height, frameCount, fps) { Loop = loop };
     }
@@ -302,7 +312,7 @@ public static class AnimationLoader
         // Character art is ~14.5px left of frame center in the right-facing sprites.
         // Shift draw position right so character visual center = entity position.
         // Y offset shifts sprite up so entity position aligns with character's feet/shadow.
-        sprite.PivotOffsetX = 14.5f;
+        sprite.PivotOffsetX = 15f;
         sprite.PivotOffsetY = -8f;
 
         sprite.Play("idle_down");
@@ -340,7 +350,7 @@ public static class AnimationLoader
         // Death
         sprite.AddAnimation("death", LoadStrip($"{sword}/04 Stranded - Pack 4 back up-Death.png", 64, 65, 10, false));
 
-        sprite.PivotOffsetX = 14.5f;
+        sprite.PivotOffsetX = 15f;
         sprite.PivotOffsetY = -8f;
 
         sprite.Play("idle_down");
@@ -355,7 +365,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/hero/starter_hero/hero.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         int cols = 10; // 320 / 32 = 10
 
@@ -388,7 +398,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/hero/starter_hero/companion.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         int cols = 10; // 320 / 32 = 10
 
@@ -501,7 +511,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/enemies/starter_archer/archer.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         // Archer: idle 1-5(5f), run 11-14(4f), shoot 19-25(7f), hit 33-34(2f), dead 35-42(8f)
         int cols = 8;
@@ -526,7 +536,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/enemies/starter_guard/guard.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         // Guard: idle 1-5(5f), run 11-14(4f), attack 19-23(5f), dead 29-44(16f)
         int cols = 16;
@@ -550,7 +560,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/enemies/starter_warrior/warrior.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         // Warrior: idle 1-5(5f), run 11-14(4f), attack 19-23(5f), hit 29-30(2f), dead 33-40(8f)
         int cols = 8;
@@ -628,7 +638,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/enemies/robots/Rusty Robot/Rusty Robot 20x29 without Shadow.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         int cols = 8;
         sprite.AddAnimation("idle_right", FromGrid(tex, 20, 29, cols, 0, 8, 8));
@@ -647,7 +657,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/enemies/robots/Guard Robot/Robot 1 - Blue 26x34 without shadows.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         int cols = 10;
         sprite.AddAnimation("idle_right", FromGrid(tex, 26, 34, cols, 10, 8, 8));
@@ -666,7 +676,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/enemies/robots/Circle Bot/Circle Bot blue 29x35 without shadow.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         int cols = 8;
         sprite.AddAnimation("idle_right", FromGrid(tex, 29, 35, cols, 0, 8, 8));
@@ -685,7 +695,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/enemies/robots/Delivery Bot/Delivery Bot yellow without shadow 23x21.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         int cols = 6;
         sprite.AddAnimation("idle_right", FromGrid(tex, 23, 21, cols, 0, 6, 8));
@@ -781,7 +791,7 @@ public static class AnimationLoader
     {
         string path = basePath + "/bosses/tarnished_widow/The Tarnished Widow 188x90.png";
         if (!File.Exists(path)) return null;
-        var tex = Raylib.LoadTexture(path);
+        var tex = LoadTexturePoint(path);
         var sprite = new AnimatedSprite();
         int cols = 18; // 3384 / 188 = 18 cols, 720 / 90 = 8 rows
 
