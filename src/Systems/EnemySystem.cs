@@ -215,6 +215,18 @@ public static class EnemySystem
             scaleFactor *= 4f;
             enemy.InitAsBoss(def, spawnPos, scaleFactor);
             enemy.DefIndex = typeIndex;
+            // Cycle boss sprites: Dust Warrior, Blowfish, Tarnished Widow
+            enemy.BossSpriteType = waveNumber switch
+            {
+                <= 5 => 0,                          // Dust Warrior early
+                <= 9 => waveNumber % 2 == 0 ? 1 : 0, // Alternate Dust Warrior / Blowfish
+                _ => waveNumber % 3 switch           // Cycle all three late game
+                {
+                    0 => 0, // Dust Warrior
+                    1 => 1, // Blowfish
+                    _ => 2, // Tarnished Widow
+                },
+            };
         }
         else
         {

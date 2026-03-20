@@ -10,14 +10,20 @@ public class AssetManager
     public SpriteAtlas Tiles { get; private set; } = null!;
     public SpriteAtlas Interface { get; private set; } = null!;
 
-    // STRANDED animated sprites
-    public AnimatedSprite? HeroSprite { get; private set; }
+    // STRANDED animated sprites — hero variants
+    public AnimatedSprite? HeroSprite { get; set; } // active hero (set by character selection)
+    public AnimatedSprite? HeroGunSprite { get; private set; }
+    public AnimatedSprite? HeroSwordSprite { get; private set; }
+    public AnimatedSprite? StarterHeroSprite { get; private set; }
+    public AnimatedSprite? CompanionSprite { get; private set; }
 
     // Enemy animated sprites keyed by EnemyDef index (0=Scorpion→TribeHunter, etc.)
     public AnimatedSprite?[] EnemySprites { get; private set; } = Array.Empty<AnimatedSprite?>();
 
-    // Boss animated sprite (Dust Warrior)
+    // Boss animated sprites
     public AnimatedSprite? BossSprite { get; private set; }
+    public AnimatedSprite? BlowfishSprite { get; private set; }
+    public AnimatedSprite? TarnishedWidowSprite { get; private set; }
 
     // STRANDED terrain props (obstacle textures and ground scatter)
     public Texture2D[] ObstacleTextures { get; private set; } = Array.Empty<Texture2D>();
@@ -71,12 +77,20 @@ public class AssetManager
         if (!Directory.Exists(strandedPath)) return;
 
         if (Directory.Exists(strandedPath + "/hero"))
-            HeroSprite = AnimationLoader.LoadHeroGun(strandedPath);
+        {
+            HeroGunSprite = AnimationLoader.LoadHeroGun(strandedPath);
+            HeroSwordSprite = AnimationLoader.LoadHeroSword(strandedPath);
+            StarterHeroSprite = AnimationLoader.LoadStarterHero(strandedPath);
+            CompanionSprite = AnimationLoader.LoadCompanion(strandedPath);
+            HeroSprite = HeroGunSprite; // default
+        }
 
         if (Directory.Exists(strandedPath + "/enemies"))
             EnemySprites = AnimationLoader.LoadEnemySprites(strandedPath);
 
         BossSprite = AnimationLoader.LoadBossSprite(strandedPath);
+        BlowfishSprite = AnimationLoader.LoadBlowfish(strandedPath);
+        TarnishedWidowSprite = AnimationLoader.LoadTarnishedWidow(strandedPath);
 
         LoadStrandedTerrain(strandedPath);
         LoadStrandedUI(strandedPath);
@@ -191,8 +205,13 @@ public class AssetManager
         Raylib.UnloadTexture(Weapons.Texture);
         Raylib.UnloadTexture(Tiles.Texture);
         Raylib.UnloadTexture(Interface.Texture);
-        HeroSprite?.UnloadAll();
+        HeroGunSprite?.UnloadAll();
+        HeroSwordSprite?.UnloadAll();
+        StarterHeroSprite?.UnloadAll();
+        CompanionSprite?.UnloadAll();
         BossSprite?.UnloadAll();
+        BlowfishSprite?.UnloadAll();
+        TarnishedWidowSprite?.UnloadAll();
         foreach (var es in EnemySprites)
             es?.UnloadAll();
         foreach (var tex in ObstacleTextures)

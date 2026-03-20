@@ -12,6 +12,9 @@ Raylib.SetExitKey(KeyboardKey.Null); // disable ESC auto-close, we handle it our
 Raylib.SetTargetFPS(60);
 Raylib.InitAudioDevice();
 
+// SDL gamepad for macOS Xbox controller support (GLFW can't read axes)
+InputHelper.InitGamepad();
+
 // Apply saved settings
 settings.Apply();
 if (settings.Fullscreen)
@@ -32,6 +35,9 @@ manager.Init(assets);
 while (!Raylib.WindowShouldClose() && !manager.QuitRequested)
 {
     float dt = Raylib.GetFrameTime();
+
+    // Poll SDL gamepad
+    InputHelper.UpdateGamepad();
 
     // Update display scaling (handles fullscreen/windowed transitions)
     Display.Update();
@@ -68,6 +74,7 @@ while (!Raylib.WindowShouldClose() && !manager.QuitRequested)
 }
 
 // Cleanup
+InputHelper.ShutdownGamepad();
 Raylib.UnloadRenderTexture(renderTarget);
 assets.UnloadAll();
 Raylib.CloseAudioDevice();

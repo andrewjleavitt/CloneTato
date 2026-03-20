@@ -363,9 +363,18 @@ public class PlayingScreen
                 : new Color((byte)229, (byte)229, (byte)229, alpha);
 
             // Try STRANDED animated sprite — bosses use dedicated boss sprite
-            AnimatedSprite? eSprite = enemy.IsBoss && state.Assets.BossSprite != null
-                ? state.Assets.BossSprite
-                : (enemy.DefIndex < enemySprites.Length ? enemySprites[enemy.DefIndex] : null);
+            AnimatedSprite? eSprite;
+            if (enemy.IsBoss)
+            {
+                eSprite = enemy.BossSpriteType switch
+                {
+                    1 => state.Assets.BlowfishSprite ?? state.Assets.BossSprite,
+                    2 => state.Assets.TarnishedWidowSprite ?? state.Assets.BossSprite,
+                    _ => state.Assets.BossSprite,
+                };
+            }
+            else
+                eSprite = enemy.DefIndex < enemySprites.Length ? enemySprites[enemy.DefIndex] : null;
 
             if (eSprite != null)
             {

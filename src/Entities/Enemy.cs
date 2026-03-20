@@ -32,6 +32,7 @@ public class Enemy : Entity
     // Boss fields
     public bool IsBoss;
     public float Scale = 1f;
+    public int BossSpriteType; // 0=DustWarrior, 1=Blowfish, 2=TarnishedWidow
 
     // Boss melee attack fields
     public bool HasMeleeAttack;
@@ -68,6 +69,7 @@ public class Enemy : Entity
         FlashTimer = 0;
         IsBoss = false;
         Scale = 1f;
+        BossSpriteType = 0;
         IsArmed = false;
         WeaponSpriteIndex = 0;
         ShootCooldown = 0;

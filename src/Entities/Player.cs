@@ -10,6 +10,7 @@ public class Player : Entity
     public int CurrentHP;
     public float InvincibilityTimer;
     public int CharacterIndex;
+    public HeroType HeroType;
     public bool FacingLeft;
     public float AnimTimer;
 
@@ -32,6 +33,7 @@ public class Player : Entity
     public void Init(CharacterDef character)
     {
         CharacterIndex = character.SpriteIndex;
+        HeroType = character.HeroType;
         BaseStats = character.BaseStats;
         ComputedStats = BaseStats;
         CurrentHP = ComputedStats.MaxHP;

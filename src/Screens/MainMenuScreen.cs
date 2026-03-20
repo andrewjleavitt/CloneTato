@@ -7,7 +7,7 @@ namespace CloneTato.Screens;
 public class MainMenuScreen
 {
     private int _selected;
-    private const int ItemCount = 6;
+    private const int ItemCount = 7;
 
     public void Update(float dt, GameState state, GameStateManager manager)
     {
@@ -43,10 +43,14 @@ public class MainMenuScreen
                 state.Assets.PlaySoundVariant("select", 0.5f);
                 break;
             case 4:
-                manager.OpenSettings();
+                manager.TransitionTo(GameScreen.Credits);
                 state.Assets.PlaySoundVariant("select", 0.5f);
                 break;
             case 5:
+                manager.OpenSettings();
+                state.Assets.PlaySoundVariant("select", 0.5f);
+                break;
+            case 6:
                 manager.QuitRequested = true;
                 break;
         }
@@ -97,13 +101,14 @@ public class MainMenuScreen
         int startY = 160;
         int spacing = 28;
 
-        string[] labels = { "START RUN", "UPGRADES", "WEAPONS", "SPRITES", "SETTINGS", "QUIT" };
+        string[] labels = { "START RUN", "UPGRADES", "WEAPONS", "SPRITES", "CREDITS", "SETTINGS", "QUIT" };
         Color[] colors =
         {
             new(60, 100, 60, 255),
             new(70, 50, 90, 255),
             new(80, 70, 50, 255),
             new(90, 70, 60, 255),
+            new(80, 60, 80, 255),
             new(60, 70, 100, 255),
             new(100, 60, 60, 255),
         };
@@ -115,9 +120,10 @@ public class MainMenuScreen
         }
 
         string hint = InputHelper.GamepadAvailable
-            ? "D-Pad navigate, A select"
+            ? "D-Pad navigate, A select, B back"
             : "WASD/Arrows navigate, Enter select";
         UIRenderer.DrawTextSmall(hint,
             Constants.LogicalWidth / 2 - hint.Length * 5 / 2, Constants.LogicalHeight - 15, Color.Gray);
+
     }
 }

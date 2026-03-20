@@ -125,7 +125,7 @@ public class LevelUpScreen
         }
 
         string hint = InputHelper.GamepadAvailable
-            ? "D-Pad select, A confirm"
+            ? "Left/Right select, A confirm"
             : "Left/Right select, Enter confirm";
         int hintW = hint.Length * 5;
         UIRenderer.DrawTextSmall(hint, Constants.LogicalWidth / 2 - hintW / 2, cardY + cardH + 10, Color.Gray);

@@ -109,6 +109,14 @@ public class GameState
         Player = new Player();
         Player.Init(character);
 
+        // Set active hero sprite based on character type
+        Assets.HeroSprite = character.HeroType switch
+        {
+            HeroType.BladeDancer => Assets.HeroSwordSprite ?? Assets.HeroGunSprite,
+            HeroType.Drifter => Assets.StarterHeroSprite ?? Assets.HeroGunSprite,
+            _ => Assets.HeroGunSprite,
+        };
+
         EquippedWeapons.Clear();
         WeaponCooldowns.Clear();
         WeaponClipAmmo.Clear();

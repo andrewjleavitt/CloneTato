@@ -12,6 +12,7 @@ public class SpriteGalleryScreen
     private int _selectedAnim;
     private bool _showHitbox = true;
     private float _animTimer;
+    private int _scrollOffset; // for scrolling the entry list
 
     private GalleryEntry[] _entries = Array.Empty<GalleryEntry>();
     private bool _initialized;
@@ -19,9 +20,10 @@ public class SpriteGalleryScreen
     private class GalleryEntry
     {
         public string Name = "";
+        public string Category = "";
         public AnimatedSprite? Sprite;
         public string[] AnimationNames = Array.Empty<string>();
-        public float Radius; // hitbox radius
+        public float Radius;
         public float DrawScale = 1f;
     }
 
@@ -32,13 +34,13 @@ public class SpriteGalleryScreen
 
         var list = new List<GalleryEntry>();
 
-        // Hero (gun)
-        if (state.Assets.HeroSprite != null)
+        // Heroes
+        if (state.Assets.HeroGunSprite != null)
         {
             list.Add(new GalleryEntry
             {
-                Name = "Hero (Gun)",
-                Sprite = state.Assets.HeroSprite,
+                Name = "Gunslinger", Category = "HERO",
+                Sprite = state.Assets.HeroGunSprite,
                 AnimationNames = new[]
                 {
                     "idle_right", "idle_up", "idle_down",
@@ -46,15 +48,75 @@ public class SpriteGalleryScreen
                     "roll_right", "roll_up", "roll_down",
                     "death"
                 },
-                Radius = 10f,
-                DrawScale = 1f,
+                Radius = 10f, DrawScale = 1f,
+            });
+        }
+        if (state.Assets.HeroSwordSprite != null)
+        {
+            list.Add(new GalleryEntry
+            {
+                Name = "Blade Dancer", Category = "HERO",
+                Sprite = state.Assets.HeroSwordSprite,
+                AnimationNames = new[]
+                {
+                    "idle_right", "idle_up", "idle_down",
+                    "run_right", "run_up", "run_down",
+                    "roll_right", "roll_up", "roll_down",
+                    "slash_right", "slash_up", "slash_down",
+                    "death"
+                },
+                Radius = 10f, DrawScale = 1f,
+            });
+        }
+        if (state.Assets.StarterHeroSprite != null)
+        {
+            list.Add(new GalleryEntry
+            {
+                Name = "Drifter", Category = "HERO",
+                Sprite = state.Assets.StarterHeroSprite,
+                AnimationNames = new[]
+                {
+                    "idle_right", "idle_up", "idle_down",
+                    "run_right", "run_up", "run_down",
+                    "roll_right", "roll_up", "roll_down",
+                    "death"
+                },
+                Radius = 8f, DrawScale = 1.5f,
+            });
+        }
+        if (state.Assets.CompanionSprite != null)
+        {
+            list.Add(new GalleryEntry
+            {
+                Name = "Companion", Category = "HERO",
+                Sprite = state.Assets.CompanionSprite,
+                AnimationNames = new[] { "idle", "move", "gather", "attack" },
+                Radius = 4f, DrawScale = 2f,
             });
         }
 
-        // Enemies
-        string[] enemyNames = { "Tribe Hunter", "Small Bug", "Medium Insect", "Tribe Warrior",
-            "Archer", "Guard", "Warrior" };
-        float[] enemyRadii = { 10f, 8f, 9f, 12f, 10f, 12f, 11f };
+        // Enemy definitions with categories
+        var enemyInfo = new (string name, string category, float radius)[]
+        {
+            ("Tribe Hunter", "TRIBE", 10f),
+            ("Small Bug", "INSECTS", 8f),
+            ("Medium Insect", "INSECTS", 9f),
+            ("Tribe Warrior", "TRIBE", 12f),
+            ("Archer", "HUMANOIDS", 10f),
+            ("Guard", "HUMANOIDS", 12f),
+            ("Warrior", "HUMANOIDS", 11f),
+            ("Big Bug", "INSECTS", 14f),
+            ("Spiny Beetle", "INSECTS", 11f),
+            ("Relic Guardian", "BEASTS", 14f),
+            ("Rusty Robot", "ROBOTS", 8f),
+            ("Guard Robot", "ROBOTS", 11f),
+            ("Circle Bot", "ROBOTS", 10f),
+            ("Delivery Bot", "ROBOTS", 7f),
+            ("Hooded Minion", "MINIONS", 10f),
+            ("Bomb Minion", "MINIONS", 5f),
+            ("Ranged Minion", "MINIONS", 8f),
+        };
+
         for (int i = 0; i < state.Assets.EnemySprites.Length; i++)
         {
             var eSprite = state.Assets.EnemySprites[i];
@@ -67,17 +129,16 @@ public class SpriteGalleryScreen
                 if (eSprite.HasAnimation(name)) anims.Add(name);
             }
 
+            var info = i < enemyInfo.Length ? enemyInfo[i] : ($"Enemy {i}", "OTHER", 10f);
             list.Add(new GalleryEntry
             {
-                Name = i < enemyNames.Length ? enemyNames[i] : $"Enemy {i}",
-                Sprite = eSprite,
-                AnimationNames = anims.ToArray(),
-                Radius = i < enemyRadii.Length ? enemyRadii[i] : 10f,
-                DrawScale = 1f,
+                Name = info.Item1, Category = info.Item2,
+                Sprite = eSprite, AnimationNames = anims.ToArray(),
+                Radius = info.Item3, DrawScale = 1f,
             });
         }
 
-        // Boss
+        // Bosses
         if (state.Assets.BossSprite != null)
         {
             var bossAnims = new List<string>();
@@ -86,16 +147,59 @@ public class SpriteGalleryScreen
             {
                 if (state.Assets.BossSprite.HasAnimation(name)) bossAnims.Add(name);
             }
-
             list.Add(new GalleryEntry
             {
-                Name = "Dust Warrior (Boss)",
+                Name = "Dust Warrior", Category = "BOSSES",
                 Sprite = state.Assets.BossSprite,
                 AnimationNames = bossAnims.ToArray(),
-                Radius = 20f,
-                DrawScale = 1.5f,
+                Radius = 20f, DrawScale = 1.5f,
             });
         }
+
+        if (state.Assets.BlowfishSprite != null)
+        {
+            var bfAnims = new List<string>();
+            foreach (var name in new[] { "idle_right", "idle_up", "idle_down",
+                "walk_right", "walk_up", "walk_down", "attack", "death" })
+            {
+                if (state.Assets.BlowfishSprite.HasAnimation(name)) bfAnims.Add(name);
+            }
+            list.Add(new GalleryEntry
+            {
+                Name = "Blowfish", Category = "BOSSES",
+                Sprite = state.Assets.BlowfishSprite,
+                AnimationNames = bfAnims.ToArray(),
+                Radius = 20f, DrawScale = 1.5f,
+            });
+        }
+
+        if (state.Assets.TarnishedWidowSprite != null)
+        {
+            var twAnims = new List<string>();
+            foreach (var name in new[] { "idle_right", "idle_up", "idle_down",
+                "walk_right", "walk_up", "walk_down", "attack", "death" })
+            {
+                if (state.Assets.TarnishedWidowSprite.HasAnimation(name)) twAnims.Add(name);
+            }
+            list.Add(new GalleryEntry
+            {
+                Name = "Tarnished Widow", Category = "BOSSES",
+                Sprite = state.Assets.TarnishedWidowSprite,
+                AnimationNames = twAnims.ToArray(),
+                Radius = 25f, DrawScale = 1.5f,
+            });
+        }
+
+        // Sort by category for grouped display
+        string[] categoryOrder = { "HERO", "TRIBE", "INSECTS", "BEASTS", "HUMANOIDS", "ROBOTS", "MINIONS", "BOSSES" };
+        list.Sort((a, b) =>
+        {
+            int ai = Array.IndexOf(categoryOrder, a.Category);
+            int bi = Array.IndexOf(categoryOrder, b.Category);
+            if (ai < 0) ai = 99;
+            if (bi < 0) bi = 99;
+            return ai != bi ? ai.CompareTo(bi) : string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+        });
 
         _entries = list.ToArray();
     }
@@ -105,7 +209,6 @@ public class SpriteGalleryScreen
         _selectedEntry = 0;
         _selectedAnim = 0;
         _animTimer = 0;
-        // Don't reset _initialized — sprites stay loaded
     }
 
     public void Update(float dt, GameState state, GameStateManager manager)
@@ -139,22 +242,27 @@ public class SpriteGalleryScreen
             }
         }
 
-        // H to toggle hitbox
         if (Raylib.IsKeyPressed(KeyboardKey.H))
             _showHitbox = !_showHitbox;
 
         _animTimer += dt;
     }
 
+    private const int ListX = 8;
+    private const int ListTop = 36;
+    private const int RowH = 11;
+    private const int CategoryH = 13;
+    private const int PanelDivider = 170; // x position where right panel starts
+
     public void Draw(GameState state, GameStateManager manager)
     {
         InitEntries(state);
         Raylib.ClearBackground(new Color(30, 30, 35, 255));
 
-        // Title
-        UIRenderer.DrawTextMedium("SPRITE GALLERY", 10, 8, Color.Gold);
-        UIRenderer.DrawTextSmall("Up/Down: character  Left/Right: animation  H: toggle hitbox  ESC: back",
-            10, 24, Color.Gray);
+        // Header
+        UIRenderer.DrawTextMedium("SPRITE GALLERY", 10, 6, Color.Gold);
+        UIRenderer.DrawTextSmall("Up/Down: select   Left/Right: anim   H: hitbox   ESC: back",
+            10, 22, Color.Gray);
 
         if (_entries.Length == 0)
         {
@@ -162,43 +270,92 @@ public class SpriteGalleryScreen
             return;
         }
 
-        // Left panel: entry list
-        int listX = 10;
-        int listY = 44;
-        int listSpacing = 14;
+        // Divider line
+        Raylib.DrawLine(PanelDivider - 4, ListTop, PanelDivider - 4, Constants.LogicalHeight, new Color(60, 60, 65, 255));
+
+        DrawEntryList();
+        DrawPreviewPanel();
+    }
+
+    private void DrawEntryList()
+    {
+        // Build display rows: category headers + entries
+        // Figure out how many visual rows we have and which row is selected
+        var rows = new List<(int entryIdx, string? categoryLabel)>(); // entryIdx=-1 for category headers
+        string? lastCat = null;
+        int selectedRow = 0;
+
         for (int i = 0; i < _entries.Length; i++)
         {
-            Color c = i == _selectedEntry ? Color.Gold : Color.LightGray;
-            string prefix = i == _selectedEntry ? "> " : "  ";
-            UIRenderer.DrawTextSmall($"{prefix}{_entries[i].Name}", listX, listY + i * listSpacing, c);
+            if (_entries[i].Category != lastCat)
+            {
+                lastCat = _entries[i].Category;
+                rows.Add((-1, lastCat));
+            }
+            if (i == _selectedEntry) selectedRow = rows.Count;
+            rows.Add((i, null));
         }
 
-        // Preview area
+        // Scrolling: keep selected row visible within the viewable window
+        int maxVisibleRows = (Constants.LogicalHeight - ListTop - 8) / RowH;
+        // Ensure selectedRow is visible with some padding
+        if (selectedRow < _scrollOffset + 1)
+            _scrollOffset = Math.Max(0, selectedRow - 1);
+        else if (selectedRow >= _scrollOffset + maxVisibleRows - 1)
+            _scrollOffset = selectedRow - maxVisibleRows + 2;
+        _scrollOffset = Math.Clamp(_scrollOffset, 0, Math.Max(0, rows.Count - maxVisibleRows));
+
+        int y = ListTop;
+        for (int r = _scrollOffset; r < rows.Count && y < Constants.LogicalHeight - 4; r++)
+        {
+            var (entryIdx, categoryLabel) = rows[r];
+
+            if (categoryLabel != null)
+            {
+                // Category header
+                UIRenderer.DrawTextSmall(categoryLabel, ListX, y + 1, new Color(120, 180, 255, 255));
+                Raylib.DrawLine(ListX, y + 10, PanelDivider - 10, y + 10, new Color(50, 70, 100, 255));
+                y += CategoryH;
+            }
+            else
+            {
+                bool selected = entryIdx == _selectedEntry;
+                Color c = selected ? Color.Gold : Color.LightGray;
+
+                // Highlight bar
+                if (selected)
+                    Raylib.DrawRectangle(ListX - 2, y - 1, PanelDivider - ListX - 6, RowH, new Color(50, 50, 60, 255));
+
+                string prefix = selected ? "> " : "  ";
+                UIRenderer.DrawTextSmall($"{prefix}{_entries[entryIdx].Name}", ListX, y, c);
+                y += RowH;
+            }
+        }
+
+        // Scroll indicators
+        if (_scrollOffset > 0)
+            UIRenderer.DrawTextSmall("^", PanelDivider - 14, ListTop, Color.Gray);
+        if (_scrollOffset + maxVisibleRows < rows.Count)
+            UIRenderer.DrawTextSmall("v", PanelDivider - 14, Constants.LogicalHeight - 12, Color.Gray);
+    }
+
+    private void DrawPreviewPanel()
+    {
         var entry = _entries[_selectedEntry];
         if (entry.Sprite == null || entry.AnimationNames.Length == 0) return;
 
         string animName = entry.AnimationNames[_selectedAnim];
+        int rightX = PanelDivider + 4;
+        int rightW = Constants.LogicalWidth - rightX - 4;
+        int centerX = rightX + rightW / 2;
 
-        // Animation name list (horizontal below title area)
-        int animListY = listY + _entries.Length * listSpacing + 8;
-        UIRenderer.DrawTextSmall("Animations:", listX, animListY, Color.White);
-        int animX = listX;
-        int animY = animListY + 12;
-        for (int i = 0; i < entry.AnimationNames.Length; i++)
-        {
-            Color c = i == _selectedAnim ? Color.Gold : Color.Gray;
-            UIRenderer.DrawTextSmall(entry.AnimationNames[i], animX, animY, c);
-            animY += 11;
-        }
+        // Sprite preview — centered in upper portion of right panel
+        float previewY = ListTop + 80;
+        float previewScale = entry.DrawScale * 3f;
 
-        // Draw the sprite preview (large, centered in right side of screen)
-        float previewX = Constants.LogicalWidth * 0.65f;
-        float previewY = Constants.LogicalHeight * 0.45f;
-        float previewScale = entry.DrawScale * 3f; // scale up for visibility
-
-        // Checkerboard background behind sprite
-        int bgSize = 80;
-        int bgX = (int)previewX - bgSize / 2;
+        // Checkerboard background
+        int bgSize = 90;
+        int bgX = centerX - bgSize / 2;
         int bgY = (int)previewY - bgSize / 2;
         for (int cx = 0; cx < bgSize; cx += 8)
         {
@@ -215,43 +372,63 @@ public class SpriteGalleryScreen
         float frameDur = entry.Sprite.GetFrameDuration(animName);
         int frame = frameCount > 0 ? (int)(_animTimer / frameDur) % frameCount : 0;
 
-        // Draw with flipH for "left" viewing
-        bool flipH = false;
-        entry.Sprite.DrawAnimationFrame(animName, frame, flipH,
-            previewX, previewY, Color.White, previewScale);
+        entry.Sprite.DrawAnimationFrame(animName, frame, false,
+            centerX, previewY, Color.White, previewScale);
 
-        // Hitbox circle (offset to show where entity position is relative to sprite)
+        // Hitbox overlay
         if (_showHitbox)
         {
-            // Entity position is at (previewX, previewY) — the sprite is offset by pivot
-            Raylib.DrawCircleLines((int)previewX, (int)previewY, entry.Radius * previewScale / entry.DrawScale,
-                new Color(0, 255, 0, 180));
-            // Entity position dot
-            Raylib.DrawCircleV(new System.Numerics.Vector2(previewX, previewY), 2f, Color.Red);
-            // Cross at entity position
+            float hitR = entry.Radius * previewScale / entry.DrawScale;
+            Raylib.DrawCircleLines(centerX, (int)previewY, hitR, new Color(0, 255, 0, 180));
+            Raylib.DrawCircleV(new System.Numerics.Vector2(centerX, previewY), 2f, Color.Red);
             Raylib.DrawLineV(
-                new System.Numerics.Vector2(previewX - 6, previewY),
-                new System.Numerics.Vector2(previewX + 6, previewY), Color.Red);
+                new System.Numerics.Vector2(centerX - 6, previewY),
+                new System.Numerics.Vector2(centerX + 6, previewY), Color.Red);
             Raylib.DrawLineV(
-                new System.Numerics.Vector2(previewX, previewY - 6),
-                new System.Numerics.Vector2(previewX, previewY + 6), Color.Red);
+                new System.Numerics.Vector2(centerX, previewY - 6),
+                new System.Numerics.Vector2(centerX, previewY + 6), Color.Red);
         }
 
-        // Info text
-        int infoX = (int)previewX - 60;
-        int infoY = (int)previewY + bgSize / 2 + 10;
-        UIRenderer.DrawTextSmall($"Animation: {animName}", infoX, infoY, Color.White);
-        UIRenderer.DrawTextSmall($"Frames: {frameCount}  FPS: {(frameDur > 0 ? (int)(1f / frameDur) : 0)}",
-            infoX, infoY + 12, Color.White);
-        UIRenderer.DrawTextSmall($"Frame Size: {entry.Sprite.GetFrameWidth(animName)}x{entry.Sprite.GetFrameHeight(animName)}",
-            infoX, infoY + 24, Color.White);
-        UIRenderer.DrawTextSmall($"Hitbox Radius: {entry.Radius:F0}px", infoX, infoY + 36,
-            _showHitbox ? Color.Green : Color.Gray);
-        UIRenderer.DrawTextSmall($"Draw Scale: {previewScale:F1}x", infoX, infoY + 48, Color.White);
+        // Entry name + category
+        UIRenderer.DrawTextSmall(entry.Name, rightX, ListTop, Color.Gold);
+        UIRenderer.DrawTextSmall(entry.Category, rightX + entry.Name.Length * 5 + 8, ListTop, new Color(120, 180, 255, 255));
 
-        // Hitbox toggle indicator
-        string hitboxText = _showHitbox ? "[H] Hitbox: ON" : "[H] Hitbox: OFF";
-        UIRenderer.DrawTextSmall(hitboxText, infoX, infoY + 64,
+        // Animation selector (below preview)
+        int animY = (int)previewY + bgSize / 2 + 8;
+        UIRenderer.DrawTextSmall("Animation:", rightX, animY, Color.White);
+
+        // Show animations in a compact row, wrapping if needed
+        int ax = rightX;
+        int ay = animY + 12;
+        for (int i = 0; i < entry.AnimationNames.Length; i++)
+        {
+            string aName = entry.AnimationNames[i];
+            int tw = aName.Length * 5 + 6;
+
+            // Wrap to next line if too wide
+            if (ax + tw > Constants.LogicalWidth - 4)
+            {
+                ax = rightX;
+                ay += 11;
+            }
+
+            Color c = i == _selectedAnim ? Color.Gold : Color.Gray;
+            if (i == _selectedAnim)
+                Raylib.DrawRectangle(ax - 1, ay - 1, tw, 10, new Color(50, 50, 60, 255));
+            UIRenderer.DrawTextSmall(aName, ax, ay, c);
+            ax += tw;
+        }
+
+        // Info block below animations
+        int infoY = ay + 18;
+        UIRenderer.DrawTextSmall($"Frames: {frameCount}   FPS: {(frameDur > 0 ? (int)(1f / frameDur) : 0)}", rightX, infoY, Color.White);
+        UIRenderer.DrawTextSmall($"Size: {entry.Sprite.GetFrameWidth(animName)}x{entry.Sprite.GetFrameHeight(animName)}   " +
+            $"Scale: {previewScale:F1}x", rightX, infoY + 11, Color.White);
+        UIRenderer.DrawTextSmall($"Hitbox: {entry.Radius:F0}px", rightX, infoY + 22,
+            _showHitbox ? Color.Green : Color.Gray);
+
+        string hitboxText = _showHitbox ? "[H] ON" : "[H] OFF";
+        UIRenderer.DrawTextSmall(hitboxText, rightX + 70, infoY + 22,
             _showHitbox ? Color.Green : Color.DarkGray);
     }
 }

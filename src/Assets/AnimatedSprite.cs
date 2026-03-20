@@ -348,6 +348,62 @@ public static class AnimationLoader
     }
 
     /// <summary>
+    /// Build an AnimatedSprite for the Starter Pack hero (grid sheet 20x32, 16 cols × 6 rows).
+    /// </summary>
+    public static AnimatedSprite? LoadStarterHero(string basePath)
+    {
+        string path = basePath + "/hero/starter_hero/hero.png";
+        if (!File.Exists(path)) return null;
+        var tex = Raylib.LoadTexture(path);
+        var sprite = new AnimatedSprite();
+        int cols = 16; // 320 / 20 = 16
+
+        // Row 0: idle/walk down (8 frames)
+        sprite.AddAnimation("idle_down", FromGrid(tex, 20, 32, cols, 0, 8, 8));
+        sprite.AddAnimation("run_down", FromGrid(tex, 20, 32, cols, 0, 8, 10));
+        // Row 1: idle/walk right (8 frames)
+        sprite.AddAnimation("idle_right", FromGrid(tex, 20, 32, cols, 16, 8, 8));
+        sprite.AddAnimation("run_right", FromGrid(tex, 20, 32, cols, 16, 8, 10));
+        // Row 2: idle/walk up (8 frames)
+        sprite.AddAnimation("idle_up", FromGrid(tex, 20, 32, cols, 32, 8, 8));
+        sprite.AddAnimation("run_up", FromGrid(tex, 20, 32, cols, 32, 8, 10));
+        // Row 3: hit/transition (4 frames)
+        sprite.AddAnimation("roll_down", FromGrid(tex, 20, 32, cols, 48, 4, 10, false));
+        sprite.AddAnimation("roll_right", FromGrid(tex, 20, 32, cols, 48, 4, 10, false));
+        sprite.AddAnimation("roll_up", FromGrid(tex, 20, 32, cols, 48, 4, 10, false));
+        // Rows 4-5: death (blue sparkle effect, ~16 frames across 2 rows)
+        sprite.AddAnimation("death", FromGrid(tex, 20, 32, cols, 64, 16, 10, false));
+
+        sprite.PivotOffsetY = -4f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    /// <summary>
+    /// Build an AnimatedSprite for the Starter Pack companion (grid sheet 20x32, 16 cols × 4 rows).
+    /// </summary>
+    public static AnimatedSprite? LoadCompanion(string basePath)
+    {
+        string path = basePath + "/hero/starter_hero/companion.png";
+        if (!File.Exists(path)) return null;
+        var tex = Raylib.LoadTexture(path);
+        var sprite = new AnimatedSprite();
+        int cols = 16; // 320 / 32 = 10? Actually 320/20 = 16
+
+        // Row 0: idle bob (4 frames)
+        sprite.AddAnimation("idle", FromGrid(tex, 20, 32, cols, 0, 4, 6));
+        // Row 1: move (4 frames)
+        sprite.AddAnimation("move", FromGrid(tex, 20, 32, cols, 16, 4, 8));
+        // Row 2: pulse/gather (4 frames)
+        sprite.AddAnimation("gather", FromGrid(tex, 20, 32, cols, 32, 4, 8));
+        // Row 3: attack/activate (longer animation)
+        sprite.AddAnimation("attack", FromGrid(tex, 20, 32, cols, 48, 10, 10));
+
+        sprite.Play("idle");
+        return sprite;
+    }
+
+    /// <summary>
     /// Build an AnimatedSprite for a tribe hunter enemy.
     /// </summary>
     public static AnimatedSprite LoadTribeHunter(string basePath)
@@ -509,13 +565,251 @@ public static class AnimationLoader
         return sprite;
     }
 
+    public static AnimatedSprite LoadBigBug(string basePath)
+    {
+        var sprite = new AnimatedSprite();
+        string dir = basePath + "/enemies/insects/Big Bug";
+
+        sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
+        sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
+        sprite.AddAnimation("death", LoadStrip($"{dir}/Big Insect-Death.png", 72, 44, 13, false));
+
+        // Reuse for all directions (non-directional sprite)
+        sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
+        sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
+        sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
+        sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
+
+        sprite.PivotOffsetY = -4f;
+        sprite.Play("idle_right");
+        return sprite;
+    }
+
+    public static AnimatedSprite LoadSpinyBeetle(string basePath)
+    {
+        var sprite = new AnimatedSprite();
+        string dir = basePath + "/enemies/insects/Medium bug 2";
+
+        sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
+        sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
+        sprite.AddAnimation("death", LoadStrip($"{dir}/Medium2 bug-Death.png", 88, 37, 11, false));
+
+        sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
+        sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
+        sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
+        sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
+
+        sprite.PivotOffsetY = -4f;
+        sprite.Play("idle_right");
+        return sprite;
+    }
+
+    public static AnimatedSprite LoadTamedBeast(string basePath)
+    {
+        var sprite = new AnimatedSprite();
+        string dir = basePath + "/enemies/tribe/Tribe Tamed Beast";
+
+        sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Tribe Tamed Beast-Idle.png", 76, 67, 6));
+        sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Tribe Tamed Beast-Up Idle.png", 76, 67, 6));
+        sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Tribe Tamed Beast-Down Idle.png", 76, 67, 6));
+        sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Tribe Tamed Beast-move lr.png", 76, 67, 6));
+        sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Tribe Tamed Beast-Move Up.png", 76, 67, 6));
+        sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Tribe Tamed Beast-Move Down.png", 76, 67, 6));
+        sprite.AddAnimation("death", LoadStrip($"{dir}/Tribe Tamed Beast-death.png", 76, 67, 17, false));
+
+        sprite.PivotOffsetY = -10f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadRustyRobot(string basePath)
+    {
+        string path = basePath + "/enemies/robots/Rusty Robot/Rusty Robot 20x29 without Shadow.png";
+        if (!File.Exists(path)) return null;
+        var tex = Raylib.LoadTexture(path);
+        var sprite = new AnimatedSprite();
+        int cols = 8;
+        sprite.AddAnimation("idle_right", FromGrid(tex, 20, 29, cols, 0, 8, 8));
+        sprite.AddAnimation("idle_up", FromGrid(tex, 20, 29, cols, 0, 8, 8));
+        sprite.AddAnimation("idle_down", FromGrid(tex, 20, 29, cols, 0, 8, 8));
+        sprite.AddAnimation("walk_right", FromGrid(tex, 20, 29, cols, 8, 8, 10));
+        sprite.AddAnimation("walk_up", FromGrid(tex, 20, 29, cols, 8, 8, 10));
+        sprite.AddAnimation("walk_down", FromGrid(tex, 20, 29, cols, 8, 8, 10));
+        sprite.AddAnimation("death", FromGrid(tex, 20, 29, cols, 8, 8, 10, false));
+        sprite.PivotOffsetY = -3f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadGuardRobot(string basePath)
+    {
+        string path = basePath + "/enemies/robots/Guard Robot/Robot 1 - Blue 26x34 without shadows.png";
+        if (!File.Exists(path)) return null;
+        var tex = Raylib.LoadTexture(path);
+        var sprite = new AnimatedSprite();
+        int cols = 10;
+        sprite.AddAnimation("idle_right", FromGrid(tex, 26, 34, cols, 10, 8, 8));
+        sprite.AddAnimation("idle_up", FromGrid(tex, 26, 34, cols, 10, 8, 8));
+        sprite.AddAnimation("idle_down", FromGrid(tex, 26, 34, cols, 10, 8, 8));
+        sprite.AddAnimation("walk_right", FromGrid(tex, 26, 34, cols, 20, 8, 8));
+        sprite.AddAnimation("walk_up", FromGrid(tex, 26, 34, cols, 20, 8, 8));
+        sprite.AddAnimation("walk_down", FromGrid(tex, 26, 34, cols, 20, 8, 8));
+        sprite.AddAnimation("death", FromGrid(tex, 26, 34, cols, 40, 10, 10, false));
+        sprite.PivotOffsetY = -4f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadCircleBot(string basePath)
+    {
+        string path = basePath + "/enemies/robots/Circle Bot/Circle Bot blue 29x35 without shadow.png";
+        if (!File.Exists(path)) return null;
+        var tex = Raylib.LoadTexture(path);
+        var sprite = new AnimatedSprite();
+        int cols = 8;
+        sprite.AddAnimation("idle_right", FromGrid(tex, 29, 35, cols, 0, 8, 8));
+        sprite.AddAnimation("idle_up", FromGrid(tex, 29, 35, cols, 0, 8, 8));
+        sprite.AddAnimation("idle_down", FromGrid(tex, 29, 35, cols, 0, 8, 8));
+        sprite.AddAnimation("walk_right", FromGrid(tex, 29, 35, cols, 8, 8, 10));
+        sprite.AddAnimation("walk_up", FromGrid(tex, 29, 35, cols, 8, 8, 10));
+        sprite.AddAnimation("walk_down", FromGrid(tex, 29, 35, cols, 8, 8, 10));
+        sprite.AddAnimation("death", FromGrid(tex, 29, 35, cols, 24, 8, 10, false));
+        sprite.PivotOffsetY = -4f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadDeliveryBot(string basePath)
+    {
+        string path = basePath + "/enemies/robots/Delivery Bot/Delivery Bot yellow without shadow 23x21.png";
+        if (!File.Exists(path)) return null;
+        var tex = Raylib.LoadTexture(path);
+        var sprite = new AnimatedSprite();
+        int cols = 6;
+        sprite.AddAnimation("idle_right", FromGrid(tex, 23, 21, cols, 0, 6, 8));
+        sprite.AddAnimation("idle_up", FromGrid(tex, 23, 21, cols, 0, 6, 8));
+        sprite.AddAnimation("idle_down", FromGrid(tex, 23, 21, cols, 0, 6, 8));
+        sprite.AddAnimation("walk_right", FromGrid(tex, 23, 21, cols, 6, 6, 10));
+        sprite.AddAnimation("walk_up", FromGrid(tex, 23, 21, cols, 6, 6, 10));
+        sprite.AddAnimation("walk_down", FromGrid(tex, 23, 21, cols, 6, 6, 10));
+        sprite.AddAnimation("death", FromGrid(tex, 23, 21, cols, 18, 6, 10, false));
+        sprite.PivotOffsetY = -2f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadHoodedMinion(string basePath)
+    {
+        string dir = basePath + "/enemies/minions/Minion 1/Sprites Without Shadows";
+        if (!Directory.Exists(dir)) return null;
+        var sprite = new AnimatedSprite();
+
+        sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Minion 1-idle.png", 33, 36, 8));
+        sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Minion 1-idle.png", 33, 36, 8));
+        sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Minion 1-idle.png", 33, 36, 8));
+        sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Minion 1-Run.png", 33, 36, 8));
+        sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Minion 1-Run.png", 33, 36, 8));
+        sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Minion 1-Run.png", 33, 36, 8));
+        sprite.AddAnimation("death", LoadStrip($"{dir}/Minion 1-Death.png", 33, 36, 8, false));
+
+        sprite.PivotOffsetY = -4f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadBombMinion(string basePath)
+    {
+        string dir = basePath + "/enemies/minions/Minion 2/Sprites Without Shadows";
+        if (!Directory.Exists(dir)) return null;
+        var sprite = new AnimatedSprite();
+
+        sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Minion 2-Idle.png", 13, 15, 8));
+        sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Minion 2-Idle.png", 13, 15, 8));
+        sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Minion 2-Idle.png", 13, 15, 8));
+        sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Minion 2-Run.png", 13, 15, 8));
+        sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Minion 2-Run.png", 13, 15, 8));
+        sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Minion 2-Run.png", 13, 15, 8));
+        sprite.AddAnimation("death", LoadStrip($"{dir}/Minion 2-Prep Explode.png", 13, 15, 4, false));
+
+        sprite.PivotOffsetY = -1f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadRangedMinion(string basePath)
+    {
+        string dir = basePath + "/enemies/minions/Minion 3/Sprites without Shadow";
+        if (!Directory.Exists(dir)) return null;
+        var sprite = new AnimatedSprite();
+
+        sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Minion 3-Idle.png", 25, 15, 8));
+        sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Minion 3-Idle.png", 25, 15, 8));
+        sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Minion 3-Idle.png", 25, 15, 8));
+        sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Minion 3-Run.png", 25, 15, 8));
+        sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Minion 3-Run.png", 25, 15, 8));
+        sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Minion 3-Run.png", 25, 15, 8));
+        sprite.AddAnimation("death", LoadStrip($"{dir}/Minion 3-Death.png", 25, 15, 7, false));
+
+        sprite.PivotOffsetY = -1f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadBlowfish(string basePath)
+    {
+        string dir = basePath + "/enemies/blowfish";
+        if (!Directory.Exists(dir)) return null;
+        var sprite = new AnimatedSprite();
+
+        sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Blowfish-Big Idle.png", 94, 47, 8));
+        sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Blowfish-Big Idle.png", 94, 47, 8));
+        sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Blowfish-Big Idle.png", 94, 47, 8));
+        sprite.AddAnimation("walk_right", LoadStrip($"{dir}/move Left & Right.png", 94, 47, 12));
+        sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Move Up.png", 94, 47, 18));
+        sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Move Down.png", 94, 47, 18));
+        sprite.AddAnimation("attack", LoadStrip($"{dir}/Blowfish-Attack out of Ground Down.png", 94, 47, 13, false));
+        sprite.AddAnimation("death", LoadStrip($"{dir}/Blowfish-Death.png", 94, 47, 14, false));
+
+        sprite.PivotOffsetY = -6f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadTarnishedWidow(string basePath)
+    {
+        string path = basePath + "/bosses/tarnished_widow/The Tarnished Widow 188x90.png";
+        if (!File.Exists(path)) return null;
+        var tex = Raylib.LoadTexture(path);
+        var sprite = new AnimatedSprite();
+        int cols = 18; // 3384 / 188 = 18 cols, 720 / 90 = 8 rows
+
+        // Row 1: Idle (8 frames)
+        sprite.AddAnimation("idle_right", FromGrid(tex, 188, 90, cols, 0, 8, 8));
+        sprite.AddAnimation("idle_up", FromGrid(tex, 188, 90, cols, 0, 8, 8));
+        sprite.AddAnimation("idle_down", FromGrid(tex, 188, 90, cols, 0, 8, 8));
+        // Row 2: Walk (10 frames)
+        sprite.AddAnimation("walk_right", FromGrid(tex, 188, 90, cols, 18, 10, 8));
+        sprite.AddAnimation("walk_up", FromGrid(tex, 188, 90, cols, 18, 10, 8));
+        sprite.AddAnimation("walk_down", FromGrid(tex, 188, 90, cols, 18, 10, 8));
+        // Row 5: Attack with blood (10 frames)
+        sprite.AddAnimation("attack", FromGrid(tex, 188, 90, cols, 72, 10, 10, false));
+        // Row 8: Death explosion (18 frames)
+        sprite.AddAnimation("death", FromGrid(tex, 188, 90, cols, 126, 18, 8, false));
+
+        sprite.PivotOffsetY = -10f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
     /// <summary>
     /// Load all enemy animated sprites, indexed to match EnemyDatabase order.
     /// 0=TribeHunter, 1=SmallBug, 2=MediumInsect, 3=TribeWarrior, 4=Archer, 5=Guard, 6=Warrior
+    /// 7=BigBug, 8=SpinyBeetle, 9=RelicGuardian, 10=RustyRobot, 11=GuardRobot
+    /// 12=CircleBot, 13=DeliveryBot, 14=HoodedMinion, 15=BombMinion, 16=RangedMinion
     /// </summary>
     public static AnimatedSprite?[] LoadEnemySprites(string basePath)
     {
-        var sprites = new AnimatedSprite?[7];
+        var sprites = new AnimatedSprite?[17];
         sprites[0] = LoadTribeHunter(basePath);
         sprites[1] = LoadSmallBug(basePath);
         sprites[2] = LoadMediumInsect(basePath);
@@ -523,6 +817,16 @@ public static class AnimationLoader
         sprites[4] = LoadStarterArcher(basePath);
         sprites[5] = LoadStarterGuard(basePath);
         sprites[6] = LoadStarterWarrior(basePath);
+        sprites[7] = LoadBigBug(basePath);
+        sprites[8] = LoadSpinyBeetle(basePath);
+        sprites[9] = LoadTamedBeast(basePath);
+        sprites[10] = LoadRustyRobot(basePath);
+        sprites[11] = LoadGuardRobot(basePath);
+        sprites[12] = LoadCircleBot(basePath);
+        sprites[13] = LoadDeliveryBot(basePath);
+        sprites[14] = LoadHoodedMinion(basePath);
+        sprites[15] = LoadBombMinion(basePath);
+        sprites[16] = LoadRangedMinion(basePath);
         return sprites;
     }
 

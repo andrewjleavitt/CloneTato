@@ -21,6 +21,8 @@ public struct Stats
     public float PostDashAttackSpeed;  // bonus attack speed multiplier after dash
     public float PostDashMoveSpeed;    // bonus move speed multiplier after dash
     public float PostDashInvuln;       // seconds of invulnerability after dash
+    public float RangedDamageMultiplier; // multiplier for ranged weapon damage (0 = no modifier)
+    public float MeleeDamageMultiplier;  // multiplier for melee weapon damage (0 = no modifier)
 
     public static Stats Default() => new()
     {
@@ -59,5 +61,7 @@ public struct Stats
         PostDashAttackSpeed = a.PostDashAttackSpeed + b.PostDashAttackSpeed,
         PostDashMoveSpeed = a.PostDashMoveSpeed + b.PostDashMoveSpeed,
         PostDashInvuln = a.PostDashInvuln + b.PostDashInvuln,
+        RangedDamageMultiplier = a.RangedDamageMultiplier + b.RangedDamageMultiplier,
+        MeleeDamageMultiplier = a.MeleeDamageMultiplier + b.MeleeDamageMultiplier,
     };
 }

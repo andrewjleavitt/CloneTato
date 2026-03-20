@@ -15,7 +15,7 @@ public class MetaProgression
     public int Victories { get; set; }
 
     // Character unlocks (index into CharacterDatabase)
-    public bool[] CharacterUnlocked { get; set; } = { true, false, false, false };
+    public bool[] CharacterUnlocked { get; set; } = { true, false, false };
 
     // Stat upgrades (each level gives a tiny boost)
     public int MaxHPLevel { get; set; }        // +0.5 per level
@@ -94,12 +94,19 @@ public class MetaProgression
 
     public void CheckUnlocks()
     {
-        // Character 1 (Sand Mouse): reach wave 5
-        if (BestWave >= 5 && CharacterUnlocked.Length > 1) CharacterUnlocked[1] = true;
-        // Character 2 (Dune Fox): kill 200 total enemies
-        if (TotalKills >= 200 && CharacterUnlocked.Length > 2) CharacterUnlocked[2] = true;
-        // Character 3 (Rock Turtle): reach wave 10
-        if (BestWave >= 10 && CharacterUnlocked.Length > 3) CharacterUnlocked[3] = true;
+        // Ensure array is correct size for current character count
+        if (CharacterUnlocked.Length < CharacterDatabase.Characters.Length)
+        {
+            var old = CharacterUnlocked;
+            CharacterUnlocked = new bool[CharacterDatabase.Characters.Length];
+            Array.Copy(old, CharacterUnlocked, Math.Min(old.Length, CharacterUnlocked.Length));
+            CharacterUnlocked[0] = true; // first character always unlocked
+        }
+
+        // Character 1 (Blade Dancer): reach wave 10
+        if (BestWave >= 10 && CharacterUnlocked.Length > 1) CharacterUnlocked[1] = true;
+        // Character 2 (Drifter): reach wave 20 (beat the game)
+        if (BestWave >= 20 && CharacterUnlocked.Length > 2) CharacterUnlocked[2] = true;
     }
 
     // Save/Load
