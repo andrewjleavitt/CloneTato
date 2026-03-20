@@ -138,7 +138,7 @@ public class PlayingScreen
 
     public void Draw(GameState state)
     {
-        Raylib.ClearBackground(new Color(18, 10, 12, 255));
+        Raylib.ClearBackground(new Color(55, 35, 38, 255));
 
         Raylib.BeginMode2D(_camera.Camera);
 
@@ -643,9 +643,9 @@ public class PlayingScreen
     {
         if (state.Assets.HasStrandedTerrain)
         {
-            // Blood Desert palette: very dark base
+            // Blood Desert palette: warm dark mauve base
             Raylib.DrawRectangle(0, 0, Constants.ArenaWidth, Constants.ArenaHeight,
-                new Color(22, 12, 14, 255));
+                new Color(75, 48, 50, 255));
 
             float camLeft = _camera.Camera.Target.X - Constants.LogicalWidth / 2f;
             float camTop = _camera.Camera.Target.Y - Constants.LogicalHeight / 2f;
