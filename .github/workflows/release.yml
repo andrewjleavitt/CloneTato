@@ -21,7 +21,7 @@ jobs:
             rid: osx-arm64
             artifact: Drift-macos-arm64
             itch_channel: osx-arm64
-          - os: macos-13
+          - os: macos-latest
             rid: osx-x64
             artifact: Drift-macos-x64
             itch_channel: osx-x64
