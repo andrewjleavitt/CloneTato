@@ -41,6 +41,9 @@ public class AssetManager
     public Texture2D HPBarSheet { get; private set; }
     public bool HasStrandedUI { get; private set; }
 
+    // Shaders
+    public Shader OutlineShader { get; private set; }
+
     private readonly Dictionary<string, Sound> _sounds = new();
 
     private static Texture2D LoadTexturePoint(string path)
@@ -76,6 +79,7 @@ public class AssetManager
 
         LoadSounds();
         LoadStrandedAssets();
+        LoadShaders();
     }
 
     private void LoadStrandedAssets()
@@ -179,6 +183,13 @@ public class AssetManager
         LargeScatterTextures = lgList.ToArray();
     }
 
+    private void LoadShaders()
+    {
+        string outlinePath = "assets/shaders/outline.fs";
+        if (File.Exists(outlinePath))
+            OutlineShader = Raylib.LoadShader(null, outlinePath);
+    }
+
     private void LoadSounds()
     {
         string soundPath = Constants.AssetBasePath + "/Sounds";
@@ -231,6 +242,7 @@ public class AssetManager
         if (HealthPickupIcon.Id != 0) Raylib.UnloadTexture(HealthPickupIcon);
         if (CoinIcon.Id != 0) Raylib.UnloadTexture(CoinIcon);
         if (HPBarSheet.Id != 0) Raylib.UnloadTexture(HPBarSheet);
+        if (OutlineShader.Id != 0) Raylib.UnloadShader(OutlineShader);
         foreach (var sound in _sounds.Values)
             Raylib.UnloadSound(sound);
     }
