@@ -23,6 +23,10 @@ Boss encounters change the rules, not just the numbers.
 - [ ] **Tarnished Widow** — burrows underground, creates sinkholes (terrain hazards), emerges for attack phases. Multi-phase fight using her full sprite set (small form → big form → burrow → spike attacks).
 - [ ] **Blowfish** — poisons terrain zones on contact, grows from small to large form mid-fight, launches spike projectiles. Arena becomes increasingly toxic.
 - [ ] **Dust Warrior** — summons sand walls that funnel the player, has melee charge + ranged sand blast. Creates chokepoints you have to fight through.
+- [ ] **Dust Jumper** — giant insectoid with ground slam AOE (98x103 VFX). Leaping charges across the arena, creates shockwaves on landing.
+- [ ] **Speed Racer** — fast 8-directional vehicle boss. Hit-and-run tactics, ramming damage, leaves dust trails that slow the player.
+- [ ] **Armored Mech** — tankiest boss (148x109). Shield phases that must be broken, energy blade melee, muzzle flash ranged attack. 4 color variants.
+- [ ] **Electrocutioner** — teleporting boss (157x107). Appear/vanish phases, chain lightning, volley projectiles. Arena becomes electrified zones.
 - [ ] **Boss arenas** — bosses reshape the playing field. After a boss dies, the terrain changes persist into the next wave as a reward/challenge.
 
 ### 3. SKILL EXPRESSION THROUGH AIMING
@@ -59,12 +63,15 @@ Factions aren't just visual categories — they have mechanical identity.
 ### 6. RUN IDENTITY & CHARACTER BUILDS
 Every run should feel different from the last.
 
-- [ ] **Starting archetypes** (character select):
-  - Gunslinger — starts with pistol, bonus to bullet weapons, fast reload
-  - Scavenger — starts with melee, bonus pickup range, finds more gold
-  - Drone Commander — starts with an orbiting drone, bonus to summon/turret weapons
-  - Glass Cannon — 50% HP, 50% more damage, faster but fragile
-  - Nomad — bonus move speed, heat resistant, dash has longer range
+- [x] **Starting archetypes** (character select — implemented):
+  - Gunslinger — balanced ranged fighter, starts with pistol (default)
+  - Blade Dancer — melee powerhouse (+40% melee, -30% ranged), starts with sword (unlock: wave 10)
+  - Drifter — glass cannon (+50% dmg, -40% HP), starts with companion (unlock: wave 20)
+- [ ] **Evolving companion** — floating orb that follows the hero. Drifter starts with it; other heroes unlock it after unlocking Drifter. Starts as XP/health gatherer, evolves via level-up choices:
+  - "Companion: Attack Pulse" — periodically damages nearby enemies
+  - "Companion: Heal Pulse" — periodically heals player for 1-2 HP
+  - "Companion: XP Boost" — gathered XP is worth 20% more
+  - "Companion: Shield" — blocks one lethal hit per wave
 - [ ] **Weapon synergies** — certain weapon combinations unlock passive bonuses (dual pistols = faster fire, shotgun + melee = close-range damage aura).
 - [ ] **Relic system** — rare persistent items found in runs that carry over to future runs (meta-progression beyond stat upgrades). "The Widow's Fang" — crit kills spawn a sinkhole. "Desert Glass" — heat buildup increases fire damage.
 
