@@ -64,10 +64,18 @@ while (!Raylib.WindowShouldClose() && !manager.QuitRequested)
     Raylib.BeginDrawing();
     Raylib.ClearBackground(Color.Black);
 
+    // Apply color grading post-process during gameplay screens
+    bool applyColorGrade = assets.ColorGradeShader.Id != 0
+        && manager.CurrentScreen is GameScreen.Playing or GameScreen.Shop
+            or GameScreen.LevelUp or GameScreen.GameOver or GameScreen.Victory;
+    if (applyColorGrade) Raylib.BeginShaderMode(assets.ColorGradeShader);
+
     // Flip the render texture vertically (render textures are flipped in OpenGL)
     var srcRect = new Rectangle(0, 0, renderTarget.Texture.Width, -renderTarget.Texture.Height);
     Raylib.DrawTexturePro(renderTarget.Texture, srcRect, Display.DestRect,
         System.Numerics.Vector2.Zero, 0f, Color.White);
+
+    if (applyColorGrade) Raylib.EndShaderMode();
 
     Raylib.DrawFPS(4, 4);
     Raylib.EndDrawing();
