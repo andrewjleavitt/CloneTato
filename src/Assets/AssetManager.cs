@@ -193,6 +193,7 @@ public class AssetManager
     private void LoadSounds()
     {
         string soundPath = Constants.AssetBasePath + "/Sounds";
+        if (!Directory.Exists(soundPath)) return;
         string[] soundFiles = Directory.GetFiles(soundPath, "*.ogg");
         foreach (var file in soundFiles)
         {

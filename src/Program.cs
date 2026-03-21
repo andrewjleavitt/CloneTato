@@ -3,6 +3,9 @@ using CloneTato.Assets;
 using CloneTato.Core;
 using Raylib_cs;
 
+// Set working directory to executable location so relative asset paths work in published builds
+Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
 // Load settings before anything else
 var settings = GameSettings.Load();
 
