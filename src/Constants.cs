@@ -16,8 +16,8 @@ public static class Constants
     public const int TileSpacing = 1;
 
     public const int MaxWeaponSlots = 6;
-    public const int MaxWaves = 20;
-    public const float WaveBaseDuration = 25.0f;
+    public const int WavesPerBiome = 10;
+    public const int BiomeCount = 3;
 
     public const float PlayerInvincibilityTime = 0.5f;
     public const float XPAttractRadius = 50f;

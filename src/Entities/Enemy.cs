@@ -29,6 +29,21 @@ public class Enemy : Entity
     public float ProjectileSpeed;
     public float PreferredRange;
 
+    // Ranged attack config (innate)
+    public int ProjectileCount = 1;
+    public float ProjectileSpread;
+
+    // Loot enemy (treasure goblin) — flees, no contact damage, big drops
+    public bool IsLootEnemy;
+    public float FleeTimer;         // despawn after this many seconds if not killed
+
+    // Kamikaze fields
+    public bool IsKamikaze;
+    public float FuseTimer;
+    public float FuseDuration;
+    public float ExplosionRadius;
+    public int ExplosionDamage;
+
     // Boss fields
     public bool IsBoss;
     public float Scale = 1f;
@@ -77,6 +92,15 @@ public class Enemy : Entity
         ProjectileDamage = 0;
         ProjectileSpeed = 0;
         PreferredRange = 0;
+        ProjectileCount = 1;
+        ProjectileSpread = 0;
+        IsLootEnemy = false;
+        FleeTimer = 0;
+        IsKamikaze = false;
+        FuseTimer = 0;
+        FuseDuration = 0;
+        ExplosionRadius = 0;
+        ExplosionDamage = 0;
         HasMeleeAttack = false;
         MeleeAttackCooldown = 0;
         MeleeAttackTimer = 0;
@@ -86,6 +110,45 @@ public class Enemy : Entity
         MeleeAttackRange = 0;
         MeleeAttackDamage = 0;
         MeleeAttackHit = false;
+
+        // Loot enemies (flee behavior) — no contact damage, despawn timer
+        if (def.Behavior == EnemyBehavior.Flee)
+        {
+            IsLootEnemy = true;
+            FleeTimer = 12f; // 12 seconds to catch and kill
+            ContactDamage = 0;
+        }
+
+        // Wire up innate attack patterns from def
+        if (def.AttackType == EnemyAttackType.Melee)
+        {
+            HasMeleeAttack = true;
+            MeleeAttackCooldown = def.AttackCooldown;
+            MeleeAttackTimer = 0.5f + Random.Shared.NextSingle() * 0.5f; // stagger first attack
+            MeleeAttackRange = def.AttackRange;
+            MeleeAttackDamage = (int)(def.BaseDamage * scaleFactor * def.AttackDamageMultiplier);
+            AttackAnimDuration = def.AttackAnimDuration;
+        }
+        else if (def.AttackType == EnemyAttackType.Ranged)
+        {
+            IsArmed = true;
+            ShootCooldown = def.AttackCooldown;
+            ShootTimer = Random.Shared.NextSingle() * def.AttackCooldown; // stagger
+            ProjectileDamage = (int)(def.BaseDamage * scaleFactor * def.AttackDamageMultiplier);
+            ProjectileSpeed = def.ProjectileSpeed;
+            PreferredRange = def.AttackRange;
+            AttackAnimDuration = def.AttackAnimDuration;
+            ProjectileCount = def.ProjectileCount;
+            ProjectileSpread = def.ProjectileSpread;
+        }
+        else if (def.AttackType == EnemyAttackType.Kamikaze)
+        {
+            IsKamikaze = true;
+            FuseDuration = def.FuseDuration;
+            FuseTimer = def.FuseDuration;
+            ExplosionRadius = def.ExplosionRadius;
+            ExplosionDamage = (int)(def.BaseDamage * scaleFactor * def.ExplosionDamageMultiplier);
+        }
     }
 
     public void ArmWithWeapon(WeaponDef weapon, float scaleFactor)
@@ -144,4 +207,5 @@ public enum EnemyBehavior
     FastChase,
     Tank,
     Erratic,
+    Flee,       // Runs away from player (treasure goblin)
 }

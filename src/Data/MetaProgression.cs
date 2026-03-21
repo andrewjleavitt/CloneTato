@@ -103,10 +103,10 @@ public class MetaProgression
             CharacterUnlocked[0] = true; // first character always unlocked
         }
 
-        // Character 1 (Blade Dancer): reach wave 10
-        if (BestWave >= 10 && CharacterUnlocked.Length > 1) CharacterUnlocked[1] = true;
-        // Character 2 (Drifter): reach wave 20 (beat the game)
-        if (BestWave >= 20 && CharacterUnlocked.Length > 2) CharacterUnlocked[2] = true;
+        // Character 1 (Blade Dancer): beat The Waste (biome 1 = 10 waves)
+        if (BestWave >= Constants.WavesPerBiome && CharacterUnlocked.Length > 1) CharacterUnlocked[1] = true;
+        // Character 2 (Drifter): beat Blood Desert (biome 2 = 20 total waves)
+        if (BestWave >= Constants.WavesPerBiome * 2 && CharacterUnlocked.Length > 2) CharacterUnlocked[2] = true;
     }
 
     // Save/Load

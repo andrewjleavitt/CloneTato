@@ -4,48 +4,143 @@ public class WaveConfig
 {
     public float Duration;
     public int TotalEnemies;
-    public float SpawnRate; // enemies per second
+    public float BaseSpawnRate; // enemies per second (multiplied by phase curve in WaveSystem)
     public int[] EnemyTypeIndices = [];
+    public float[]? SpawnWeights; // optional per-enemy-type weights (parallel to EnemyTypeIndices)
     public bool IsBossWave;
     public int GoldReward;
 
-    public static WaveConfig GetWave(int wave)
+    /// <summary>
+    /// Get wave config for a specific biome and wave number.
+    /// Biome 1 = The Waste, Biome 2 = Blood Desert, Biome 3 = The Temple.
+    /// </summary>
+    public static WaveConfig GetWave(int biome, int wave)
     {
-        var config = new WaveConfig
+        return biome switch
         {
-            Duration = Constants.WaveBaseDuration + wave * 2f,
-            TotalEnemies = 12 + wave * 7,
-            SpawnRate = 0.8f + wave * 0.18f,
-            IsBossWave = wave >= 3 && (wave % 3 == 0 || wave % 5 == 0),
-            GoldReward = 20 + wave * 5,
+            1 => GetWasteWave(wave),
+            2 => GetBloodDesertWave(wave),
+            3 => GetTempleWave(wave),
+            _ => GetWasteWave(wave), // fallback
         };
+    }
 
-        // Progressively unlock enemy types across waves
-        config.EnemyTypeIndices = wave switch
+    // Biome 1: The Waste
+    // Enemies: Small Bug [1], Medium Insect [2], Rusty Robot [10], Delivery Bot [13], Spiny Beetle [8], Big Bug [7]
+    // Boss: Dust Warrior
+    private static WaveConfig GetWasteWave(int wave)
+    {
+        return wave switch
         {
-            1 => [0, 1],                                   // Tribe Hunter + Small Bug
-            2 => [0, 1, 10],                               // + Rusty Robot
-            3 => [0, 1, 2, 10],                            // + Medium Insect
-            4 => [0, 1, 2, 4, 10],                         // + Archer
-            5 => [0, 1, 2, 8, 10, 13],                     // + Spiny Beetle + Delivery Bot
-            6 => [0, 1, 2, 3, 8, 10, 13],                  // + Tribe Warrior
-            7 => [0, 1, 2, 3, 7, 8, 10, 13],               // + Big Bug
-            8 => [0, 1, 2, 3, 4, 7, 8, 10, 12, 13],        // + Circle Bot
-            9 => [0, 1, 2, 3, 7, 8, 10, 12, 13, 15],       // + Bomb Minion
-            10 => [0, 1, 2, 3, 7, 8, 10, 11, 12, 13, 14, 15], // + Guard Robot + Hooded Minion
-            11 => [0, 1, 2, 3, 5, 7, 8, 10, 11, 12, 13, 14, 15], // + Guard
-            12 => [0, 1, 2, 3, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16], // + Warrior + Ranged Minion
-            13 => [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], // + Relic Guardian
-            _ => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], // All enemies
+            1 => new WaveConfig
+            {
+                Duration = 40f,
+                TotalEnemies = 18,
+                BaseSpawnRate = 0.55f,
+                EnemyTypeIndices = [1],                    // Small Bug only — swarm intro
+                GoldReward = 15,
+            },
+            2 => new WaveConfig
+            {
+                Duration = 45f,
+                TotalEnemies = 22,
+                BaseSpawnRate = 0.60f,
+                EnemyTypeIndices = [1, 2],                 // + Medium Insect
+                SpawnWeights = [0.65f, 0.35f],
+                GoldReward = 18,
+            },
+            3 => new WaveConfig
+            {
+                Duration = 50f,
+                TotalEnemies = 26,
+                BaseSpawnRate = 0.65f,
+                EnemyTypeIndices = [1, 2],                 // Same roster, real pressure
+                SpawnWeights = [0.50f, 0.50f],
+                GoldReward = 22,
+            },
+            4 => new WaveConfig
+            {
+                Duration = 55f,
+                TotalEnemies = 28,
+                BaseSpawnRate = 0.65f,
+                EnemyTypeIndices = [1, 2, 10],             // + Rusty Robot
+                SpawnWeights = [0.40f, 0.30f, 0.30f],
+                GoldReward = 25,
+            },
+            5 => new WaveConfig
+            {
+                Duration = 60f,
+                TotalEnemies = 32,
+                BaseSpawnRate = 0.70f,
+                EnemyTypeIndices = [1, 2, 10, 13],         // + Delivery Bot
+                SpawnWeights = [0.30f, 0.25f, 0.20f, 0.25f],
+                GoldReward = 28,
+            },
+            6 => new WaveConfig
+            {
+                Duration = 65f,
+                TotalEnemies = 35,
+                BaseSpawnRate = 0.72f,
+                EnemyTypeIndices = [1, 2, 8, 10, 13],      // + Spiny Beetle
+                SpawnWeights = [0.22f, 0.18f, 0.22f, 0.16f, 0.22f],
+                GoldReward = 32,
+            },
+            7 => new WaveConfig
+            {
+                Duration = 75f,
+                TotalEnemies = 38,
+                BaseSpawnRate = 0.70f,
+                EnemyTypeIndices = [1, 2, 7, 8, 10, 13],   // + Big Bug (full roster)
+                SpawnWeights = [0.18f, 0.15f, 0.15f, 0.17f, 0.15f, 0.20f],
+                GoldReward = 35,
+            },
+            8 => new WaveConfig
+            {
+                Duration = 80f,
+                TotalEnemies = 45,
+                BaseSpawnRate = 0.78f,
+                EnemyTypeIndices = [1, 2, 7, 8, 10, 13],   // All 6 — density ramp
+                SpawnWeights = [0.18f, 0.15f, 0.18f, 0.17f, 0.12f, 0.20f],
+                GoldReward = 40,
+            },
+            9 => new WaveConfig
+            {
+                Duration = 90f,
+                TotalEnemies = 55,
+                BaseSpawnRate = 0.85f,
+                EnemyTypeIndices = [1, 2, 7, 8, 10, 13],   // All 6, heavy — pre-boss gauntlet
+                SpawnWeights = [0.16f, 0.14f, 0.22f, 0.18f, 0.12f, 0.18f],
+                GoldReward = 45,
+            },
+            10 => new WaveConfig
+            {
+                Duration = 90f,
+                TotalEnemies = 18,                          // Steady adds during boss fight
+                BaseSpawnRate = 0.30f,
+                EnemyTypeIndices = [1, 10],                 // Small Bugs + Rusty Robots as adds
+                SpawnWeights = [0.70f, 0.30f],
+                IsBossWave = true,
+                GoldReward = 60,
+            },
+            _ => GetWasteWave(Math.Clamp(wave, 1, 10)),    // clamp to valid range
         };
+    }
 
-        // Boss waves get more enemies and are longer
-        if (config.IsBossWave)
-        {
-            config.TotalEnemies += 5;
-            config.Duration += 10f;
-        }
+    // Biome 2: Blood Desert — placeholder, returns Waste waves as fallback
+    // Enemies: Tribe Hunter [0], Archer [4], Guard [5], Tribe Warrior [3], Warrior [6], Relic Guardian [9]
+    // Boss: Blowfish
+    private static WaveConfig GetBloodDesertWave(int wave)
+    {
+        // TODO: Implement Blood Desert wave definitions
+        return GetWasteWave(wave);
+    }
 
-        return config;
+    // Biome 3: The Temple — placeholder, returns Waste waves as fallback
+    // Enemies: Hooded Minion [14], Circle Bot [12], Ranged Minion [16], Guard Robot [11], Bomb Minion [15], Planter Bot [17]
+    // Boss: Tarnished Widow
+    private static WaveConfig GetTempleWave(int wave)
+    {
+        // TODO: Implement Temple wave definitions
+        return GetWasteWave(wave);
     }
 }

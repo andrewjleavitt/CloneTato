@@ -13,11 +13,29 @@ public class PlayingScreen
     private readonly GameCamera _camera = new();
     private float _screenShakeTimer;
     private float _screenShakeIntensity;
+    private float _hitstopTimer; // freeze all updates for impact feel
 
     private const float ReticleDistance = 60f; // fixed distance from player
 
     public void Update(float dt, GameState state, GameStateManager manager)
     {
+        // Hitstop — freeze all game updates for impact feel
+        if (_hitstopTimer > 0)
+        {
+            _hitstopTimer -= dt;
+            // Still update camera and screen shake during hitstop
+            _camera.Update(state.Player.Position, dt);
+            if (_screenShakeTimer > 0)
+            {
+                _screenShakeTimer -= dt;
+                float shake = _screenShakeIntensity * (_screenShakeTimer / 0.15f);
+                _camera.Camera.Target += new Vector2(
+                    MathF.Round((Random.Shared.NextSingle() - 0.5f) * shake * 2f),
+                    MathF.Round((Random.Shared.NextSingle() - 0.5f) * shake * 2f));
+            }
+            return;
+        }
+
         // Compute mouse world position
         var mouseLogical = Display.ScreenToLogical(Raylib.GetMousePosition());
         state.MouseWorldPosition = Raylib.GetScreenToWorld2D(mouseLogical, _camera.Camera);
@@ -78,6 +96,19 @@ public class PlayingScreen
         // Collision detection
         CollisionSystem.ProcessCollisions(state);
 
+        // Consume pending combat feel effects from systems
+        if (state.PendingHitstop > 0)
+        {
+            TriggerHitstop(state.PendingHitstop);
+            state.PendingHitstop = 0;
+        }
+        if (state.PendingShakeIntensity > 0)
+        {
+            TriggerScreenShake(state.PendingShakeDuration, state.PendingShakeIntensity);
+            state.PendingShakeDuration = 0;
+            state.PendingShakeIntensity = 0;
+        }
+
         // Check for crits that happened this frame (damage numbers colored yellow = crit)
         for (int i = 0; i < state.DamageNumbers.Count; i++)
         {
@@ -120,7 +151,7 @@ public class PlayingScreen
         // Check wave complete
         if (!state.WaveActive)
         {
-            if (state.CurrentWave >= Constants.MaxWaves)
+            if (state.CurrentWave >= Constants.WavesPerBiome)
                 manager.TransitionTo(GameScreen.Victory);
             else
                 manager.TransitionTo(GameScreen.Shop);
@@ -134,6 +165,12 @@ public class PlayingScreen
             _screenShakeTimer = duration;
             _screenShakeIntensity = intensity;
         }
+    }
+
+    public void TriggerHitstop(float duration)
+    {
+        if (duration > _hitstopTimer)
+            _hitstopTimer = duration;
     }
 
     public void Draw(GameState state)

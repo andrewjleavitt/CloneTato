@@ -68,7 +68,7 @@ public class GameOverScreen
         int y = 80;
         UIRenderer.DrawTextSmall("-- RUN --", leftX, y, Color.Gold);
         y += 12;
-        UIRenderer.DrawTextSmall($"Wave: {state.CurrentWave}/{Constants.MaxWaves}", leftX, y, Color.White); y += 10;
+        UIRenderer.DrawTextSmall($"Wave: {state.CurrentWave}/{Constants.WavesPerBiome}", leftX, y, Color.White); y += 10;
         UIRenderer.DrawTextSmall($"Level: {state.Level}", leftX, y, Color.SkyBlue); y += 10;
         UIRenderer.DrawTextSmall($"Kills: {state.TotalEnemiesKilled}", leftX, y, Color.White); y += 10;
         UIRenderer.DrawTextSmall($"Damage: {state.TotalDamageDealt}", leftX, y, Color.White); y += 10;

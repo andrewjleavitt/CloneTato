@@ -240,8 +240,16 @@ public static class CollisionSystem
                 if (!enemy.Active) continue;
 
                 if (enemy.IsDying) continue;
+                if (enemy.IsLootEnemy) continue; // loot enemies don't hurt player
                 if (CircleOverlap(player.Position, player.Radius, enemy.Position, enemy.Radius))
                 {
+                    // Kamikaze enemies explode on contact
+                    if (enemy.IsKamikaze)
+                    {
+                        Systems.EnemySystem.Explode(enemy, state);
+                        break;
+                    }
+
                     // Dodge check
                     if (Random.Shared.NextSingle() < player.ComputedStats.DodgeChance)
                     {
@@ -255,6 +263,12 @@ public static class CollisionSystem
                     player.InvincibilityTimer = Constants.PlayerInvincibilityTime;
                     player.FlashTimer = 0.15f;
 
+                    // Player knockback away from enemy
+                    Vector2 knockDir = Vector2.Normalize(player.Position - enemy.Position);
+                    float knockForce = enemy.Behavior == Entities.EnemyBehavior.Tank ? 250f : 150f;
+                    player.KnockbackVelocity = knockDir * knockForce;
+                    player.KnockbackTimer = 0.12f;
+
                     // Trigger attack animation on contact
                     if (!enemy.IsAttacking)
                     {
@@ -266,6 +280,7 @@ public static class CollisionSystem
                     var dmgNum = state.GetInactiveDamageNumber();
                     dmgNum?.Init(player.Position, damage.ToString(), Color.Red);
 
+                    state.RequestScreenShake(0.08f, 1.5f);
                     state.Assets.PlaySoundVariant("hurt", 0.5f);
                     break;
                 }
@@ -295,10 +310,19 @@ public static class CollisionSystem
                     player.CurrentHP -= damage;
                     player.InvincibilityTimer = Constants.PlayerInvincibilityTime;
                     player.FlashTimer = 0.15f;
+
+                    // Player knockback from projectile direction
+                    if (proj.Velocity.Length() > 0.1f)
+                    {
+                        player.KnockbackVelocity = Vector2.Normalize(proj.Velocity) * 120f;
+                        player.KnockbackTimer = 0.1f;
+                    }
+
                     proj.Active = false;
 
                     var dmgNum = state.GetInactiveDamageNumber();
                     dmgNum?.Init(player.Position, damage.ToString(), Color.Red);
+                    state.RequestScreenShake(0.06f, 1.0f);
                     state.Assets.PlaySoundVariant("hurt", 0.5f);
                     break;
                 }

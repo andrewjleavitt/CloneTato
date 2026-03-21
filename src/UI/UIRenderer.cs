@@ -55,7 +55,7 @@ public static class UIRenderer
         DrawTextSmall($"Lv {state.Level}", barX + barW + 4, xpY - 1, Color.SkyBlue);
 
         // Wave info (top center)
-        string waveText = $"Wave {state.CurrentWave}/{Constants.MaxWaves}";
+        string waveText = $"Wave {state.CurrentWave}/{Constants.WavesPerBiome}";
         int textW = waveText.Length * 5;
         DrawTextSmall(waveText, Constants.LogicalWidth / 2 - textW / 2, 4, Color.White);
 

@@ -38,6 +38,7 @@ public class GameState
     public Stats LevelBonus;
     public Stats MetaBonus;
 
+    public int CurrentBiome = 1;
     public int CurrentWave;
     public float WaveTimer;
     public bool WaveActive;
@@ -52,6 +53,25 @@ public class GameState
     public int XPToNextLevel = 8;
     public bool LevelUpPending;
     public int PendingLevelUps;
+
+    // Combat feel — set by systems, consumed by PlayingScreen
+    public float PendingHitstop;        // seconds of hitstop to apply
+    public float PendingShakeDuration;
+    public float PendingShakeIntensity;
+
+    public void RequestHitstop(float duration)
+    {
+        if (duration > PendingHitstop) PendingHitstop = duration;
+    }
+
+    public void RequestScreenShake(float duration, float intensity)
+    {
+        if (intensity > PendingShakeIntensity)
+        {
+            PendingShakeDuration = duration;
+            PendingShakeIntensity = intensity;
+        }
+    }
 
     // Stats tracking
     public int TotalEnemiesKilled;
@@ -137,6 +157,7 @@ public class GameState
         ItemBonus = default;
         LevelBonus = default;
 
+        CurrentBiome = 1;
         CurrentWave = 0;
         Gold = 0;
         XP = 0;
@@ -153,7 +174,7 @@ public class GameState
     public void StartWave()
     {
         CurrentWave++;
-        CurrentWaveConfig = WaveConfig.GetWave(CurrentWave);
+        CurrentWaveConfig = WaveConfig.GetWave(CurrentBiome, CurrentWave);
         WaveTimer = CurrentWaveConfig.Duration;
         WaveActive = true;
         EnemiesSpawnedThisWave = 0;
@@ -223,12 +244,33 @@ public class GameState
         TotalEnemiesKilled++;
         EnemiesKilledThisWave++;
 
+        // Loot enemies burst extra drops in a ring
+        if (enemy.IsLootEnemy)
+        {
+            // Scatter XP orbs in a burst
+            int orbCount = 6;
+            for (int o = 0; o < orbCount; o++)
+            {
+                var orb = GetInactiveXPOrb();
+                if (orb == null) break;
+                float angle = o * (MathF.PI * 2f / orbCount);
+                var offset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 12f;
+                orb.Init(enemy.Position + offset, Math.Max(1, enemy.XPValue / orbCount));
+            }
+            Gold += enemy.GoldValue;
+
+            // Always drop a health pickup
+            var hp = GetInactiveHealthPickup();
+            hp?.Init(enemy.Position, 15);
+            return;
+        }
+
         // XP orbs
-        int orbCount = 1 + enemy.XPValue / 3;
-        for (int o = 0; o < orbCount; o++)
+        int normalOrbCount = 1 + enemy.XPValue / 3;
+        for (int o = 0; o < normalOrbCount; o++)
         {
             var orb = GetInactiveXPOrb();
-            orb?.Init(enemy.Position, Math.Max(1, enemy.XPValue / orbCount));
+            orb?.Init(enemy.Position, Math.Max(1, enemy.XPValue / normalOrbCount));
         }
         Gold += enemy.GoldValue;
 

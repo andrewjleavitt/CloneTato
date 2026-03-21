@@ -63,7 +63,7 @@ public class VictoryScreen
 
         int cy = 100;
         int cx = Constants.LogicalWidth / 2 - 80;
-        UIRenderer.DrawTextSmall($"All {Constants.MaxWaves} waves survived!", cx, cy, Color.Green);
+        UIRenderer.DrawTextSmall($"All {Constants.WavesPerBiome} waves survived!", cx, cy, Color.Green);
         UIRenderer.DrawTextSmall($"Enemies Killed: {state.TotalEnemiesKilled}", cx, cy + 16, Color.White);
         UIRenderer.DrawTextSmall($"Damage Dealt: {state.TotalDamageDealt}", cx, cy + 30, Color.White);
         UIRenderer.DrawTextSmall($"Time Survived: {state.TotalTimeSurvived:F1}s", cx, cy + 44, Color.White);

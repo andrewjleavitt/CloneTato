@@ -24,6 +24,10 @@ public class Player : Entity
     public float DashBuffTimer; // time remaining on post-dash buff
     public const float DashBuffDuration = 1.2f; // seconds of buff after dash
 
+    // Hit knockback
+    public float KnockbackTimer;
+    public Vector2 KnockbackVelocity;
+
     public Player()
     {
         Radius = 10f;

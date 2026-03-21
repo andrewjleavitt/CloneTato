@@ -271,9 +271,13 @@ public static class WeaponSystem
             dmgNum?.Init(enemy.Position, finalDamage.ToString(),
                 crit ? Color.Yellow : Color.White);
 
-            // Enemy death
+            // Enemy death — hitstop on kill
             if (enemy.CurrentHP <= 0 && !enemy.IsDying)
+            {
                 state.HandleEnemyDeath(enemy);
+                state.RequestHitstop(0.05f);  // ~3 frames freeze on melee kill
+                state.RequestScreenShake(0.12f, 2.5f);
+            }
         }
 
         // Spawn swipe visual
@@ -282,7 +286,11 @@ public static class WeaponSystem
             hitCount > 0 ? Color.White : new Color((byte)200, (byte)200, (byte)200, (byte)150));
 
         if (hitCount > 0)
+        {
             state.Assets.PlaySoundVariant("hurt", 0.2f);
+            // Subtle screen shake on melee hit (not kill)
+            state.RequestScreenShake(0.06f, 1.0f);
+        }
         else
             state.Assets.PlaySoundVariant("move", 0.15f);
     }

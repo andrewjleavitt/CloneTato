@@ -104,6 +104,14 @@ public static class PlayerSystem
         float terrainMult = CollisionSystem.GetTerrainSpeedMultiplier(state, player.Position);
         moveSpeed *= terrainMult;
 
+        // Apply knockback if active — overrides movement input
+        if (player.KnockbackTimer > 0)
+        {
+            player.KnockbackTimer -= dt;
+            player.Position += player.KnockbackVelocity * dt;
+            player.KnockbackVelocity *= 0.85f; // friction decay
+        }
+
         player.Velocity = input * moveSpeed;
         player.Position += player.Velocity * dt;
 
