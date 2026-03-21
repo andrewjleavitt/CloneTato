@@ -382,8 +382,6 @@ public class PlayingScreen
                 string animName;
                 if (enemy.IsDying)
                     animName = "death";
-                else if (enemy.IsAttacking && eSprite.HasAnimation("attack"))
-                    animName = "attack";
                 else
                 {
                     var vel = enemy.Velocity;
@@ -395,7 +393,18 @@ public class PlayingScreen
                     else
                         dir = "down";
 
-                    animName = moving ? $"walk_{dir}" : $"idle_{dir}";
+                    if (enemy.IsAttacking)
+                    {
+                        // Try directional attack, fall back to generic "attack"
+                        string dirAtk = $"attack_{dir}";
+                        animName = eSprite.HasAnimation(dirAtk) ? dirAtk
+                            : eSprite.HasAnimation("attack") ? "attack"
+                            : moving ? $"walk_{dir}" : $"idle_{dir}";
+                    }
+                    else
+                    {
+                        animName = moving ? $"walk_{dir}" : $"idle_{dir}";
+                    }
                 }
 
                 // Compute frame from enemy's AnimTimer

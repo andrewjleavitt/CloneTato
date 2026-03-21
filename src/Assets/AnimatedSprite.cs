@@ -431,6 +431,11 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Tribe Hunter-Walk Down.png", 34, 37, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Tribe Hunter-death.png", 34, 37, 10, false));
 
+        // Attack (shoot) — 7 frames per direction
+        sprite.AddAnimation("attack_right", LoadStrip($"{dir}/Tribe Hunter-Shoot.png", 34, 37, 12, false));
+        sprite.AddAnimation("attack_up", LoadStrip($"{dir}/Tribe Hunter-Shoot Up.png", 34, 37, 12, false));
+        sprite.AddAnimation("attack_down", LoadStrip($"{dir}/Tribe Hunter-Shoot down.png", 34, 37, 12, false));
+
         // Hunter body is centered horizontally; feet near bottom of 37px frame
         sprite.PivotOffsetY = -4f;
 
@@ -454,6 +459,11 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Tribe Warrior-Walk Down.png", 62, 69, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Tribe Warrior-death.png", 62, 69, 10, false));
 
+        // Attack — 11 frames per direction
+        sprite.AddAnimation("attack_right", LoadStrip($"{dir}/Tribe Warrior-attack.png", 62, 69, 12, false));
+        sprite.AddAnimation("attack_up", LoadStrip($"{dir}/Tribe Warrior-Attack Up.png", 62, 69, 12, false));
+        sprite.AddAnimation("attack_down", LoadStrip($"{dir}/Tribe Warrior-attack down.png", 62, 69, 12, false));
+
         // Large frame (62x69) — warrior body is in upper portion, weapon extends left
         sprite.PivotOffsetY = -10f;
 
@@ -469,6 +479,7 @@ public static class AnimationLoader
         sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Small insect - idle move.png", 20, 28, 6));
         sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Small insect - idle move.png", 20, 28, 6));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Small Insect-Death.png", 20, 28, 10, false));
+        sprite.AddAnimation("attack", LoadStrip($"{dir}/Small Insect-Attack.png", 20, 28, 12, false));
 
         // Bugs don't have directional variants — reuse same animation
         sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Small insect - idle move.png", 20, 28, 6));
@@ -491,6 +502,7 @@ public static class AnimationLoader
         sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Medium Insect-idleMove.png", 34, 37, 6));
         sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Medium Insect-idleMove.png", 34, 37, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Medium Insect-Death.png", 34, 37, 10, false));
+        sprite.AddAnimation("attack", LoadStrip($"{dir}/Medium Insect-Attack.png", 34, 37, 12, false));
 
         sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Medium Insect-idleMove.png", 34, 37, 6));
         sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Medium Insect-idleMove.png", 34, 37, 6));
@@ -521,6 +533,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_right", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_up", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
+        // shoot: frames 19-25 (7 frames)
+        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 19, 7, 12, false));
         // death: 35-42 but grid only has 40 cells (8x5), cap at frame 39
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 35, 5, 8, false));
         // Grid sheet (32x32) — character feet near bottom
@@ -546,6 +560,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_right", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_up", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
+        // attack: frames 19-23 (5 frames)
+        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 19, 5, 12, false));
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 29, 16, 10, false));
         // Stocky guard — slightly above center in 32x32 frame
         sprite.PivotOffsetY = -3f;
@@ -570,6 +586,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_right", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_up", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
+        // attack: frames 19-23 (5 frames)
+        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 19, 5, 12, false));
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 33, 8, 10, false));
         // Warrior — feet near bottom of 32x32 frame
         sprite.PivotOffsetY = -4f;
@@ -585,6 +603,7 @@ public static class AnimationLoader
         sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
         sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Big Insect-Death.png", 72, 44, 13, false));
+        sprite.AddAnimation("attack", LoadStrip($"{dir}/Big Insect-Attack.png", 72, 44, 12, false));
 
         // Reuse for all directions (non-directional sprite)
         sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
@@ -605,6 +624,7 @@ public static class AnimationLoader
         sprite.AddAnimation("idle_right", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
         sprite.AddAnimation("walk_right", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Medium2 bug-Death.png", 88, 37, 11, false));
+        sprite.AddAnimation("attack", LoadStrip($"{dir}/Medium2 bug-Attack.png", 88, 37, 12, false));
 
         sprite.AddAnimation("idle_up", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
         sprite.AddAnimation("idle_down", LoadStrip($"{dir}/Medium2 bug-Idle Move.png", 88, 37, 8));
@@ -628,6 +648,11 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Tribe Tamed Beast-Move Up.png", 76, 67, 6));
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Tribe Tamed Beast-Move Down.png", 76, 67, 6));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Tribe Tamed Beast-death.png", 76, 67, 17, false));
+
+        // Attack — 16 frames per direction
+        sprite.AddAnimation("attack_right", LoadStrip($"{dir}/Tribe Tamed Beast - Attack Left Right.png", 76, 67, 12, false));
+        sprite.AddAnimation("attack_up", LoadStrip($"{dir}/Tribe Tamed Beast-Attack Up.png", 76, 67, 12, false));
+        sprite.AddAnimation("attack_down", LoadStrip($"{dir}/Tribe Tamed Beast-Attack Down.png", 76, 67, 12, false));
 
         sprite.PivotOffsetY = -10f;
         sprite.Play("idle_down");
@@ -723,6 +748,7 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Minion 1-Run.png", 33, 36, 8));
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Minion 1-Run.png", 33, 36, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Minion 1-Death.png", 33, 36, 8, false));
+        sprite.AddAnimation("attack", LoadStrip($"{dir}/Minion 1-Attack.png", 33, 36, 12, false));
 
         sprite.PivotOffsetY = -4f;
         sprite.Play("idle_down");
@@ -761,6 +787,7 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Minion 3-Run.png", 25, 15, 8));
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Minion 3-Run.png", 25, 15, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Minion 3-Death.png", 25, 15, 7, false));
+        sprite.AddAnimation("attack", LoadStrip($"{dir}/Minion 3-Range Attack.png", 25, 15, 12, false));
 
         sprite.PivotOffsetY = -1f;
         sprite.Play("idle_down");

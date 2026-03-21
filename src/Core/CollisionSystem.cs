@@ -255,6 +255,14 @@ public static class CollisionSystem
                     player.InvincibilityTimer = Constants.PlayerInvincibilityTime;
                     player.FlashTimer = 0.15f;
 
+                    // Trigger attack animation on contact
+                    if (!enemy.IsAttacking)
+                    {
+                        enemy.IsAttacking = true;
+                        enemy.AttackAnimTimer = 0.4f;
+                        enemy.AttackAnimDuration = 0.4f;
+                    }
+
                     var dmgNum = state.GetInactiveDamageNumber();
                     dmgNum?.Init(player.Position, damage.ToString(), Color.Red);
 

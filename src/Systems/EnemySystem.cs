@@ -94,6 +94,11 @@ public static class EnemySystem
                 if (enemy.ShootTimer <= 0 && dist < enemy.PreferredRange * 2.5f)
                 {
                     enemy.ShootTimer = enemy.ShootCooldown;
+                    // Play attack animation
+                    enemy.IsAttacking = true;
+                    enemy.AttackAnimTimer = 0.35f;
+                    enemy.AttackAnimDuration = 0.35f;
+
                     var proj = state.GetInactiveEnemyProjectile();
                     if (proj != null)
                     {
@@ -110,6 +115,13 @@ public static class EnemySystem
                             Raylib_cs.Color.Orange
                         );
                     }
+                }
+                // Tick attack animation
+                if (enemy.IsAttacking)
+                {
+                    enemy.AttackAnimTimer -= dt;
+                    if (enemy.AttackAnimTimer <= 0)
+                        enemy.IsAttacking = false;
                 }
             }
 
@@ -151,6 +163,14 @@ public static class EnemySystem
                         enemy.MeleeAttackHit = false;
                     }
                 }
+            }
+
+            // Tick attack animation for non-boss, non-armed enemies (contact attack visual)
+            if (enemy.IsAttacking && !enemy.HasMeleeAttack && !enemy.IsArmed)
+            {
+                enemy.AttackAnimTimer -= dt;
+                if (enemy.AttackAnimTimer <= 0)
+                    enemy.IsAttacking = false;
             }
 
             // Terrain zone speed modifier for enemies too

@@ -115,7 +115,9 @@ public class SpriteGalleryScreen
 
             var anims = new List<string>();
             foreach (var name in new[] { "idle_right", "idle_up", "idle_down",
-                "walk_right", "walk_up", "walk_down", "death" })
+                "walk_right", "walk_up", "walk_down",
+                "attack", "attack_right", "attack_up", "attack_down",
+                "death" })
             {
                 if (eSprite.HasAnimation(name)) anims.Add(name);
             }
