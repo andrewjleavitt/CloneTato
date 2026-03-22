@@ -534,8 +534,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_right", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_up", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
-        // shoot: frames 19-25 (7 frames)
-        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 19, 7, 12, false));
+        // shoot: 7 frames starting at row 2 (frame 16)
+        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 16, 7, 12, false));
         // death: 35-42 but grid only has 40 cells (8x5), cap at frame 39
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 35, 5, 8, false));
         // Grid sheet (32x32) — character feet near bottom
@@ -561,8 +561,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_right", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_up", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
-        // attack: frames 19-23 (5 frames)
-        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 19, 5, 12, false));
+        // attack: 5 frames starting at row-aligned position
+        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 16, 5, 12, false));
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 29, 16, 10, false));
         // Stocky guard — slightly above center in 32x32 frame
         sprite.PivotOffsetY = -3f;
@@ -587,8 +587,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_right", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_up", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
-        // attack: frames 19-23 (5 frames)
-        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 19, 5, 12, false));
+        // attack: 5 frames starting at row 2 (frame 16)
+        sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 16, 5, 12, false));
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 32, 8, 10, false));
         // Warrior — feet near bottom of 32x32 frame
         sprite.PivotOffsetY = -4f;
