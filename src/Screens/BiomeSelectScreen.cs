@@ -182,8 +182,8 @@ public class BiomeSelectScreen
 
     private static string[] GetBiomeEnemies(int biome) => biome switch
     {
-        1 => ["Scorpion", "Snake", "Bat", "Rusty Robot", "Delivery Bot", "Spiny Beetle", "Big Bug"],
-        2 => ["Beetle", "Archer", "Guard", "Warrior", "Relic Guardian", "Spiny Beetle"],
+        1 => ["Small Bug", "Medium Insect", "Tribe Hunter", "Rusty Robot", "Delivery Bot", "Spiny Beetle", "Big Bug"],
+        2 => ["Tribe Warrior", "Archer", "Guard", "Warrior", "Relic Guardian", "Spiny Beetle"],
         3 => ["Hooded Minion", "Circle Bot", "Ranged Minion", "Guard Robot", "Bomb Minion", "Planter Bot"],
         _ => ["???"],
     };
