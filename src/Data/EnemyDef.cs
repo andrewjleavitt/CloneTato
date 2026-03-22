@@ -38,6 +38,12 @@ public class EnemyDef
     // Frontal damage reduction (shield-bearers)
     public float FrontalDamageReduction; // 0 = none, 0.5 = 50% reduction from front
 
+    // Rush/lunge (anti-kite melee)
+    public bool CanRush;                // enables rush behavior
+    public float RushCooldown = 3f;     // seconds between rushes
+    public float RushDuration = 0.3f;   // how long the rush lasts
+    public float RushSpeedMult = 3f;    // speed multiplier during rush
+
     // Kamikaze params
     public float FuseDuration;          // seconds until self-destruct
     public float ExplosionRadius;       // blast radius
@@ -121,6 +127,7 @@ public static class EnemyDatabase
             AttackType = EnemyAttackType.Melee,
             AttackCooldown = 1.0f, AttackRange = 26f,
             AttackAnimDuration = 0.35f, AttackDamageMultiplier = 1.3f,
+            CanRush = true, RushCooldown = 3.5f, RushDuration = 0.25f, RushSpeedMult = 3.5f,
         },
         // Insects (index 7-8)
         new()

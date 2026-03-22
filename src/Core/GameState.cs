@@ -24,6 +24,10 @@ public class GameState
     // Visual-only ground decorations (no collision)
     public List<GroundScatter> GroundScatterProps = new();
 
+    // Explosion VFX pool
+    public const int MaxExplosionVFX = 10;
+    public ExplosionVFX[] ExplosionEffects = new ExplosionVFX[MaxExplosionVFX];
+
     public List<WeaponInstance> EquippedWeapons = new();
     public List<float> WeaponCooldowns = new();
     public List<int> WeaponClipAmmo = new();     // current ammo in clip per weapon
@@ -236,6 +240,18 @@ public class GameState
         for (int i = 0; i < MeleeSwipes.Count; i++)
             if (!MeleeSwipes[i].Active) return MeleeSwipes[i];
         return null;
+    }
+
+    public void SpawnExplosionVFX(Vector2 pos, float radius, int defIndex = -1)
+    {
+        for (int i = 0; i < ExplosionEffects.Length; i++)
+        {
+            if (!ExplosionEffects[i].Active)
+            {
+                ExplosionEffects[i].Init(pos, radius, 0.5f, defIndex);
+                return;
+            }
+        }
     }
 
     public void HandleEnemyDeath(Enemy enemy)

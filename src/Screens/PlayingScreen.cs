@@ -133,6 +133,17 @@ public class PlayingScreen
                 MathF.Round((Random.Shared.NextSingle() - 0.5f) * shake * 2f));
         }
 
+        // Update explosion VFX
+        for (int i = 0; i < state.ExplosionEffects.Length; i++)
+        {
+            if (state.ExplosionEffects[i].Active)
+            {
+                state.ExplosionEffects[i].Timer -= dt;
+                if (state.ExplosionEffects[i].Timer <= 0)
+                    state.ExplosionEffects[i].Active = false;
+            }
+        }
+
         // Check player death
         if (state.Player.CurrentHP <= 0)
         {
@@ -572,6 +583,39 @@ public class PlayingScreen
             }
 
             Raylib.DrawText(dn.Text, (int)dn.Position.X - 4, (int)dn.Position.Y, fontSize, c);
+        }
+
+        // Explosion VFX
+        for (int i = 0; i < state.ExplosionEffects.Length; i++)
+        {
+            ref var vfx = ref state.ExplosionEffects[i];
+            if (!vfx.Active) continue;
+
+            float progress = vfx.Progress;
+            float alpha = vfx.Alpha;
+
+            // Try to use the animated explosion sprite from the Bomb Minion
+            var bombSprite = state.Assets.EnemySprites[15]; // Bomb Minion
+            int explFrames = bombSprite?.GetFrameCount("explode") ?? 0;
+            if (bombSprite != null && explFrames > 0)
+            {
+                int frame = Math.Clamp((int)(progress * explFrames), 0, explFrames - 1);
+                byte a = (byte)(alpha * 255);
+                var tint = new Color((byte)255, (byte)255, (byte)255, a);
+                float scale = vfx.Radius / 40f; // scale sprite to match explosion radius
+                bombSprite.DrawAnimationFrame("explode", frame, false,
+                    vfx.Position.X, vfx.Position.Y, tint, scale);
+            }
+            else
+            {
+                // Fallback: expanding circle
+                float r = vfx.Radius * progress;
+                byte a = (byte)(alpha * 200);
+                Raylib.DrawCircle((int)vfx.Position.X, (int)vfx.Position.Y, r,
+                    new Color((byte)255, (byte)160, (byte)50, a));
+                Raylib.DrawCircle((int)vfx.Position.X, (int)vfx.Position.Y, r * 0.6f,
+                    new Color((byte)255, (byte)220, (byte)100, (byte)(a * 0.7f)));
+            }
         }
 
         // Targeting reticle (fixed distance from player)

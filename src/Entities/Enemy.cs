@@ -70,6 +70,16 @@ public class Enemy : Entity
     // Frontal damage reduction
     public float FrontalDamageReduction;
 
+    // Rush/lunge attack (Warrior anti-kite)
+    public bool CanRush;
+    public float RushCooldown;
+    public float RushCooldownTimer;
+    public bool IsRushing;
+    public float RushTimer;
+    public float RushDuration;
+    public float RushSpeed;
+    public Vector2 RushDirection;
+
     public void Init(EnemyDef def, Vector2 spawnPos, float scaleFactor = 1f)
     {
         Position = spawnPos;
@@ -120,6 +130,14 @@ public class Enemy : Entity
         IsEnraged = false;
         CanEnrage = def.EnragesAtLowHP;
         FrontalDamageReduction = def.FrontalDamageReduction;
+        CanRush = def.CanRush;
+        IsRushing = false;
+        RushCooldown = def.RushCooldown;
+        RushCooldownTimer = 1f + Random.Shared.NextSingle() * def.RushCooldown; // stagger first rush
+        RushTimer = 0;
+        RushDuration = def.RushDuration;
+        RushSpeed = def.BaseSpeed * def.RushSpeedMult;
+        RushDirection = Vector2.Zero;
 
         // Loot enemies (flee behavior) — no contact damage, despawn timer
         if (def.Behavior == EnemyBehavior.Flee)

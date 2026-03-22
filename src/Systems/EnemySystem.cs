@@ -66,6 +66,44 @@ public static class EnemySystem
                 enemy.FlashTimer = 0.3f; // visible enrage flash
             }
 
+            // Rush/lunge logic — override movement when active
+            if (enemy.CanRush)
+            {
+                if (enemy.IsRushing)
+                {
+                    enemy.RushTimer -= dt;
+                    if (enemy.RushTimer <= 0)
+                    {
+                        enemy.IsRushing = false;
+                        enemy.RushCooldownTimer = enemy.RushCooldown;
+                    }
+                    else
+                    {
+                        // Rush: move at high speed in locked direction
+                        enemy.Velocity = enemy.RushDirection * enemy.RushSpeed;
+                        enemy.Position += enemy.Velocity * dt;
+                        enemy.Position = new Vector2(
+                            Math.Clamp(enemy.Position.X, 0, Constants.ArenaWidth),
+                            Math.Clamp(enemy.Position.Y, 0, Constants.ArenaHeight));
+                        continue; // skip normal movement during rush
+                    }
+                }
+                else
+                {
+                    enemy.RushCooldownTimer -= dt;
+                    float distToPlayer = Vector2.Distance(enemy.Position, playerPos);
+                    // Trigger rush when at medium range (60-150) and cooldown ready
+                    if (enemy.RushCooldownTimer <= 0 && distToPlayer > 60f && distToPlayer < 150f)
+                    {
+                        enemy.IsRushing = true;
+                        enemy.RushTimer = enemy.RushDuration;
+                        enemy.RushDirection = Vector2.Normalize(playerPos - enemy.Position);
+                        enemy.IsAttacking = true;
+                        enemy.AttackAnimTimer = enemy.AttackAnimDuration;
+                    }
+                }
+            }
+
             Vector2 dir = playerPos - enemy.Position;
             float dist = dir.Length();
 
@@ -469,7 +507,10 @@ public static class EnemySystem
             }
         }
 
-        // Screen shake
+        // Explosion VFX + screen shake
+        state.SpawnExplosionVFX(pos, radius, enemy.DefIndex);
+        state.PendingShakeDuration = 0.2f;
+        state.PendingShakeIntensity = 4f;
         state.Assets.PlaySoundVariant("explosion", 0.5f);
     }
 
