@@ -28,6 +28,9 @@ public class Player : Entity
     public float KnockbackTimer;
     public Vector2 KnockbackVelocity;
 
+    // Melee attack animation
+    public float MeleeAnimTimer; // > 0 means currently showing attack anim
+
     public Player()
     {
         Radius = 10f;

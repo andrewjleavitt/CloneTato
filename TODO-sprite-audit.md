@@ -62,7 +62,7 @@ Go through every character in the Sprite Gallery. For each one:
 | move | down | `Move Down.png` | 8 | — | [ ] Not wired |
 | death | — | `Death.png` | 13 | 10 | [x] Wired |
 
-- [ ] **Wire chop:** 4-frame overhead chop — single-target melee. Slash = wide arc, Chop = focused hit?
+- [x] **Chop wired:** 3-direction chop animations loaded (chop_right/up/down)
 - [ ] **Wire move:** Walk animation separate from run
 - [ ] **Verify:** Slash frame counts (5/7/7 across directions) — are some frames empty?
 
@@ -235,12 +235,12 @@ Go through every character in the Sprite Gallery. For each one:
 | idle | 1 | 5 | [x] Wired |
 | walk/run | 11 | 4 | [x] Wired |
 | shoot | 16 | 7 | [x] Wired as "attack" (fixed offset) |
-| hit | 33 | 2 | [ ] Not wired |
+| hit | 33 | 2 | [x] Wired |
 | death | 35 | 5 | [x] Wired |
 
 - [x] Shoot animation wired (start frame fixed 19→16)
 - [x] Kiting behavior implemented (predictive aim + wounded rapid-fire)
-- [ ] Wire hit reaction animation
+- [x] Hit reaction animation wired (plays on FlashTimer)
 
 ### Guard — MELEE TANK
 **Source:** `enemies/starter_guard/guard.png`
@@ -268,12 +268,12 @@ Go through every character in the Sprite Gallery. For each one:
 | idle | 1 | 5 | [x] Wired |
 | walk/run | 11 | 4 | [x] Wired |
 | attack | 16 | 5 | [x] Wired as "attack" (fixed offset) |
-| hit | 29 | 2 | [ ] Not wired |
+| hit | 29 | 2 | [x] Wired |
 | death | 33 | 8 | [x] Wired |
 
 - [x] Attack animation wired (start frame fixed 19→16)
 - [x] Rush/lunge attack implemented
-- [ ] Wire hit reaction animation
+- [x] Hit reaction animation wired (plays on FlashTimer)
 
 ---
 
@@ -388,9 +388,9 @@ Go through every character in the Sprite Gallery. For each one:
 | idle | `Minion 2-Idle.png` | 8 | 8 | [x] Wired |
 | run | `Minion 2-Run.png` | 8 | 8 | [x] Wired |
 | prep explode | `Minion 2-Prep Explode.png` | 4 | 8 | [x] Wired as death |
-| explosion VFX | `Minion 2 Explosion - 124x71.png` | 15 | 12 | [ ] Not loaded |
+| explosion VFX | `Minion 2 Explosion - 124x71.png` | 15 | 10 | [x] Loaded + rendered |
 
-- [ ] **TODO:** Load explosion VFX (1860x77, 15 frames at 124x77)
+- [x] Explosion VFX loaded as "explode" animation and rendered for all explosion effects
 - [x] Explosion-on-death AOE implemented (damages nearby enemies, chain reactions)
 - [x] Fuse proximity trigger implemented (arms within 100px of player)
 
@@ -438,17 +438,18 @@ Go through every character in the Sprite Gallery. For each one:
 | walk down | `Move Down.png` | 18 | [x] Wired |
 | attack | `Attack out of Ground Down.png` | 13 | [x] Wired |
 | death | `Blowfish-Death.png` | 14 | [x] Wired |
-| small idle | `Blowfish-Small Idle.png` | 12 | [ ] Not wired |
-| small move | `Blowfish-Small Move.png` | ? | [ ] Not wired |
-| go big | `Blowfish-Grow into Big Form.png` | 5 | [ ] Not wired |
-| go small | `Blowfish-Small shrink.png` | 4 | [ ] Not wired |
-| into ground | `Blowfish-Move into ground.png` | 11 | [ ] Not wired |
-| attack up | `Attack out of Ground Up.png` | 13 | [ ] Not wired |
-| spike 1/2/3 | `Spike*.png` | various | [ ] Not wired |
-| spike trail | `Spike trail.png` | ? | [ ] Not wired |
+| small idle | `Blowfish-Small Idlelmove.png` | 12 | [x] Wired |
+| go big | `Blowfish-Go big.png` | 5 | [x] Wired |
+| go small | `Blowfish-Go Small.png` | 4 | [x] Wired |
+| into ground | `Blowfish-Into Ground.png` | 11 | [x] Wired (burrow) |
+| attack up | `Blowfish-Attack Out of Ground Up.png` | 13 | [x] Wired |
+| spike 1 | `Blowfish-Spike 1.png` | 14 | [x] Wired |
+| spike 2 | `Blowfish-Spike 2.png` | 14 | [x] Wired |
+| spike 3 | `Blowfish-Spike 3.png` | 14 | [x] Wired |
 
-- [ ] **Phase boss potential:** small form → grow → big form → burrow → emerge attack
-- [ ] Spike sprites could be projectiles
+- [x] Phase boss: burrow (30% opacity underground) → emerge attack up → spike burst
+- [x] Inflation pulse AOE implemented
+- [ ] Spike trail VFX (`Spike trail.png`) not yet loaded
 
 ### Tarnished Widow
 **Source:** `bosses/tarnished_widow/The Tarnished Widow 188x90.png`
@@ -458,15 +459,15 @@ Go through every character in the Sprite Gallery. For each one:
 |-----|-------|---------------|------------------|--------|
 | 0 | 0 | 8 | idle | [x] Wired |
 | 1 | 18 | 10 | walk | [x] Wired |
-| 2 | 36 | 18? | unknown — dissolve/alternate? | [ ] Not wired |
-| 3 | 54 | 8? | unknown — idle variant? | [ ] Not wired |
-| 4 | 72 | 10 | attack (with blood) | [x] Wired |
-| 5 | 90 | 8? | unknown — more blood attack? | [ ] Not wired |
-| 6 | 108 | 12? | unknown — charge/lunge? | [ ] Not wired |
+| 2 | 36 | 10 | attack 1 — melee leg sweep | [x] Wired |
+| 3 | 54 | 8 | attack spit — ranged web spit | [x] Wired |
+| 4 | 72 | 10 | pounce launch (jump up) | [x] Wired |
+| 5 | 90 | 10 | pounce land (jump down) | [x] Wired |
+| 6 | 108 | 10 | summon/buff animation | [x] Wired |
 | 7 | 126 | 18 | death explosion | [x] Wired |
 
-- [ ] **NEEDS REVIEW:** Rows 2, 3, 5, 6 have unknown animations
-- [ ] Multi-phase boss fight potential with the full 8-row sheet
+- [x] All 8 rows mapped and wired with BossAttackAnim system
+- [x] Pounce (launch + land), web spit, summon, melee all use correct animations
 - [ ] Verify pivot offset Y=-10
 
 ---
@@ -582,12 +583,8 @@ Humanoid grid sheet attack frames fixed (startFrame 19→16).
 - Rusty Robot (no attack — kamikaze), Guard Robot ✓, Circle Bot ✓, Delivery Bot ✓, Planter Bot ✓
 
 ### Still not wired (low priority):
-- Blade Dancer chop (separate from slash — could be alt melee)
 - Hero "move" walk animations (separate from run)
-- Bomb Minion explosion VFX (124x71 sprite, 15 frames)
-- Blowfish small form + burrow animations (12 unused)
-- Tarnished Widow rows 2, 3, 5, 6 (unknown animations)
-- Archer/Warrior hit reaction animations
+- Blowfish spike trail VFX
 
 ### Bosses not yet implemented: 4
 - Dust Jumper (9 rows + slam VFX)
@@ -596,7 +593,7 @@ Humanoid grid sheet attack frames fixed (startFrame 19→16).
 - Electrocutioner (6 animations + volley projectile)
 
 ### Phase boss potential:
-- Blowfish: small→grow→big→burrow→emerge (12 unused animations)
-- Tarnished Widow: 4 unknown animation rows
+- Blowfish: small→grow→big→burrow→emerge — ALL WIRED
+- Tarnished Widow: all 8 rows mapped and wired (melee, spit, pounce, summon, death)
 - Electrocutioner: appear/teleport/attack/range (natural phase transitions)
 - Armored Mech: shield/stance/multiple attack types

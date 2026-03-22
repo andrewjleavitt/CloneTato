@@ -281,6 +281,9 @@ public static class WeaponSystem
             }
         }
 
+        // Trigger player melee attack animation
+        player.MeleeAnimTimer = 0.35f;
+
         // Spawn swipe visual
         var swipe = state.GetInactiveMeleeSwipe();
         swipe?.Init(player.Position, swingAngle, weapon.MeleeArc, weapon.Range,

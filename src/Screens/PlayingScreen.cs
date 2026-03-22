@@ -478,6 +478,10 @@ public class PlayingScreen
                     {
                         animName = eSprite.HasAnimation("burrow") ? "burrow" : $"idle_{dir}";
                     }
+                    else if (enemy.FlashTimer > 0 && eSprite.HasAnimation("hit"))
+                    {
+                        animName = "hit";
+                    }
                     else if (enemy.IsAttacking)
                     {
                         // Widow boss: use specific attack animation from BossAttackAnim
@@ -1114,6 +1118,8 @@ public class PlayingScreen
             anim = "death";
         else if (player.IsDashing)
             anim = $"roll_{dir}";
+        else if (player.MeleeAnimTimer > 0 && hero.HasAnimation($"slash_{dir}"))
+            anim = $"slash_{dir}";
         else if (moving)
             anim = $"run_{dir}";
         else

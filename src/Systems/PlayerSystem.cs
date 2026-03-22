@@ -143,6 +143,7 @@ public static class PlayerSystem
         // Timers
         if (player.InvincibilityTimer > 0) player.InvincibilityTimer -= dt;
         if (player.FlashTimer > 0) player.FlashTimer -= dt;
+        if (player.MeleeAnimTimer > 0) player.MeleeAnimTimer -= dt;
 
         // Animation
         if (player.Velocity.LengthSquared() > 1f)

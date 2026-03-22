@@ -620,9 +620,26 @@ public static class EnemySystem
                     {
                         enemy.IsAttacking = false;
                         enemy.BossAttackAnim = "";
-                        // Big Bug: 1s recovery after ground slam (punish window)
+                        // Big Bug: 1s recovery after ground slam (punish window) + spawn small bugs
                         if (enemy.IsAOEPulse && enemy.Behavior == EnemyBehavior.Tank)
+                        {
                             enemy.StunTimer = 1.0f;
+                            // Slam shakes small bugs out of the ground
+                            if (enemy.DefIndex == 7)
+                            {
+                                int spawnCount = 1 + (enemy.CurrentHP < enemy.MaxHP / 2 ? 1 : 0); // 2 below half HP
+                                for (int sb = 0; sb < spawnCount; sb++)
+                                {
+                                    var bug = state.GetInactiveEnemy();
+                                    if (bug == null) break;
+                                    float bAngle = Random.Shared.NextSingle() * MathF.PI * 2f;
+                                    Vector2 bPos = enemy.Position + new Vector2(MathF.Cos(bAngle), MathF.Sin(bAngle)) * 20f;
+                                    float sFactor = (1f + (state.CurrentWave - 1) * 0.08f) * Constants.BiomeStatScale(state.CurrentBiome);
+                                    bug.Init(EnemyDatabase.Enemies[1], bPos, sFactor); // Small Bug
+                                    bug.DefIndex = 1;
+                                }
+                            }
+                        }
                         // Guard/Guard Robot: 0.6s recovery after shield bash
                         else if (enemy.DefIndex == 5 || enemy.DefIndex == 11)
                             enemy.StunTimer = 0.6f;

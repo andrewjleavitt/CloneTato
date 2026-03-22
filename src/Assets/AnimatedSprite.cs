@@ -342,10 +342,15 @@ public static class AnimationLoader
         sprite.AddAnimation("roll_up", LoadStrip($"{sword}/Up/04 Stranded - Pack 4 back up-Roll Up.png", 64, 65, 12, false));
         sprite.AddAnimation("roll_down", LoadStrip($"{sword}/Down/04 Stranded - Pack 4 back up-Roll Down.png", 64, 65, 12, false));
 
-        // Slash attack
+        // Slash attack (wide arc)
         sprite.AddAnimation("slash_right", LoadStrip($"{sword}/Right Left/R Slash.png", 64, 65, 12, false));
         sprite.AddAnimation("slash_up", LoadStrip($"{sword}/Up/attack slash up.png", 64, 65, 12, false));
         sprite.AddAnimation("slash_down", LoadStrip($"{sword}/Down/04 Stranded - Pack 4 back up-Slash Down.png", 64, 65, 12, false));
+
+        // Chop attack (focused overhead)
+        sprite.AddAnimation("chop_right", LoadStrip($"{sword}/Right Left/R CHop.png", 64, 65, 12, false));
+        sprite.AddAnimation("chop_up", LoadStrip($"{sword}/Up/04 Stranded - Pack 4 back up-Chop Up.png", 64, 65, 12, false));
+        sprite.AddAnimation("chop_down", LoadStrip($"{sword}/Down/04 Stranded - Pack 4 back up-Chop Down.png", 64, 65, 12, false));
 
         // Death
         sprite.AddAnimation("death", LoadStrip($"{sword}/04 Stranded - Pack 4 back up-Death.png", 64, 65, 10, false));
@@ -536,6 +541,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         // shoot: 7 frames starting at row 2 (frame 16)
         sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 16, 7, 12, false));
+        // hit reaction: 2 frames at 33
+        sprite.AddAnimation("hit", FromGrid(tex, 32, 32, cols, 33, 2, 8, false));
         // death: 35-42 but grid only has 40 cells (8x5), cap at frame 39
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 35, 5, 8, false));
         // Grid sheet (32x32) — character feet near bottom
@@ -589,6 +596,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         // attack: 5 frames starting at row 2 (frame 16)
         sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 16, 5, 12, false));
+        // hit reaction: 2 frames at 29
+        sprite.AddAnimation("hit", FromGrid(tex, 32, 32, cols, 29, 2, 8, false));
         sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 32, 8, 10, false));
         // Warrior — feet near bottom of 32x32 frame
         sprite.PivotOffsetY = -4f;
@@ -877,17 +886,25 @@ public static class AnimationLoader
         var sprite = new AnimatedSprite();
         int cols = 18; // 3384 / 188 = 18 cols, 720 / 90 = 8 rows
 
-        // Row 1: Idle (8 frames)
+        // Row 0: Idle (8 frames)
         sprite.AddAnimation("idle_right", FromGrid(tex, 188, 90, cols, 0, 8, 8));
         sprite.AddAnimation("idle_up", FromGrid(tex, 188, 90, cols, 0, 8, 8));
         sprite.AddAnimation("idle_down", FromGrid(tex, 188, 90, cols, 0, 8, 8));
-        // Row 2: Walk (10 frames)
+        // Row 1: Move (10 frames)
         sprite.AddAnimation("walk_right", FromGrid(tex, 188, 90, cols, 18, 10, 8));
         sprite.AddAnimation("walk_up", FromGrid(tex, 188, 90, cols, 18, 10, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 188, 90, cols, 18, 10, 8));
-        // Row 5: Attack with blood (10 frames)
-        sprite.AddAnimation("attack", FromGrid(tex, 188, 90, cols, 72, 10, 10, false));
-        // Row 8: Death explosion (18 frames)
+        // Row 2: Attack 1 — melee leg sweep (10 frames)
+        sprite.AddAnimation("attack", FromGrid(tex, 188, 90, cols, 36, 10, 10, false));
+        // Row 3: Attack spit — ranged web spit (8 frames)
+        sprite.AddAnimation("attack_spit", FromGrid(tex, 188, 90, cols, 54, 8, 10, false));
+        // Row 4: Jump attack up — pounce launch (10 frames)
+        sprite.AddAnimation("pounce_up", FromGrid(tex, 188, 90, cols, 72, 10, 12, false));
+        // Row 5: Jump attack land — pounce landing (10 frames)
+        sprite.AddAnimation("pounce_land", FromGrid(tex, 188, 90, cols, 90, 10, 12, false));
+        // Row 6: Buff attack — summon/buff animation (10 frames)
+        sprite.AddAnimation("summon", FromGrid(tex, 188, 90, cols, 108, 10, 10, false));
+        // Row 7: Death (18 frames)
         sprite.AddAnimation("death", FromGrid(tex, 188, 90, cols, 126, 18, 8, false));
 
         sprite.PivotOffsetY = -10f;
