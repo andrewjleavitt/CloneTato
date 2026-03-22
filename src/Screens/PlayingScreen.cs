@@ -480,11 +480,20 @@ public class PlayingScreen
                     }
                     else if (enemy.IsAttacking)
                     {
-                        // Try directional attack, fall back to generic "attack"
-                        string dirAtk = $"attack_{dir}";
-                        animName = eSprite.HasAnimation(dirAtk) ? dirAtk
-                            : eSprite.HasAnimation("attack") ? "attack"
-                            : moving ? $"walk_{dir}" : $"idle_{dir}";
+                        // Widow boss: use specific attack animation from BossAttackAnim
+                        if (enemy.IsBoss && enemy.BossSpriteType == 2 && enemy.BossAttackAnim.Length > 0
+                            && eSprite.HasAnimation(enemy.BossAttackAnim))
+                        {
+                            animName = enemy.BossAttackAnim;
+                        }
+                        else
+                        {
+                            // Try directional attack, fall back to generic "attack"
+                            string dirAtk = $"attack_{dir}";
+                            animName = eSprite.HasAnimation(dirAtk) ? dirAtk
+                                : eSprite.HasAnimation("attack") ? "attack"
+                                : moving ? $"walk_{dir}" : $"idle_{dir}";
+                        }
                     }
                     else
                     {

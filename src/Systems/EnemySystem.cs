@@ -246,6 +246,7 @@ public static class EnemySystem
                     {
                         enemy.IsPouncing = false;
                         enemy.PounceTimer = enemy.BossPhase >= 1 ? 4f : 7f;
+                        enemy.BossAttackAnim = "pounce_land";
                         // Landing impact AOE
                         enemy.PulseVFXTimer = 0.4f;
                         float pounceDist = Vector2.Distance(enemy.Position, playerPos);
@@ -286,6 +287,7 @@ public static class EnemySystem
                     enemy.PounceDir = Vector2.Normalize(playerPos - enemy.Position);
                     enemy.IsAttacking = true;
                     enemy.AttackAnimTimer = 0.5f;
+                    enemy.BossAttackAnim = "pounce_up";
                 }
 
                 // Web spit: create slow zones at player position
@@ -319,6 +321,7 @@ public static class EnemySystem
                     }
                     enemy.IsAttacking = true;
                     enemy.AttackAnimTimer = 0.4f;
+                    enemy.BossAttackAnim = "attack_spit";
                 }
 
                 // Spiderling summons
@@ -326,6 +329,9 @@ public static class EnemySystem
                 if (enemy.SummonTimer <= 0)
                 {
                     enemy.SummonTimer = enemy.BossPhase >= 1 ? 6f : 12f;
+                    enemy.IsAttacking = true;
+                    enemy.AttackAnimTimer = 0.6f;
+                    enemy.BossAttackAnim = "summon";
                     int spiderlingCount = enemy.BossPhase >= 1 ? 4 : 2;
                     // Spawn Small Bug type (index 1) as spiderlings
                     for (int s = 0; s < spiderlingCount; s++)
@@ -563,7 +569,10 @@ public static class EnemySystem
                 {
                     enemy.AttackAnimTimer -= dt;
                     if (enemy.AttackAnimTimer <= 0)
+                    {
                         enemy.IsAttacking = false;
+                        enemy.BossAttackAnim = "";
+                    }
                 }
             }
 
@@ -610,6 +619,7 @@ public static class EnemySystem
                     if (enemy.AttackAnimTimer <= 0)
                     {
                         enemy.IsAttacking = false;
+                        enemy.BossAttackAnim = "";
                         // Big Bug: 1s recovery after ground slam (punish window)
                         if (enemy.IsAOEPulse && enemy.Behavior == EnemyBehavior.Tank)
                             enemy.StunTimer = 1.0f;
