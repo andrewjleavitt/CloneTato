@@ -127,8 +127,8 @@ public class WaveConfig
     }
 
     // Biome 2: Blood Desert
-    // Core: Beetle [3], Archer [4], Guard [5], Warrior [6], Relic Guardian [9]
-    // Filler: Snake [1] (fast melee), Spiny Beetle [8] (ranged crossover)
+    // Core: Tribe Warrior [3], Archer [4], Guard [5], Warrior [6], Relic Guardian [9]
+    // Filler: Small Bug [1] (fast melee), Spiny Beetle [8] (ranged crossover)
     // Boss: Blowfish
     private static WaveConfig GetBloodDesertWave(int wave)
     {
@@ -165,7 +165,7 @@ public class WaveConfig
                 Duration = 55f,
                 TotalEnemies = 28,
                 BaseSpawnRate = 0.65f,
-                EnemyTypeIndices = [3, 4, 5, 6],           // + Beetle (heavy tank)
+                EnemyTypeIndices = [3, 4, 5, 6],           // + Tribe Warrior (melee)
                 SpawnWeights = [0.25f, 0.25f, 0.25f, 0.25f],
                 GoldReward = 28,
             },
@@ -174,7 +174,7 @@ public class WaveConfig
                 Duration = 60f,
                 TotalEnemies = 32,
                 BaseSpawnRate = 0.68f,
-                EnemyTypeIndices = [1, 3, 4, 5, 6],        // + Snake (fast filler)
+                EnemyTypeIndices = [1, 3, 4, 5, 6],        // + Small Bug (fast filler)
                 SpawnWeights = [0.20f, 0.20f, 0.20f, 0.20f, 0.20f],
                 GoldReward = 32,
             },
@@ -230,7 +230,7 @@ public class WaveConfig
 
     // Biome 3: The Temple
     // Core: Hooded Minion [14], Circle Bot [12], Ranged Minion [16], Guard Robot [11], Bomb Minion [15], Planter Bot [17]
-    // Filler: Snake [1] (fast filler)
+    // Filler: Small Bug [1] (fast filler)
     // Boss: Tarnished Widow
     private static WaveConfig GetTempleWave(int wave)
     {
