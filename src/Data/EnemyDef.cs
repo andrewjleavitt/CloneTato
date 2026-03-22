@@ -64,9 +64,10 @@ public static class EnemyDatabase
 {
     public static readonly EnemyDef[] Enemies =
     {
+        // Original enemies (index 0-3)
         new()
         {
-            Name = "Scorpion", SpriteIndex = 0,
+            Name = "Tribe Hunter", SpriteIndex = 0,
             BaseHP = 25, BaseSpeed = 45f, BaseDamage = 8,
             XPValue = 2, GoldValue = 1, Radius = 12f,
             Behavior = Entities.EnemyBehavior.Chase,
@@ -77,7 +78,7 @@ public static class EnemyDatabase
         },
         new()
         {
-            Name = "Snake", SpriteIndex = 4,
+            Name = "Small Bug", SpriteIndex = 4,
             BaseHP = 15, BaseSpeed = 70f, BaseDamage = 5,
             XPValue = 2, GoldValue = 1, Radius = 8f,
             Behavior = Entities.EnemyBehavior.FastChase,
@@ -87,7 +88,7 @@ public static class EnemyDatabase
         },
         new()
         {
-            Name = "Bat", SpriteIndex = 8,
+            Name = "Medium Insect", SpriteIndex = 8,
             BaseHP = 18, BaseSpeed = 55f, BaseDamage = 6,
             XPValue = 3, GoldValue = 2, Radius = 11f,
             Behavior = Entities.EnemyBehavior.Erratic,
@@ -97,7 +98,7 @@ public static class EnemyDatabase
         },
         new()
         {
-            Name = "Beetle", SpriteIndex = 12,
+            Name = "Tribe Warrior", SpriteIndex = 12,
             BaseHP = 60, BaseSpeed = 30f, BaseDamage = 15,
             XPValue = 5, GoldValue = 3, Radius = 14f,
             Behavior = Entities.EnemyBehavior.Tank,
@@ -105,7 +106,7 @@ public static class EnemyDatabase
             AttackCooldown = 1.6f, AttackRange = 30f,
             AttackAnimDuration = 0.55f, AttackDamageMultiplier = 1.4f,
         },
-        // Starter Pack enemies (index 4-6)
+        // Humanoid / Starter Pack (index 4-6)
         new()
         {
             Name = "Archer", SpriteIndex = 0,
