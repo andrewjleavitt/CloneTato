@@ -261,11 +261,15 @@ public static class WeaponSystem
             state.TotalDamageDealt += finalDamage;
             hitCount++;
 
-            // Knockback away from player
+            // Knockback away from player — resist based on enemy type
             Vector2 knockDir = dist > 1f
                 ? Vector2.Normalize(enemy.Position - player.Position)
                 : new Vector2(MathF.Cos(swingAngle), MathF.Sin(swingAngle));
-            enemy.KnockbackVelocity = knockDir * Constants.KnockbackForce * 1.5f;
+            float knockResist = enemy.IsBoss ? 0.3f
+                : enemy.Behavior == Entities.EnemyBehavior.Tank ? 0.4f
+                : enemy.Behavior == Entities.EnemyBehavior.FastChase ? 1.4f
+                : 1f;
+            enemy.KnockbackVelocity = knockDir * Constants.KnockbackForce * 1.5f * knockResist;
             enemy.KnockbackTimer = Constants.KnockbackDuration;
 
             var dmgNum = state.GetInactiveDamageNumber();
@@ -284,16 +288,33 @@ public static class WeaponSystem
         // Trigger player melee attack animation
         player.MeleeAnimTimer = 0.35f;
 
-        // Spawn swipe visual
+        // Melee lunge — slight forward movement toward aim direction
+        float lungeForce = player.HeroType == Data.HeroType.BladeDancer ? 80f : 40f;
+        player.Velocity += aimDir * lungeForce;
+
+        // Spawn swipe visual — tint by weapon type
+        Color swipeColor = hitCount > 0
+            ? weapon.Def.Name switch
+            {
+                "Knife" => new Color((byte)200, (byte)230, (byte)255, (byte)255),   // cold steel
+                "Spear" => new Color((byte)255, (byte)220, (byte)150, (byte)255),   // golden
+                "Hammer" => new Color((byte)255, (byte)180, (byte)100, (byte)255),  // impact orange
+                "Cleaver" => new Color((byte)255, (byte)150, (byte)150, (byte)255), // blood red
+                _ => Color.White,
+            }
+            : new Color((byte)200, (byte)200, (byte)200, (byte)150);
         var swipe = state.GetInactiveMeleeSwipe();
-        swipe?.Init(player.Position, swingAngle, weapon.MeleeArc, weapon.Range,
-            hitCount > 0 ? Color.White : new Color((byte)200, (byte)200, (byte)200, (byte)150));
+        swipe?.Init(player.Position, swingAngle, weapon.MeleeArc, weapon.Range, swipeColor);
 
         if (hitCount > 0)
         {
             state.Assets.PlaySoundVariant("hurt", 0.2f);
-            // Subtle screen shake on melee hit (not kill)
-            state.RequestScreenShake(0.06f, 1.0f);
+            // Screen shake scales with multi-hit (cleaving through a crowd feels powerful)
+            float shakeIntensity = 1.0f + (hitCount - 1) * 0.3f;
+            state.RequestScreenShake(0.06f + hitCount * 0.02f, shakeIntensity);
+            // Hitstop on multi-hit for extra impact
+            if (hitCount >= 3)
+                state.RequestHitstop(0.03f);
         }
         else
             state.Assets.PlaySoundVariant("move", 0.15f);
@@ -454,11 +475,14 @@ public static class WeaponSystem
             enemy.FlashTimer = 0.1f;
             state.TotalDamageDealt += finalDamage;
 
-            // Knockback from explosion center
+            // Knockback from explosion center — resist based on enemy type
             Vector2 knockDir = dist > 1f
                 ? Vector2.Normalize(enemy.Position - pos)
                 : new Vector2(Random.Shared.NextSingle() - 0.5f, Random.Shared.NextSingle() - 0.5f);
-            enemy.KnockbackVelocity = knockDir * Constants.KnockbackForce * 2f;
+            float exKnockResist = enemy.IsBoss ? 0.3f
+                : enemy.Behavior == Entities.EnemyBehavior.Tank ? 0.4f
+                : 1f;
+            enemy.KnockbackVelocity = knockDir * Constants.KnockbackForce * 2f * exKnockResist;
             enemy.KnockbackTimer = Constants.KnockbackDuration * 1.5f;
 
             var dmgNum = state.GetInactiveDamageNumber();

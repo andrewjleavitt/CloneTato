@@ -417,6 +417,30 @@ public class PlayingScreen
             state.Assets.Tiles.DrawCentered(tileIdx, barrel.Position.X, barrel.Position.Y, tint);
         }
 
+        // Enemy melee telegraph indicators (drawn under enemies)
+        for (int i = 0; i < state.Enemies.Count; i++)
+        {
+            var enemy = state.Enemies[i];
+            if (!enemy.Active || enemy.IsDying) continue;
+            // Show telegraph ring when enemy is winding up a melee attack
+            if (enemy.HasMeleeAttack && !enemy.IsAttacking && enemy.MeleeAttackTimer < 0.3f
+                && enemy.MeleeAttackTimer > 0 && enemy.StunTimer <= 0)
+            {
+                float pulse = 0.5f + 0.5f * MathF.Sin(enemy.MeleeAttackTimer * 30f);
+                byte ta = (byte)(60 + 40 * pulse);
+                Color telegraphColor = enemy.IsAOEPulse
+                    ? new Color((byte)255, (byte)100, (byte)50, ta)   // orange for AOE
+                    : new Color((byte)255, (byte)50, (byte)50, ta);   // red for melee
+                float range = enemy.MeleeAttackRange;
+                Raylib.DrawCircleLines((int)enemy.Position.X, (int)enemy.Position.Y,
+                    range, telegraphColor);
+                // Fill for AOE attacks
+                if (enemy.IsAOEPulse)
+                    Raylib.DrawCircle((int)enemy.Position.X, (int)enemy.Position.Y,
+                        range, new Color((byte)255, (byte)100, (byte)50, (byte)(ta / 4)));
+            }
+        }
+
         // Enemies
         var enemySprites = state.Assets.EnemySprites;
         for (int i = 0; i < state.Enemies.Count; i++)

@@ -209,7 +209,10 @@ public static class CollisionSystem
                     state.TotalDamageDealt += damage;
 
                     Vector2 knockDir = Vector2.Normalize(enemy.Position - proj.Position);
-                    enemy.KnockbackVelocity = knockDir * Constants.KnockbackForce;
+                    float projKnockResist = enemy.IsBoss ? 0.2f
+                        : enemy.Behavior == Entities.EnemyBehavior.Tank ? 0.5f
+                        : 1f;
+                    enemy.KnockbackVelocity = knockDir * Constants.KnockbackForce * projKnockResist;
                     enemy.KnockbackTimer = Constants.KnockbackDuration;
 
                     var dmgNum = state.GetInactiveDamageNumber();
