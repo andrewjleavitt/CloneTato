@@ -498,6 +498,26 @@ public static class EnemySystem
                 }
             }
 
+            // Acid trail (Medium Insect)
+            if (enemy.LeavesAcidTrail)
+            {
+                enemy.AcidTrailTimer -= dt;
+                if (enemy.AcidTrailTimer <= 0)
+                {
+                    enemy.AcidTrailTimer = enemy.AcidTrailInterval;
+                    // Spawn a temporary ooze zone at current position
+                    state.TerrainZones.Add(new Entities.TerrainZone
+                    {
+                        Position = enemy.Position,
+                        Radius = enemy.AcidPoolRadius,
+                        Type = Entities.TerrainType.Ooze,
+                        Active = true,
+                        Duration = enemy.AcidPoolDuration,
+                        DamagePerSecond = enemy.AcidDPS,
+                    });
+                }
+            }
+
             // Tick attack animation for non-boss, non-armed enemies (contact attack visual)
             if (enemy.IsAttacking && !enemy.HasMeleeAttack && !enemy.IsArmed)
             {

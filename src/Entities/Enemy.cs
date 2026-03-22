@@ -82,6 +82,14 @@ public class Enemy : Entity
     public float PulseVFXTimer; // visual feedback timer
     public float StunTimer; // recovery period (cannot move or attack)
 
+    // Acid trail
+    public bool LeavesAcidTrail;
+    public float AcidTrailTimer;
+    public float AcidTrailInterval;
+    public float AcidPoolDuration;
+    public float AcidPoolRadius;
+    public float AcidDPS;
+
     // Mine-laying
     public bool LaysMines;
     public float MineLayTimer;
@@ -160,6 +168,12 @@ public class Enemy : Entity
         IsAOEPulse = def.IsAOEPulse;
         PulseVFXTimer = 0;
         StunTimer = 0;
+        LeavesAcidTrail = def.LeavesAcidTrail;
+        AcidTrailTimer = 1f + Random.Shared.NextSingle() * def.AcidTrailInterval;
+        AcidTrailInterval = def.AcidTrailInterval;
+        AcidPoolDuration = def.AcidPoolDuration;
+        AcidPoolRadius = def.AcidPoolRadius;
+        AcidDPS = def.AcidDPS;
         LaysMines = def.LaysMines;
         MineLayInterval = def.MineLayInterval;
         MineLayTimer = 1f + Random.Shared.NextSingle() * def.MineLayInterval; // stagger

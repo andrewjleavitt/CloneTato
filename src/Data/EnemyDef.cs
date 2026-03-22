@@ -41,6 +41,13 @@ public class EnemyDef
     // AOE pulse attack (Circle Bot style)
     public bool IsAOEPulse;             // melee attack hits in all directions (pulse)
 
+    // Acid trail (Medium Insect)
+    public bool LeavesAcidTrail;        // drops DOT pools behind it
+    public float AcidTrailInterval = 2f; // seconds between drops
+    public float AcidPoolDuration = 1.5f;
+    public float AcidPoolRadius = 12f;
+    public float AcidDPS = 8f;          // damage per second to anything in pool
+
     // Mine-laying (Planter Bot)
     public bool LaysMines;              // drops mines while moving
     public float MineLayInterval = 3f;  // seconds between mine drops
@@ -95,6 +102,8 @@ public static class EnemyDatabase
             AttackType = EnemyAttackType.Melee,
             AttackCooldown = 1.2f, AttackRange = 25f,
             AttackAnimDuration = 0.4f, AttackDamageMultiplier = 1f,
+            LeavesAcidTrail = true, AcidTrailInterval = 2f,
+            AcidPoolDuration = 1.5f, AcidPoolRadius = 12f, AcidDPS = 8f,
         },
         new()
         {
