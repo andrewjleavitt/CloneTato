@@ -48,6 +48,11 @@ public class Enemy : Entity
     public bool IsBoss;
     public float Scale = 1f;
     public int BossSpriteType; // 0=DustWarrior, 1=Blowfish, 2=TarnishedWidow
+    public int BossPhase; // 0 = phase 1, 1 = phase 2 (enraged)
+    public float BossChargeTimer; // cooldown for boss charge attack
+    public bool IsBossCharging;
+    public float BossChargeRushTimer;
+    public Vector2 BossChargeDir;
 
     // Boss melee attack fields
     public bool HasMeleeAttack;
@@ -115,6 +120,11 @@ public class Enemy : Entity
         IsBoss = false;
         Scale = 1f;
         BossSpriteType = 0;
+        BossPhase = 0;
+        BossChargeTimer = 0;
+        IsBossCharging = false;
+        BossChargeRushTimer = 0;
+        BossChargeDir = Vector2.Zero;
         IsArmed = false;
         WeaponSpriteIndex = 0;
         ShootCooldown = 0;
@@ -230,6 +240,11 @@ public class Enemy : Entity
         MeleeAttackTimer = 1f; // initial delay before first attack
         MeleeAttackRange = 45f;
         MeleeAttackDamage = (int)(def.BaseDamage * scaleFactor * 2.5f);
+        BossPhase = 0;
+        BossChargeTimer = 5f; // first charge after 5s
+        IsBossCharging = false;
+        BossChargeRushTimer = 0;
+        BossChargeDir = Vector2.Zero;
         AttackAnimDuration = 0.5f; // 8 frames at ~16fps
     }
 

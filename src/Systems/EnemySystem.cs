@@ -77,6 +77,75 @@ public static class EnemySystem
                 enemy.FlashTimer = 0.3f; // visible enrage flash
             }
 
+            // Boss phase transition (50% HP → phase 2)
+            if (enemy.IsBoss && enemy.BossPhase == 0 && enemy.CurrentHP <= enemy.MaxHP / 2)
+            {
+                enemy.BossPhase = 1;
+                enemy.Speed *= 1.3f;
+                enemy.MeleeAttackCooldown *= 0.7f;
+                enemy.MeleeAttackDamage = (int)(enemy.MeleeAttackDamage * 1.3f);
+                enemy.FlashTimer = 0.5f;
+                state.RequestScreenShake(0.3f, 4f);
+                state.RequestHitstop(0.1f);
+                // Boss charge unlocks in phase 2
+                enemy.BossChargeTimer = 2f;
+            }
+
+            // Boss charge attack (phase 2 only)
+            if (enemy.IsBoss && enemy.BossPhase >= 1)
+            {
+                if (enemy.IsBossCharging)
+                {
+                    enemy.BossChargeRushTimer -= dt;
+                    if (enemy.BossChargeRushTimer <= 0)
+                    {
+                        enemy.IsBossCharging = false;
+                        enemy.BossChargeTimer = 4f; // cooldown before next charge
+                        // AOE slam at end of charge
+                        enemy.PulseVFXTimer = 0.4f;
+                        float chargeDist = Vector2.Distance(enemy.Position, playerPos);
+                        if (chargeDist < 55f && state.Player.InvincibilityTimer <= 0)
+                        {
+                            int dmg = Math.Max(1, (int)(enemy.MeleeAttackDamage * 0.8f) - state.Player.ComputedStats.Armor);
+                            state.Player.CurrentHP -= dmg;
+                            state.Player.InvincibilityTimer = Constants.PlayerInvincibilityTime;
+                            state.Player.FlashTimer = 0.15f;
+                            Vector2 knockDir = Vector2.Normalize(state.Player.Position - enemy.Position);
+                            state.Player.KnockbackVelocity = knockDir * 400f;
+                            state.Player.KnockbackTimer = 0.25f;
+                            var dmgNum = state.GetInactiveDamageNumber();
+                            dmgNum?.Init(state.Player.Position, dmg.ToString(), Raylib_cs.Color.Red);
+                            state.RequestScreenShake(0.2f, 3.5f);
+                            state.RequestHitstop(0.05f);
+                            state.Assets.PlaySoundVariant("hurt", 0.6f);
+                        }
+                        state.RequestScreenShake(0.15f, 2f);
+                    }
+                    else
+                    {
+                        enemy.Velocity = enemy.BossChargeDir * enemy.Speed * 4f;
+                        enemy.Position += enemy.Velocity * dt;
+                        enemy.Position = new Vector2(
+                            Math.Clamp(enemy.Position.X, 30, Constants.ArenaWidth - 30),
+                            Math.Clamp(enemy.Position.Y, 30, Constants.ArenaHeight - 30));
+                        continue;
+                    }
+                }
+                else
+                {
+                    enemy.BossChargeTimer -= dt;
+                    float distToP = Vector2.Distance(enemy.Position, playerPos);
+                    if (enemy.BossChargeTimer <= 0 && distToP > 80f && distToP < 250f && !enemy.IsAttacking)
+                    {
+                        enemy.IsBossCharging = true;
+                        enemy.BossChargeRushTimer = 0.35f;
+                        enemy.BossChargeDir = Vector2.Normalize(playerPos - enemy.Position);
+                        enemy.IsAttacking = true;
+                        enemy.AttackAnimTimer = 0.5f;
+                    }
+                }
+            }
+
             // Rush/lunge logic — override movement when active
             if (enemy.CanRush)
             {
