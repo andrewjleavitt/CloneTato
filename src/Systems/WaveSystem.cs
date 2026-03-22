@@ -13,7 +13,8 @@ public static class WaveSystem
 
         state.WaveTimer -= dt;
 
-        // Spawn enemies
+        // Spawn enemies (respecting per-biome density cap)
+        int enemyCap = Constants.BiomeEnemyCap(state.CurrentBiome);
         if (state.EnemiesSpawnedThisWave < config.TotalEnemies)
         {
             float waveProgress = 1f - (state.WaveTimer / config.Duration);
@@ -22,6 +23,12 @@ public static class WaveSystem
 
             while (state.SpawnAccumulator >= 1f && state.EnemiesSpawnedThisWave < config.TotalEnemies)
             {
+                if (state.ActiveEnemyCount() >= enemyCap)
+                {
+                    // Cap reached — hold accumulator at 1, don't spawn until some die
+                    state.SpawnAccumulator = 1f;
+                    break;
+                }
                 EnemySystem.SpawnEnemy(state, state.CurrentWave);
                 state.SpawnAccumulator -= 1f;
             }

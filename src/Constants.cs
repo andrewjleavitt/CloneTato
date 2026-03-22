@@ -19,6 +19,22 @@ public static class Constants
     public const int WavesPerBiome = 10;
     public const int BiomeCount = 3;
 
+    // Biome stat multipliers (HP, damage scale for enemies)
+    public static float BiomeStatScale(int biome) => biome switch
+    {
+        2 => 1.3f,
+        3 => 1.6f,
+        _ => 1.0f,
+    };
+
+    // Max concurrent enemies on screen per biome
+    public static int BiomeEnemyCap(int biome) => biome switch
+    {
+        2 => 50,
+        3 => 60,
+        _ => 40,
+    };
+
     public const float PlayerInvincibilityTime = 0.5f;
     public const float XPAttractRadius = 50f;
     public const float XPCollectRadius = 10f;

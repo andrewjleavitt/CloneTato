@@ -354,8 +354,8 @@ public static class EnemySystem
         }
         var def = EnemyDatabase.Enemies[typeIndex];
 
-        // Scale stats based on wave (+8% per wave)
-        float scaleFactor = 1f + (waveNumber - 1) * 0.08f;
+        // Scale stats based on wave (+8% per wave) and biome multiplier
+        float scaleFactor = (1f + (waveNumber - 1) * 0.08f) * Constants.BiomeStatScale(state.CurrentBiome);
 
         // Spawn from random arena edge
         Vector2 spawnPos = GetEdgeSpawnPosition(state.Player.Position);
