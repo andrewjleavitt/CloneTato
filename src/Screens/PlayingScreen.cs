@@ -14,11 +14,15 @@ public class PlayingScreen
     private float _screenShakeTimer;
     private float _screenShakeIntensity;
     private float _hitstopTimer; // freeze all updates for impact feel
+    private bool _debugOverlay; // F3: show hitboxes, pivots, sprite bounds
 
     private const float ReticleDistance = 60f; // fixed distance from player
 
     public void Update(float dt, GameState state, GameStateManager manager)
     {
+        if (Raylib.IsKeyPressed(KeyboardKey.F3))
+            _debugOverlay = !_debugOverlay;
+
         // Hitstop — freeze all game updates for impact feel
         if (_hitstopTimer > 0)
         {
@@ -659,9 +663,84 @@ public class PlayingScreen
         // Targeting reticle (fixed distance from player)
         DrawReticle(state);
 
+        // Debug overlay: hitboxes, pivots, attack ranges (F3 toggle)
+        if (_debugOverlay)
+            DrawDebugOverlay(state);
+
         Raylib.EndMode2D();
 
+        if (_debugOverlay)
+        {
+            Raylib.DrawText("DEBUG: F3 toggle | circles=hitbox | cross=pivot | red=attack range",
+                4, Constants.LogicalHeight - 12, 8, Color.Yellow);
+        }
+
         UIRenderer.DrawHUD(state);
+    }
+
+    private static void DrawDebugOverlay(GameState state)
+    {
+        // Player hitbox + pivot
+        var p = state.Player;
+        Raylib.DrawCircleLinesV(p.Position, p.Radius, Color.Lime);
+        DrawCross(p.Position, Color.Lime);
+
+        // Player melee range (if has melee weapon)
+        for (int w = 0; w < state.EquippedWeapons.Count; w++)
+        {
+            var wep = state.EquippedWeapons[w];
+            if (wep.Def.Type == Data.WeaponType.Melee)
+                Raylib.DrawCircleLinesV(p.Position, wep.Def.Range, new Color(255, 100, 100, 80));
+        }
+
+        // Enemies
+        for (int i = 0; i < state.Enemies.Count; i++)
+        {
+            var e = state.Enemies[i];
+            if (!e.Active || e.IsBurrowed) continue;
+
+            Color hitboxColor = e.IsDying ? new Color(100, 100, 100, 120) :
+                e.IsBoss ? Color.Magenta : Color.Red;
+            Raylib.DrawCircleLinesV(e.Position, e.Radius, hitboxColor);
+            DrawCross(e.Position, hitboxColor);
+
+            // Attack range
+            if (e.HasMeleeAttack)
+                Raylib.DrawCircleLinesV(e.Position, e.MeleeAttackRange, new Color(255, 50, 50, 60));
+            if (e.IsArmed && e.PreferredRange > 0)
+                Raylib.DrawCircleLinesV(e.Position, e.PreferredRange, new Color(255, 150, 50, 40));
+
+            // Def index label
+            Raylib.DrawText($"{e.DefIndex}", (int)e.Position.X - 4, (int)e.Position.Y - (int)e.Radius - 10, 8, Color.White);
+        }
+
+        // Projectiles
+        for (int i = 0; i < state.Projectiles.Count; i++)
+        {
+            var proj = state.Projectiles[i];
+            if (!proj.Active) continue;
+            Raylib.DrawCircleLinesV(proj.Position, proj.Radius, Color.SkyBlue);
+        }
+        for (int i = 0; i < state.EnemyProjectiles.Count; i++)
+        {
+            var proj = state.EnemyProjectiles[i];
+            if (!proj.Active) continue;
+            Raylib.DrawCircleLinesV(proj.Position, proj.Radius, Color.Orange);
+        }
+
+        // Obstacles
+        for (int i = 0; i < state.Obstacles.Count; i++)
+        {
+            var obs = state.Obstacles[i];
+            if (!obs.Active) continue;
+            Raylib.DrawCircleLinesV(obs.Position, obs.Radius, new Color(150, 150, 150, 100));
+        }
+    }
+
+    private static void DrawCross(Vector2 pos, Color color)
+    {
+        Raylib.DrawLine((int)pos.X - 3, (int)pos.Y, (int)pos.X + 3, (int)pos.Y, color);
+        Raylib.DrawLine((int)pos.X, (int)pos.Y - 3, (int)pos.X, (int)pos.Y + 3, color);
     }
 
     private void DrawMeleeSwipe(Entities.MeleeSwipe swipe)
