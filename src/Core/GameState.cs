@@ -329,6 +329,25 @@ public class GameState
             Assets.PlaySoundVariant("explosion", 0.3f);
         }
 
+        // Big Bug death burst — nest splits into small bugs
+        if (enemy.DefIndex == 7 && !enemy.IsBoss)
+        {
+            int burstCount = 2 + (CurrentWave >= 7 ? 1 : 0); // 3 in later waves
+            float scaleFactor = (1f + (CurrentWave - 1) * 0.08f) * Constants.BiomeStatScale(CurrentBiome);
+            for (int b = 0; b < burstCount; b++)
+            {
+                var bug = GetInactiveEnemy();
+                if (bug == null) break;
+                float angle = (MathF.PI * 2f / burstCount) * b + Random.Shared.NextSingle() * 0.5f;
+                Vector2 spawnPos = enemy.Position + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 15f;
+                bug.Init(Data.EnemyDatabase.Enemies[1], spawnPos, scaleFactor); // Small Bug
+                bug.DefIndex = 1;
+                // Scatter outward from death position
+                bug.KnockbackVelocity = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 150f;
+                bug.KnockbackTimer = 0.2f;
+            }
+        }
+
         // Loot enemies burst extra drops in a ring
         if (enemy.IsLootEnemy)
         {

@@ -204,7 +204,7 @@ Go through every character in the Sprite Gallery. For each one:
 
 - [x] Attack animation wired
 - [x] AOE pulse ground slam implemented (IsAOEPulse)
-- [ ] **TODO:** Spawner behavior (periodically spawns small bugs)
+- [x] Spawner: slam shakes out 1-2 small bugs, death burst spawns 2-3 more
 
 ### Spiny Beetle — RANGED SPIKE SHOOTER
 **Source:** `enemies/insects/Medium bug 2/`
