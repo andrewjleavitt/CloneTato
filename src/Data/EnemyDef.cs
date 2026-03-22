@@ -147,8 +147,9 @@ public static class EnemyDatabase
             XPValue = 6, GoldValue = 4, Radius = 16f,
             Behavior = Entities.EnemyBehavior.Tank,
             AttackType = EnemyAttackType.Melee,
-            AttackCooldown = 2.0f, AttackRange = 35f,
-            AttackAnimDuration = 0.5f, AttackDamageMultiplier = 1.5f,
+            AttackCooldown = 3.0f, AttackRange = 50f,
+            AttackAnimDuration = 0.7f, AttackDamageMultiplier = 1.5f,
+            IsAOEPulse = true,
         },
         new()
         {
@@ -222,6 +223,7 @@ public static class EnemyDatabase
             AttackType = EnemyAttackType.Melee,
             AttackCooldown = 0.9f, AttackRange = 24f,
             AttackAnimDuration = 0.3f, AttackDamageMultiplier = 1.3f,
+            CanRush = true, RushCooldown = 2.5f, RushDuration = 0.2f, RushSpeedMult = 4f,
         },
         new()
         {

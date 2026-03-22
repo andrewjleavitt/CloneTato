@@ -73,6 +73,7 @@ public class Enemy : Entity
     // AOE pulse attack
     public bool IsAOEPulse;
     public float PulseVFXTimer; // visual feedback timer
+    public float StunTimer; // recovery period (cannot move or attack)
 
     // Mine-laying
     public bool LaysMines;
@@ -144,6 +145,7 @@ public class Enemy : Entity
         FrontalDamageReduction = def.FrontalDamageReduction;
         IsAOEPulse = def.IsAOEPulse;
         PulseVFXTimer = 0;
+        StunTimer = 0;
         LaysMines = def.LaysMines;
         MineLayInterval = def.MineLayInterval;
         MineLayTimer = 1f + Random.Shared.NextSingle() * def.MineLayInterval; // stagger

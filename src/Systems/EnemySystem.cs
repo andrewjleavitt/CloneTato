@@ -51,6 +51,17 @@ public static class EnemySystem
                 continue;
             }
 
+            // Stun/recovery (Big Bug post-slam)
+            if (enemy.StunTimer > 0)
+            {
+                enemy.StunTimer -= dt;
+                enemy.Velocity = Vector2.Zero;
+                // Visually flash to show vulnerability
+                if ((int)(enemy.AnimTimer * 4f) % 2 == 0)
+                    enemy.FlashTimer = 0.04f;
+                continue;
+            }
+
             // Enrage check — trigger once when HP drops below 50%
             if (enemy.CanEnrage && !enemy.IsEnraged && enemy.CurrentHP <= enemy.MaxHP / 2)
             {
@@ -302,7 +313,12 @@ public static class EnemySystem
                     }
 
                     if (enemy.AttackAnimTimer <= 0)
+                    {
                         enemy.IsAttacking = false;
+                        // Big Bug: 1s recovery after ground slam (punish window)
+                        if (enemy.IsAOEPulse && enemy.Behavior == EnemyBehavior.Tank)
+                            enemy.StunTimer = 1.0f;
+                    }
                 }
                 else
                 {
