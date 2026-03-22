@@ -423,9 +423,11 @@ public class PlayingScreen
         {
             var enemy = state.Enemies[i];
             if (!enemy.Active) continue;
-            if (enemy.IsBurrowed) continue; // Blowfish boss: invisible while burrowed
 
             byte alpha = (byte)(enemy.DeathAlpha * 255);
+            // Burrowed Blowfish: fade to semi-transparent
+            if (enemy.IsBurrowed)
+                alpha = (byte)(alpha * 0.3f);
             Color tint;
             if (enemy.FlashTimer > 0)
                 tint = new Color((byte)255, (byte)80, (byte)80, alpha);
@@ -471,7 +473,12 @@ public class PlayingScreen
                     else
                         dir = "down";
 
-                    if (enemy.IsAttacking)
+                    // Blowfish boss: burrow/emerge/inflate animations
+                    if (enemy.IsBoss && enemy.BossSpriteType == 1 && enemy.IsBurrowed)
+                    {
+                        animName = eSprite.HasAnimation("burrow") ? "burrow" : $"idle_{dir}";
+                    }
+                    else if (enemy.IsAttacking)
                     {
                         // Try directional attack, fall back to generic "attack"
                         string dirAtk = $"attack_{dir}";

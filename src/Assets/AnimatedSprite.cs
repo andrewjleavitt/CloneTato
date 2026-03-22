@@ -848,7 +848,21 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Move Up.png", 94, 47, 18));
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Move Down.png", 94, 47, 18));
         sprite.AddAnimation("attack", LoadStrip($"{dir}/Blowfish-Attack out of Ground Down.png", 94, 47, 13, false));
+        sprite.AddAnimation("attack_up", LoadStrip($"{dir}/Blowfish-Attack Out of Ground Up.png", 94, 47, 13, false));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Blowfish-Death.png", 94, 47, 14, false));
+
+        // Burrow/emerge animations
+        sprite.AddAnimation("burrow", LoadStrip($"{dir}/Blowfish-Into Ground.png", 94, 47, 11, false));
+        sprite.AddAnimation("grow", LoadStrip($"{dir}/Blowfish-Go big.png", 94, 47, 5, false));
+        sprite.AddAnimation("shrink", LoadStrip($"{dir}/Blowfish-Go Small.png", 94, 47, 4, false));
+
+        // Small form
+        sprite.AddAnimation("small_idle", LoadStrip($"{dir}/Blowfish-Small Idlelmove.png", 94, 47, 12));
+
+        // Spike projectile animations
+        sprite.AddAnimation("spike1", LoadStrip($"{dir}/Blowfish-Spike 1.png", 94, 47, 14, false));
+        sprite.AddAnimation("spike2", LoadStrip($"{dir}/Blowfish-Spike 2.png", 94, 47, 14, false));
+        sprite.AddAnimation("spike3", LoadStrip($"{dir}/Blowfish-Spike 3.png", 94, 47, 14, false));
 
         sprite.PivotOffsetY = -6f;
         sprite.Play("idle_down");
