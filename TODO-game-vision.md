@@ -14,7 +14,6 @@ The environment is a core mechanic, not just scenery.
 - [ ] **Sandstorms** — periodic events that reduce visibility, change enemy behavior (some flee, some get aggressive), and shift terrain zones. Player must adapt mid-wave.
 - [ ] **Time of day** — palette shifts across waves (dawn→noon→dusk→night). Night waves have reduced visibility but better loot. Noon waves have max heat pressure.
 - [ ] **Destructible terrain** — obstacles can be broken by explosions/bosses, changing the arena layout mid-wave. Cover is temporary.
-- [ ] **Elevation** — high ground tiles give range bonus. Low ground (dry riverbeds) gives speed but you're exposed. Positioning matters.
 - [ ] **Enemy nests** — destructible spawners that appear in waves. Kill them early to reduce pressure, or ignore them and deal with the flood.
 
 ### 2. BOSSES ARE EVENTS
@@ -36,7 +35,7 @@ Twin-stick aiming is the core differentiator from Brotato. Reward precision.
 - [ ] **Ricochet weapons** — bullets bounce off obstacles. Smart positioning = more damage.
 - [ ] **Aimed AOE** — grenades/mines that punish bad placement and reward good reads.
 - [ ] **Weak points** — some enemies (robots, bosses) have directional weak spots. Flanking matters.
-- [ ] **Combo system** — rapid kills build a multiplier that boosts XP/gold. Skilled play is rewarded economically.
+- [x] **Combo system** — rapid kills build a multiplier that boosts XP/gold. Skilled play is rewarded economically. (Implemented: 1.5s window, tier colors, XP/gold bonus)
 
 ### 4. MEANINGFUL BETWEEN-WAVE CHOICES
 Every decision between waves should create tension and run identity.
