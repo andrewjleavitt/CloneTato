@@ -28,6 +28,10 @@ public class GameState
     public const int MaxExplosionVFX = 10;
     public ExplosionVFX[] ExplosionEffects = new ExplosionVFX[MaxExplosionVFX];
 
+    // Enemy mines (placed by Planter Bot)
+    public const int MaxEnemyMines = 30;
+    public List<EnemyMine> EnemyMines = new();
+
     public List<WeaponInstance> EquippedWeapons = new();
     public List<float> WeaponCooldowns = new();
     public List<int> WeaponClipAmmo = new();     // current ammo in clip per weapon
@@ -121,6 +125,10 @@ public class GameState
         Mines.Clear();
         for (int i = 0; i < MaxMines; i++)
             Mines.Add(new Mine());
+
+        EnemyMines.Clear();
+        for (int i = 0; i < MaxEnemyMines; i++)
+            EnemyMines.Add(new EnemyMine());
 
         MeleeSwipes.Clear();
         for (int i = 0; i < MaxMeleeSwipes; i++)
@@ -239,6 +247,13 @@ public class GameState
     {
         for (int i = 0; i < MeleeSwipes.Count; i++)
             if (!MeleeSwipes[i].Active) return MeleeSwipes[i];
+        return null;
+    }
+
+    public EnemyMine? GetInactiveEnemyMine()
+    {
+        for (int i = 0; i < EnemyMines.Count; i++)
+            if (!EnemyMines[i].Active) return EnemyMines[i];
         return null;
     }
 

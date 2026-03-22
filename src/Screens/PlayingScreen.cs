@@ -322,6 +322,31 @@ public class PlayingScreen
             }
         }
 
+        // Enemy mines (Planter Bot)
+        for (int i = 0; i < state.EnemyMines.Count; i++)
+        {
+            var mine = state.EnemyMines[i];
+            if (!mine.Active) continue;
+            bool armed = mine.IsArmed;
+            // Green-tinted to distinguish from player mines
+            Raylib.DrawCircleV(mine.Position, 6f, new Color((byte)20, (byte)50, (byte)20, (byte)180));
+            Color mineColor = armed ? new Color((byte)50, (byte)200, (byte)50, (byte)255) : Color.DarkGray;
+            Raylib.DrawCircleV(mine.Position, 4f, mineColor);
+            if (armed)
+            {
+                float blink = MathF.Sin((float)Raylib.GetTime() * 6f);
+                if (blink > 0) Raylib.DrawCircleV(mine.Position, 2f, Color.Lime);
+            }
+            // Fading out in last 3 seconds
+            if (mine.Lifetime < 3f)
+            {
+                float flash = MathF.Sin((float)Raylib.GetTime() * 10f);
+                if (flash > 0)
+                    Raylib.DrawCircleLines((int)mine.Position.X, (int)mine.Position.Y, 8f,
+                        new Color((byte)100, (byte)255, (byte)100, (byte)100));
+            }
+        }
+
         // XP orbs
         for (int i = 0; i < state.XPOrbs.Count; i++)
         {
@@ -484,6 +509,18 @@ public class PlayingScreen
                     state.Assets.Enemies.DrawScaled(spriteIdx, enemy.Position.X, enemy.Position.Y, enemy.Scale, tint);
                 else
                     state.Assets.Enemies.DrawCentered(spriteIdx, enemy.Position.X, enemy.Position.Y, tint);
+            }
+
+            // Draw AOE pulse ring
+            if (enemy.PulseVFXTimer > 0 && !enemy.IsDying)
+            {
+                float pulseProgress = 1f - enemy.PulseVFXTimer / 0.4f;
+                float pulseRadius = enemy.MeleeAttackRange * pulseProgress;
+                byte pulseAlpha = (byte)(180 * (1f - pulseProgress));
+                Raylib.DrawCircleLines((int)enemy.Position.X, (int)enemy.Position.Y,
+                    pulseRadius, new Color((byte)100, (byte)200, (byte)255, pulseAlpha));
+                Raylib.DrawCircleLines((int)enemy.Position.X, (int)enemy.Position.Y,
+                    pulseRadius * 0.8f, new Color((byte)150, (byte)220, (byte)255, (byte)(pulseAlpha * 0.5f)));
             }
 
             // Draw weapon on armed enemies

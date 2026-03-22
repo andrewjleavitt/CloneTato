@@ -269,12 +269,17 @@ public static class EnemySystem
                 if (enemy.IsAttacking)
                 {
                     enemy.AttackAnimTimer -= dt;
-                    enemy.Velocity *= 0.3f; // slow down during swing
+                    enemy.Velocity *= enemy.IsAOEPulse ? 0.05f : 0.3f; // pulse stops completely
 
                     // Deal damage at the midpoint of the swing
                     if (!enemy.MeleeAttackHit && enemy.AttackAnimTimer < enemy.AttackAnimDuration * 0.5f)
                     {
                         enemy.MeleeAttackHit = true;
+
+                        // AOE pulse: trigger VFX ring
+                        if (enemy.IsAOEPulse)
+                            enemy.PulseVFXTimer = 0.4f;
+
                         if (dist < enemy.MeleeAttackRange && state.Player.InvincibilityTimer <= 0)
                         {
                             int dmg = Math.Max(1, enemy.MeleeAttackDamage - state.Player.ComputedStats.Armor);
@@ -284,13 +289,13 @@ public static class EnemySystem
 
                             // Player knockback from melee attack
                             Vector2 knockDir = Vector2.Normalize(state.Player.Position - enemy.Position);
-                            float knockForce = enemy.IsBoss ? 350f : 200f;
+                            float knockForce = enemy.IsAOEPulse ? 250f : (enemy.IsBoss ? 350f : 200f);
                             state.Player.KnockbackVelocity = knockDir * knockForce;
                             state.Player.KnockbackTimer = enemy.IsBoss ? 0.2f : 0.12f;
 
                             var dmgNum = state.GetInactiveDamageNumber();
                             dmgNum?.Init(state.Player.Position, dmg.ToString(), Raylib_cs.Color.Red);
-                            state.RequestScreenShake(0.1f, enemy.IsBoss ? 3.0f : 1.8f);
+                            state.RequestScreenShake(0.1f, enemy.IsAOEPulse ? 2.0f : (enemy.IsBoss ? 3.0f : 1.8f));
                             state.RequestHitstop(enemy.IsBoss ? 0.06f : 0.03f);
                             state.Assets.PlaySoundVariant("hurt", 0.5f);
                         }
@@ -302,7 +307,9 @@ public static class EnemySystem
                 else
                 {
                     enemy.MeleeAttackTimer -= dt;
-                    if (enemy.MeleeAttackTimer <= 0 && dist < enemy.MeleeAttackRange)
+                    // AOE pulse triggers on cooldown if player is within 1.5x range
+                    float triggerRange = enemy.IsAOEPulse ? enemy.MeleeAttackRange * 1.5f : enemy.MeleeAttackRange;
+                    if (enemy.MeleeAttackTimer <= 0 && dist < triggerRange)
                     {
                         enemy.IsAttacking = true;
                         enemy.AttackAnimTimer = enemy.AttackAnimDuration;
@@ -310,7 +317,7 @@ public static class EnemySystem
                         enemy.MeleeAttackHit = false;
                     }
                     // Telegraph: slow down and flash when about to attack (within 0.2s of cooldown ending)
-                    else if (enemy.MeleeAttackTimer < 0.2f && dist < enemy.MeleeAttackRange * 1.3f)
+                    else if (enemy.MeleeAttackTimer < 0.2f && dist < triggerRange * 1.3f)
                     {
                         enemy.Velocity *= 0.15f; // near-stop during wind-up
                         enemy.FlashTimer = 0.03f; // brief white flash as telegraph
@@ -338,6 +345,29 @@ public static class EnemySystem
                 {
                     Explode(enemy, state);
                     continue;
+                }
+            }
+
+            // Tick pulse VFX timer
+            if (enemy.PulseVFXTimer > 0)
+                enemy.PulseVFXTimer -= dt;
+
+            // Mine-laying (Planter Bot)
+            if (enemy.LaysMines)
+            {
+                enemy.MineLayTimer -= dt;
+                if (enemy.MineLayTimer <= 0)
+                {
+                    enemy.MineLayTimer = enemy.MineLayInterval;
+                    var mine = state.GetInactiveEnemyMine();
+                    if (mine != null)
+                    {
+                        mine.Init(enemy.Position, enemy.MineDamage,
+                            enemy.MineExplosionRadius, 18f, enemy.MineLifetime);
+                        // Play attack animation when laying mine
+                        enemy.IsAttacking = true;
+                        enemy.AttackAnimTimer = enemy.AttackAnimDuration;
+                    }
                 }
             }
 
@@ -373,6 +403,41 @@ public static class EnemySystem
             }
 
             if (enemy.FlashTimer > 0) enemy.FlashTimer -= dt;
+        }
+
+        // Update enemy mines
+        UpdateEnemyMines(dt, state);
+    }
+
+    private static void UpdateEnemyMines(float dt, GameState state)
+    {
+        var player = state.Player;
+        for (int i = 0; i < state.EnemyMines.Count; i++)
+        {
+            var mine = state.EnemyMines[i];
+            if (!mine.Active) continue;
+            mine.Update(dt);
+            if (!mine.IsArmed) continue;
+
+            // Check player proximity
+            float dist = Vector2.Distance(mine.Position, player.Position);
+            if (dist < mine.ProximityRadius + player.Radius && player.InvincibilityTimer <= 0)
+            {
+                // Explode and damage player
+                int dmg = Math.Max(1, mine.Damage - player.ComputedStats.Armor);
+                float falloff = 1f - (dist / (mine.ExplosionRadius + player.Radius)) * 0.4f;
+                dmg = Math.Max(1, (int)(dmg * falloff));
+                player.CurrentHP -= dmg;
+                player.InvincibilityTimer = Constants.PlayerInvincibilityTime;
+                player.FlashTimer = 0.15f;
+
+                var dmgNum = state.GetInactiveDamageNumber();
+                dmgNum?.Init(player.Position, dmg.ToString(), Raylib_cs.Color.Red);
+                state.SpawnExplosionVFX(mine.Position, mine.ExplosionRadius);
+                state.RequestScreenShake(0.15f, 2.5f);
+                state.Assets.PlaySoundVariant("explosion", 0.4f);
+                mine.Active = false;
+            }
         }
     }
 

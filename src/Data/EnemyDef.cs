@@ -38,6 +38,16 @@ public class EnemyDef
     // Frontal damage reduction (shield-bearers)
     public float FrontalDamageReduction; // 0 = none, 0.5 = 50% reduction from front
 
+    // AOE pulse attack (Circle Bot style)
+    public bool IsAOEPulse;             // melee attack hits in all directions (pulse)
+
+    // Mine-laying (Planter Bot)
+    public bool LaysMines;              // drops mines while moving
+    public float MineLayInterval = 3f;  // seconds between mine drops
+    public float MineDamageMultiplier = 1f;
+    public float MineExplosionRadius = 30f;
+    public float MineLifetime = 15f;
+
     // Rush/lunge (anti-kite melee)
     public bool CanRush;                // enables rush behavior
     public float RushCooldown = 3f;     // seconds between rushes
@@ -193,6 +203,7 @@ public static class EnemyDatabase
             AttackType = EnemyAttackType.Melee,
             AttackCooldown = 2.5f, AttackRange = 45f,
             AttackAnimDuration = 0.5f, AttackDamageMultiplier = 1.0f,
+            IsAOEPulse = true,
         },
         new()
         {
@@ -242,6 +253,8 @@ public static class EnemyDatabase
             AttackType = EnemyAttackType.Melee,
             AttackCooldown = 2.0f, AttackRange = 32f,
             AttackAnimDuration = 0.5f, AttackDamageMultiplier = 1.2f,
+            LaysMines = true, MineLayInterval = 2.5f, MineDamageMultiplier = 1.5f,
+            MineExplosionRadius = 35f, MineLifetime = 12f,
         },
     };
 }

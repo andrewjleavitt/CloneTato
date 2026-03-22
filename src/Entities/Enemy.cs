@@ -70,6 +70,18 @@ public class Enemy : Entity
     // Frontal damage reduction
     public float FrontalDamageReduction;
 
+    // AOE pulse attack
+    public bool IsAOEPulse;
+    public float PulseVFXTimer; // visual feedback timer
+
+    // Mine-laying
+    public bool LaysMines;
+    public float MineLayTimer;
+    public float MineLayInterval;
+    public int MineDamage;
+    public float MineExplosionRadius;
+    public float MineLifetime;
+
     // Rush/lunge attack (Warrior anti-kite)
     public bool CanRush;
     public float RushCooldown;
@@ -130,6 +142,14 @@ public class Enemy : Entity
         IsEnraged = false;
         CanEnrage = def.EnragesAtLowHP;
         FrontalDamageReduction = def.FrontalDamageReduction;
+        IsAOEPulse = def.IsAOEPulse;
+        PulseVFXTimer = 0;
+        LaysMines = def.LaysMines;
+        MineLayInterval = def.MineLayInterval;
+        MineLayTimer = 1f + Random.Shared.NextSingle() * def.MineLayInterval; // stagger
+        MineDamage = (int)(def.BaseDamage * scaleFactor * def.MineDamageMultiplier);
+        MineExplosionRadius = def.MineExplosionRadius;
+        MineLifetime = def.MineLifetime;
         CanRush = def.CanRush;
         IsRushing = false;
         RushCooldown = def.RushCooldown;
