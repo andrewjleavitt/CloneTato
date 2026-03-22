@@ -766,10 +766,16 @@ public class PlayingScreen
         Raylib.DrawLineV(player.Position, reticlePos, new Color((byte)255, (byte)60, (byte)60, (byte)40));
     }
 
-    // Ground tile source rect from Blood Desert Tileset (top-left ground pattern region)
-    private static readonly Rectangle _groundTileSrc = new(0, 0, 96, 64);
-    // Lighter ground variant (shifted right in tileset)
-    private static readonly Rectangle _groundTileSrcAlt = new(0, 64, 96, 64);
+    // Per-biome ground tile source rects
+    // Blood Desert (Waste + Blood Desert): gravel/sand patterns
+    private static readonly Rectangle _wasteTileSrc = new(0, 0, 96, 64);
+    private static readonly Rectangle _wasteTileSrcAlt = new(0, 64, 96, 64);
+    // Swamp (Blood Desert biome 2): dark organic ground
+    private static readonly Rectangle _swampTileSrc = new(0, 0, 48, 48);
+    private static readonly Rectangle _swampTileSrcAlt = new(48, 0, 48, 48);
+    // Temple (biome 3): stone floor tiles (16px grid, use 96x64 region of stone blocks)
+    private static readonly Rectangle _templeTileSrc = new(0, 32, 96, 64);
+    private static readonly Rectangle _templeTileSrcAlt = new(0, 96, 96, 64);
 
     private static Color GetBiomeBaseColor(int biome) => biome switch
     {
@@ -826,6 +832,18 @@ public class PlayingScreen
         _ => (new Color(30, 20, 25, 70), new Color(60, 25, 30, 90)),
     };
 
+    private static (Texture2D tileset, Rectangle src, Rectangle srcAlt, int tileW, int tileH) GetBiomeTileset(GameState state)
+    {
+        return state.CurrentBiome switch
+        {
+            2 when state.Assets.SwampTileset.Id != 0 =>
+                (state.Assets.SwampTileset, _swampTileSrc, _swampTileSrcAlt, 48, 48),
+            3 when state.Assets.TempleTileset.Id != 0 =>
+                (state.Assets.TempleTileset, _templeTileSrc, _templeTileSrcAlt, 96, 64),
+            _ => (state.Assets.BloodDesertTileset, _wasteTileSrc, _wasteTileSrcAlt, 96, 64),
+        };
+    }
+
     private void DrawArenaFloor(GameState state)
     {
         if (state.Assets.HasStrandedTerrain)
@@ -838,10 +856,10 @@ public class PlayingScreen
             float camRight = camLeft + Constants.LogicalWidth;
             float camBottom = camTop + Constants.LogicalHeight;
 
-            if (state.Assets.HasBloodDesertTileset)
+            // Select tileset and source rects per biome
+            var (tileset, tileSrc, tileSrcAlt, tileW, tileH) = GetBiomeTileset(state);
+            if (tileset.Id != 0)
             {
-                // Tile the ground using Blood Desert tileset ground pattern
-                int tileW = 96, tileH = 64;
                 int startCol = Math.Max(0, (int)(camLeft / tileW) - 1);
                 int startRow = Math.Max(0, (int)(camTop / tileH) - 1);
                 int endCol = Math.Min(Constants.ArenaWidth / tileW + 1, (int)(camRight / tileW) + 2);
@@ -852,8 +870,7 @@ public class PlayingScreen
                     {
                         int h = col * 374761393 + row * 668265263;
                         h = (h ^ (h >> 13)) * 1274126177;
-                        // Alternate between ground tile variants and flip for variety
-                        var src = (h & 0x1) == 0 ? _groundTileSrc : _groundTileSrcAlt;
+                        var src = (h & 0x1) == 0 ? tileSrc : tileSrcAlt;
                         bool flipH = (h & 0x2) != 0;
                         bool flipV = (h & 0x4) != 0;
                         var drawSrc = new Rectangle(
@@ -861,12 +878,10 @@ public class PlayingScreen
                             flipH ? -src.Width : src.Width,
                             flipV ? -src.Height : src.Height);
                         var dest = new Rectangle(col * tileW, row * tileH, tileW, tileH);
-                        // Subdued — let the dark base show through, tinted per biome
-                        Raylib.DrawTexturePro(state.Assets.BloodDesertTileset, drawSrc, dest,
+                        Raylib.DrawTexturePro(tileset, drawSrc, dest,
                             Vector2.Zero, 0f, GetBiomeTileTint(state.CurrentBiome));
                     }
 
-                // Sparse ambient particles
                 DrawAmbientParticles(camLeft, camTop, camRight, camBottom, state.CurrentBiome);
             }
             else

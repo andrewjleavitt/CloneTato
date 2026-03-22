@@ -31,8 +31,10 @@ public class AssetManager
     public Texture2D[] LargeScatterTextures { get; private set; } = Array.Empty<Texture2D>(); // larger accent props
     public bool HasStrandedTerrain => ObstacleTextures.Length > 0;
 
-    // STRANDED terrain tileset (Blood Desert floor tiles)
+    // STRANDED terrain tilesets per biome
     public Texture2D BloodDesertTileset { get; private set; }
+    public Texture2D TempleTileset { get; private set; }
+    public Texture2D SwampTileset { get; private set; }
     public bool HasBloodDesertTileset => BloodDesertTileset.Id != 0;
 
     // STRANDED UI icons
@@ -106,10 +108,18 @@ public class AssetManager
         LoadStrandedTerrain(strandedPath);
         LoadStrandedUI(strandedPath);
 
-        // Blood Desert ground tileset
+        // Per-biome ground tilesets
         string bdTilesetPath = strandedPath + "/terrain/blood_desert/Blood Desert Tileset.png";
         if (File.Exists(bdTilesetPath))
             BloodDesertTileset = LoadTexturePoint(bdTilesetPath);
+
+        string templeTilesetPath = strandedPath + "/terrain/temple/Temple Tileset.png";
+        if (File.Exists(templeTilesetPath))
+            TempleTileset = LoadTexturePoint(templeTilesetPath);
+
+        string swampTilesetPath = strandedPath + "/terrain/swamps/Swamp Tileset.png";
+        if (File.Exists(swampTilesetPath))
+            SwampTileset = LoadTexturePoint(swampTilesetPath);
     }
 
     private void LoadStrandedUI(string strandedPath)
@@ -240,6 +250,8 @@ public class AssetManager
         foreach (var tex in LargeScatterTextures)
             Raylib.UnloadTexture(tex);
         if (BloodDesertTileset.Id != 0) Raylib.UnloadTexture(BloodDesertTileset);
+        if (TempleTileset.Id != 0) Raylib.UnloadTexture(TempleTileset);
+        if (SwampTileset.Id != 0) Raylib.UnloadTexture(SwampTileset);
         if (HealthPickupIcon.Id != 0) Raylib.UnloadTexture(HealthPickupIcon);
         if (CoinIcon.Id != 0) Raylib.UnloadTexture(CoinIcon);
         if (HPBarSheet.Id != 0) Raylib.UnloadTexture(HPBarSheet);
