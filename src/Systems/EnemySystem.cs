@@ -170,7 +170,11 @@ public static class EnemySystem
                 }
                 else
                 {
-                    enemy.RushCooldownTimer -= dt;
+                    // Opportunist: Hooded Minion cooldown ticks 3x faster when player is hurt/knocked back
+                    float rushCdMult = 1f;
+                    if (enemy.DefIndex == 14 && (state.Player.KnockbackTimer > 0 || state.Player.InvincibilityTimer > 0))
+                        rushCdMult = 3f;
+                    enemy.RushCooldownTimer -= dt * rushCdMult;
                     float distToPlayer = Vector2.Distance(enemy.Position, playerPos);
                     // Trigger rush when at medium range (60-150) and cooldown ready
                     if (enemy.RushCooldownTimer <= 0 && distToPlayer > 60f && distToPlayer < 150f)
@@ -252,7 +256,16 @@ public static class EnemySystem
                 // Armed enemies hang back at preferred range
                 else if (enemy.IsArmed)
                 {
-                    if (dist < enemy.PreferredRange * 0.7f)
+                    if (dist < enemy.PreferredRange * 0.5f)
+                    {
+                        // Panic flight — erratic flee when player gets too close
+                        Vector2 fleeDir = -dir;
+                        Vector2 perp = new(-fleeDir.Y, fleeDir.X);
+                        float swerve = MathF.Sin(time * 6f + enemy.SineOffset) * 0.7f;
+                        fleeDir = Vector2.Normalize(fleeDir + perp * swerve);
+                        enemy.Velocity = fleeDir * enemy.Speed * 1.3f; // run faster when panicking
+                    }
+                    else if (dist < enemy.PreferredRange * 0.7f)
                         enemy.Velocity = -dir * enemy.Speed; // back away
                     else if (dist > enemy.PreferredRange * 1.3f)
                         enemy.Velocity = dir * enemy.Speed; // close in
@@ -267,7 +280,10 @@ public static class EnemySystem
                 // Unarmed: use original behavior with flanking
                 else if (enemy.Behavior == EnemyBehavior.Erratic)
                 {
-                    float sine = MathF.Sin(time * 4f + enemy.SineOffset) * 0.6f;
+                    // Spiny Beetle (8): exaggerated zigzag with rapid direction changes
+                    float zigFreq = enemy.DefIndex == 8 ? 7f : 4f;
+                    float zigAmp = enemy.DefIndex == 8 ? 1.0f : 0.6f;
+                    float sine = MathF.Sin(time * zigFreq + enemy.SineOffset) * zigAmp;
                     Vector2 perp = new(-dir.Y, dir.X);
                     var erraticDir = dir + perp * sine;
                     enemy.Velocity = Vector2.Normalize(erraticDir) * enemy.Speed;
@@ -298,12 +314,23 @@ public static class EnemySystem
                 enemy.ShootTimer -= dt;
                 if (enemy.ShootTimer <= 0 && dist < enemy.PreferredRange * 2.5f)
                 {
-                    enemy.ShootTimer = enemy.ShootCooldown;
+                    // Archer rapid-fire at 50% HP
+                    float shootCD = enemy.ShootCooldown;
+                    if (enemy.DefIndex == 4 && enemy.CurrentHP <= enemy.MaxHP / 2)
+                        shootCD *= 0.5f; // double fire rate when wounded
+                    enemy.ShootTimer = shootCD;
                     // Play attack animation
                     enemy.IsAttacking = true;
                     enemy.AttackAnimTimer = enemy.AttackAnimDuration > 0 ? enemy.AttackAnimDuration : 0.35f;
 
-                    Vector2 baseDir = Vector2.Normalize(playerPos - enemy.Position);
+                    // Predictive aiming — lead target based on player velocity
+                    Vector2 aimTarget = playerPos;
+                    if (enemy.ProjectileSpeed > 0 && state.Player.Velocity.LengthSquared() > 100f)
+                    {
+                        float travelTime = dist / enemy.ProjectileSpeed;
+                        aimTarget = playerPos + state.Player.Velocity * travelTime * 0.6f; // 60% lead (not perfect)
+                    }
+                    Vector2 baseDir = Vector2.Normalize(aimTarget - enemy.Position);
                     float baseAngle = MathF.Atan2(baseDir.Y, baseDir.X);
 
                     for (int s = 0; s < enemy.ProjectileCount; s++)
@@ -369,9 +396,11 @@ public static class EnemySystem
 
                             // Player knockback from melee attack
                             Vector2 knockDir = Vector2.Normalize(state.Player.Position - enemy.Position);
-                            float knockForce = enemy.IsAOEPulse ? 250f : (enemy.IsBoss ? 350f : 200f);
+                            bool isShieldBash = enemy.DefIndex == 5 || enemy.DefIndex == 11;
+                            float knockForce = isShieldBash ? 300f
+                                : enemy.IsAOEPulse ? 250f : (enemy.IsBoss ? 350f : 200f);
                             state.Player.KnockbackVelocity = knockDir * knockForce;
-                            state.Player.KnockbackTimer = enemy.IsBoss ? 0.2f : 0.12f;
+                            state.Player.KnockbackTimer = isShieldBash ? 0.18f : (enemy.IsBoss ? 0.2f : 0.12f);
 
                             var dmgNum = state.GetInactiveDamageNumber();
                             dmgNum?.Init(state.Player.Position, dmg.ToString(), Raylib_cs.Color.Red);
@@ -387,6 +416,9 @@ public static class EnemySystem
                         // Big Bug: 1s recovery after ground slam (punish window)
                         if (enemy.IsAOEPulse && enemy.Behavior == EnemyBehavior.Tank)
                             enemy.StunTimer = 1.0f;
+                        // Guard/Guard Robot: 0.6s recovery after shield bash
+                        else if (enemy.DefIndex == 5 || enemy.DefIndex == 11)
+                            enemy.StunTimer = 0.6f;
                     }
                 }
                 else
@@ -413,6 +445,15 @@ public static class EnemySystem
             // Kamikaze fuse countdown
             if (enemy.IsKamikaze)
             {
+                // Arm fuse when close to player
+                if (!enemy.FuseArmed)
+                {
+                    if (dist < enemy.FuseArmRange)
+                        enemy.FuseArmed = true;
+                    else
+                        goto skipKamikaze; // not armed yet, skip fuse logic
+                }
+
                 enemy.FuseTimer -= dt;
 
                 // Accelerating flash — pulses faster as fuse runs down
@@ -432,6 +473,7 @@ public static class EnemySystem
                     continue;
                 }
             }
+            skipKamikaze:
 
             // Tick pulse VFX timer
             if (enemy.PulseVFXTimer > 0)
@@ -650,7 +692,10 @@ public static class EnemySystem
 
                 // Chain-detonate other kamikaze enemies
                 if (other.IsKamikaze && other.FuseTimer > 0.2f)
+                {
+                    other.FuseArmed = true; // force-arm on chain detonation
                     other.FuseTimer = 0.2f; // force near-immediate detonation
+                }
 
                 if (other.CurrentHP <= 0 && !other.IsDying)
                     state.HandleEnemyDeath(other);

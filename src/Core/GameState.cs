@@ -296,6 +296,39 @@ public class GameState
         // 5 kills = 1.25x, 10 kills = 1.5x, 20 kills = 2.0x
         float comboMult = 1f + Math.Min(ComboCount - 1, 20) * 0.05f;
 
+        // Kamikaze enemies explode on death (smaller than fuse explosion)
+        if (enemy.IsKamikaze && enemy.FuseTimer > 0)
+        {
+            // Death explosion — 60% radius and damage of normal
+            float radius = enemy.ExplosionRadius * 0.6f;
+            int damage = (int)(enemy.ExplosionDamage * 0.6f);
+
+            // Damage nearby enemies
+            for (int j = 0; j < Enemies.Count; j++)
+            {
+                var other = Enemies[j];
+                if (!other.Active || other.IsDying || other == enemy) continue;
+                float d = Vector2.Distance(enemy.Position, other.Position);
+                if (d < radius)
+                {
+                    int edm = Math.Max(1, (int)(damage * 0.5f));
+                    other.CurrentHP -= edm;
+                    other.FlashTimer = 0.1f;
+                    if (other.IsKamikaze && other.FuseTimer > 0.2f)
+                    {
+                        other.FuseArmed = true;
+                        other.FuseTimer = 0.2f;
+                    }
+                    if (other.CurrentHP <= 0 && !other.IsDying)
+                        HandleEnemyDeath(other);
+                }
+            }
+
+            SpawnExplosionVFX(enemy.Position, radius);
+            RequestScreenShake(0.12f, 2f);
+            Assets.PlaySoundVariant("explosion", 0.3f);
+        }
+
         // Loot enemies burst extra drops in a ring
         if (enemy.IsLootEnemy)
         {

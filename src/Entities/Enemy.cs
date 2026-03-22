@@ -39,6 +39,8 @@ public class Enemy : Entity
 
     // Kamikaze fields
     public bool IsKamikaze;
+    public bool FuseArmed; // fuse only starts when near player
+    public float FuseArmRange; // proximity to start fuse
     public float FuseTimer;
     public float FuseDuration;
     public float ExplosionRadius;
@@ -137,6 +139,8 @@ public class Enemy : Entity
         IsLootEnemy = false;
         FleeTimer = 0;
         IsKamikaze = false;
+        FuseArmed = false;
+        FuseArmRange = 0;
         FuseTimer = 0;
         FuseDuration = 0;
         ExplosionRadius = 0;
@@ -204,6 +208,8 @@ public class Enemy : Entity
         else if (def.AttackType == EnemyAttackType.Kamikaze)
         {
             IsKamikaze = true;
+            FuseArmed = false; // fuse starts when near player
+            FuseArmRange = 100f; // arm when within 100px of player
             FuseDuration = def.FuseDuration;
             FuseTimer = def.FuseDuration;
             ExplosionRadius = def.ExplosionRadius;
