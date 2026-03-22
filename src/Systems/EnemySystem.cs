@@ -87,12 +87,25 @@ public static class EnemySystem
                 enemy.FlashTimer = 0.5f;
                 state.RequestScreenShake(0.3f, 4f);
                 state.RequestHitstop(0.1f);
-                // Boss charge unlocks in phase 2
-                enemy.BossChargeTimer = 2f;
+
+                if (enemy.BossSpriteType == 0) // Dust Warrior: charge unlocks in phase 2
+                    enemy.BossChargeTimer = 2f;
+                else if (enemy.BossSpriteType == 1) // Blowfish: faster burrow + spike burst
+                {
+                    enemy.BurrowCooldown = 1f;
+                    enemy.SpikeTimer = 0.5f;
+                    enemy.ProjectileCount = 8; // more spikes
+                }
+                else if (enemy.BossSpriteType == 2) // Tarnished Widow: faster summons + pounce
+                {
+                    enemy.PounceTimer = 1f;
+                    enemy.SummonTimer = 3f;
+                    enemy.WebSpitTimer = 1f;
+                }
             }
 
-            // Boss charge attack (phase 2 only)
-            if (enemy.IsBoss && enemy.BossPhase >= 1)
+            // === Dust Warrior charge attack (phase 2 only) ===
+            if (enemy.IsBoss && enemy.BossSpriteType == 0 && enemy.BossPhase >= 1)
             {
                 if (enemy.IsBossCharging)
                 {
@@ -100,8 +113,7 @@ public static class EnemySystem
                     if (enemy.BossChargeRushTimer <= 0)
                     {
                         enemy.IsBossCharging = false;
-                        enemy.BossChargeTimer = 4f; // cooldown before next charge
-                        // AOE slam at end of charge
+                        enemy.BossChargeTimer = 4f;
                         enemy.PulseVFXTimer = 0.4f;
                         float chargeDist = Vector2.Distance(enemy.Position, playerPos);
                         if (chargeDist < 55f && state.Player.InvincibilityTimer <= 0)
@@ -143,6 +155,191 @@ public static class EnemySystem
                         enemy.IsAttacking = true;
                         enemy.AttackAnimTimer = 0.5f;
                     }
+                }
+            }
+
+            // === Blowfish boss behavior ===
+            if (enemy.IsBoss && enemy.BossSpriteType == 1)
+            {
+                float distToPlayer = Vector2.Distance(enemy.Position, playerPos);
+
+                // Burrow: disappear, reposition, resurface with spike burst
+                if (enemy.IsBurrowed)
+                {
+                    enemy.BurrowTimer -= dt;
+                    if (enemy.BurrowTimer <= 0)
+                    {
+                        // Resurface near player (but not on top)
+                        float angle = Random.Shared.NextSingle() * MathF.PI * 2f;
+                        float resurDist = 60f + Random.Shared.NextSingle() * 40f;
+                        enemy.Position = playerPos + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * resurDist;
+                        enemy.Position = new Vector2(
+                            Math.Clamp(enemy.Position.X, 30, Constants.ArenaWidth - 30),
+                            Math.Clamp(enemy.Position.Y, 30, Constants.ArenaHeight - 30));
+                        enemy.IsBurrowed = false;
+                        enemy.FlashTimer = 0.3f;
+                        enemy.BurrowCooldown = enemy.BossPhase >= 1 ? 5f : 8f;
+                        state.RequestScreenShake(0.15f, 2.5f);
+
+                        // Spike burst on resurface
+                        FireSpikeBurst(enemy, state);
+                    }
+                    continue; // skip all movement/attacks while burrowed
+                }
+
+                enemy.BurrowCooldown -= dt;
+                if (enemy.BurrowCooldown <= 0 && !enemy.IsAttacking)
+                {
+                    enemy.IsBurrowed = true;
+                    enemy.BurrowTimer = 1.2f; // underground for 1.2s
+                    state.RequestScreenShake(0.1f, 1.5f);
+                    continue;
+                }
+
+                // Spike shot: periodic ranged burst (separate from burrow-resurface burst)
+                enemy.SpikeTimer -= dt;
+                if (enemy.SpikeTimer <= 0 && !enemy.IsAttacking && distToPlayer < 180f)
+                {
+                    enemy.SpikeTimer = enemy.BossPhase >= 1 ? 2f : 3.5f;
+                    FireSpikeBurst(enemy, state);
+                    enemy.IsAttacking = true;
+                    enemy.AttackAnimTimer = 0.5f;
+                }
+
+                // Inflation pulse: close-range AOE knockback
+                enemy.InflateTimer -= dt;
+                if (enemy.InflateTimer <= 0 && distToPlayer < 60f && !enemy.IsAttacking)
+                {
+                    enemy.InflateTimer = enemy.BossPhase >= 1 ? 3f : 5f;
+                    enemy.PulseVFXTimer = 0.5f;
+                    enemy.IsAttacking = true;
+                    enemy.AttackAnimTimer = 0.6f;
+                    // AOE damage + heavy knockback
+                    if (state.Player.InvincibilityTimer <= 0)
+                    {
+                        int dmg = Math.Max(1, (int)(enemy.MeleeAttackDamage * 1.2f) - state.Player.ComputedStats.Armor);
+                        state.Player.CurrentHP -= dmg;
+                        state.Player.InvincibilityTimer = Constants.PlayerInvincibilityTime;
+                        state.Player.FlashTimer = 0.15f;
+                        Vector2 knockDir = Vector2.Normalize(state.Player.Position - enemy.Position);
+                        state.Player.KnockbackVelocity = knockDir * 500f;
+                        state.Player.KnockbackTimer = 0.3f;
+                        var dmgNum = state.GetInactiveDamageNumber();
+                        dmgNum?.Init(state.Player.Position, dmg.ToString(), Raylib_cs.Color.Red);
+                        state.RequestScreenShake(0.25f, 4f);
+                        state.RequestHitstop(0.08f);
+                        state.Assets.PlaySoundVariant("hurt", 0.7f);
+                    }
+                }
+            }
+
+            // === Tarnished Widow boss behavior ===
+            if (enemy.IsBoss && enemy.BossSpriteType == 2)
+            {
+                float distToPlayer = Vector2.Distance(enemy.Position, playerPos);
+
+                // Pounce: long-range lunge attack
+                if (enemy.IsPouncing)
+                {
+                    enemy.PounceRushTimer -= dt;
+                    if (enemy.PounceRushTimer <= 0)
+                    {
+                        enemy.IsPouncing = false;
+                        enemy.PounceTimer = enemy.BossPhase >= 1 ? 4f : 7f;
+                        // Landing impact AOE
+                        enemy.PulseVFXTimer = 0.4f;
+                        float pounceDist = Vector2.Distance(enemy.Position, playerPos);
+                        if (pounceDist < 50f && state.Player.InvincibilityTimer <= 0)
+                        {
+                            int dmg = Math.Max(1, (int)(enemy.MeleeAttackDamage * 1.5f) - state.Player.ComputedStats.Armor);
+                            state.Player.CurrentHP -= dmg;
+                            state.Player.InvincibilityTimer = Constants.PlayerInvincibilityTime;
+                            state.Player.FlashTimer = 0.15f;
+                            Vector2 knockDir = Vector2.Normalize(state.Player.Position - enemy.Position);
+                            state.Player.KnockbackVelocity = knockDir * 450f;
+                            state.Player.KnockbackTimer = 0.25f;
+                            var dmgNum = state.GetInactiveDamageNumber();
+                            dmgNum?.Init(state.Player.Position, dmg.ToString(), Raylib_cs.Color.Red);
+                            state.RequestScreenShake(0.25f, 4f);
+                            state.RequestHitstop(0.08f);
+                            state.Assets.PlaySoundVariant("hurt", 0.7f);
+                        }
+                        state.RequestScreenShake(0.15f, 2.5f);
+                    }
+                    else
+                    {
+                        enemy.Velocity = enemy.PounceDir * enemy.Speed * 5f;
+                        enemy.Position += enemy.Velocity * dt;
+                        enemy.Position = new Vector2(
+                            Math.Clamp(enemy.Position.X, 30, Constants.ArenaWidth - 30),
+                            Math.Clamp(enemy.Position.Y, 30, Constants.ArenaHeight - 30));
+                        continue;
+                    }
+                }
+
+                // Pounce initiation
+                enemy.PounceTimer -= dt;
+                if (enemy.PounceTimer <= 0 && distToPlayer > 80f && distToPlayer < 300f && !enemy.IsAttacking)
+                {
+                    enemy.IsPouncing = true;
+                    enemy.PounceRushTimer = 0.3f;
+                    enemy.PounceDir = Vector2.Normalize(playerPos - enemy.Position);
+                    enemy.IsAttacking = true;
+                    enemy.AttackAnimTimer = 0.5f;
+                }
+
+                // Web spit: create slow zones at player position
+                enemy.WebSpitTimer -= dt;
+                if (enemy.WebSpitTimer <= 0 && distToPlayer < 200f && !enemy.IsAttacking)
+                {
+                    enemy.WebSpitTimer = enemy.BossPhase >= 1 ? 3f : 5f;
+                    // Place web zone at player's current position (they need to dodge)
+                    state.TerrainZones.Add(new TerrainZone
+                    {
+                        Position = playerPos,
+                        Radius = 25f,
+                        Type = TerrainType.Sand, // slows to 60%
+                        Active = true,
+                        Duration = 6f, // webs last 6 seconds
+                        DamagePerSecond = 3f, // light DOT from web
+                    });
+                    // Phase 2: second web zone offset from player
+                    if (enemy.BossPhase >= 1)
+                    {
+                        float webAngle = Random.Shared.NextSingle() * MathF.PI * 2f;
+                        state.TerrainZones.Add(new TerrainZone
+                        {
+                            Position = playerPos + new Vector2(MathF.Cos(webAngle), MathF.Sin(webAngle)) * 30f,
+                            Radius = 20f,
+                            Type = TerrainType.Sand,
+                            Active = true,
+                            Duration = 6f,
+                            DamagePerSecond = 3f,
+                        });
+                    }
+                    enemy.IsAttacking = true;
+                    enemy.AttackAnimTimer = 0.4f;
+                }
+
+                // Spiderling summons
+                enemy.SummonTimer -= dt;
+                if (enemy.SummonTimer <= 0)
+                {
+                    enemy.SummonTimer = enemy.BossPhase >= 1 ? 6f : 12f;
+                    int spiderlingCount = enemy.BossPhase >= 1 ? 4 : 2;
+                    // Spawn Small Bug type (index 1) as spiderlings
+                    for (int s = 0; s < spiderlingCount; s++)
+                    {
+                        var spiderling = state.GetInactiveEnemy();
+                        if (spiderling == null) break;
+                        float sAngle = (MathF.PI * 2f / spiderlingCount) * s;
+                        Vector2 sPos = enemy.Position + new Vector2(MathF.Cos(sAngle), MathF.Sin(sAngle)) * 30f;
+                        float sFactor = (1f + (state.CurrentWave - 1) * 0.08f) * Constants.BiomeStatScale(state.CurrentBiome);
+                        spiderling.Init(EnemyDatabase.Enemies[1], sPos, sFactor); // Small Bug
+                        spiderling.DefIndex = 1;
+                        spiderling.Speed *= 1.2f; // slightly faster
+                    }
+                    state.RequestScreenShake(0.1f, 1.5f);
                 }
             }
 
@@ -649,6 +846,29 @@ public static class EnemySystem
                 3 => 2, // Tarnished Widow
                 _ => 0,
             };
+
+            // Biome-specific boss setup
+            if (enemy.BossSpriteType == 1) // Blowfish
+            {
+                enemy.BurrowCooldown = 6f; // first burrow after 6s
+                enemy.SpikeTimer = 3f;     // first spike shot after 3s
+                enemy.InflateTimer = 5f;   // first inflation after 5s
+                enemy.IsArmed = true;      // has ranged spike attack
+                enemy.ProjectileDamage = (int)(def.BaseDamage * scaleFactor * 1.5f);
+                enemy.ProjectileSpeed = 200f;
+                enemy.ProjectileCount = 5;
+                enemy.ProjectileSpread = MathF.PI * 2f; // full circle
+                enemy.ShootCooldown = 3f;
+                enemy.ShootTimer = 3f;
+            }
+            else if (enemy.BossSpriteType == 2) // Tarnished Widow
+            {
+                enemy.WebSpitTimer = 4f;   // first web after 4s
+                enemy.PounceTimer = 6f;    // first pounce after 6s
+                enemy.SummonTimer = 10f;   // first summon after 10s
+                enemy.MeleeAttackRange = 55f; // wider sweep
+                enemy.IsAOEPulse = true;   // leg sweep hits all around
+            }
         }
         else
         {
@@ -727,6 +947,27 @@ public static class EnemySystem
         state.PendingShakeDuration = 0.2f;
         state.PendingShakeIntensity = 4f;
         state.Assets.PlaySoundVariant("explosion", 0.5f);
+    }
+
+    private static void FireSpikeBurst(Enemy enemy, GameState state)
+    {
+        int count = enemy.ProjectileCount;
+        float angleStep = MathF.PI * 2f / count;
+        float startAngle = Random.Shared.NextSingle() * MathF.PI * 2f;
+        for (int i = 0; i < count; i++)
+        {
+            var proj = state.GetInactiveEnemyProjectile();
+            if (proj == null) break;
+            float angle = startAngle + angleStep * i;
+            Vector2 dir = new(MathF.Cos(angle), MathF.Sin(angle));
+            proj.Init(
+                enemy.Position + dir * (enemy.Radius + 5f),
+                dir * enemy.ProjectileSpeed,
+                enemy.ProjectileDamage,
+                2.5f, 0,
+                Raylib_cs.Color.Orange
+            );
+        }
     }
 
     private static Vector2 GetEdgeSpawnPosition(Vector2 playerPos)

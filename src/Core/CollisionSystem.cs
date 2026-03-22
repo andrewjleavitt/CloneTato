@@ -186,7 +186,7 @@ public static class CollisionSystem
                 var enemy = state.Enemies[e];
                 if (!enemy.Active) continue;
 
-                if (enemy.IsDying) continue;
+                if (enemy.IsDying || enemy.IsBurrowed) continue;
                 if (CircleOverlap(proj.Position, proj.Radius, enemy.Position, enemy.Radius))
                 {
                     // Explosive projectile: AOE on impact, skip normal damage
@@ -240,7 +240,7 @@ public static class CollisionSystem
                 var enemy = state.Enemies[e];
                 if (!enemy.Active) continue;
 
-                if (enemy.IsDying) continue;
+                if (enemy.IsDying || enemy.IsBurrowed) continue;
                 if (enemy.IsLootEnemy) continue; // loot enemies don't hurt player
                 if (CircleOverlap(player.Position, player.Radius, enemy.Position, enemy.Radius))
                 {

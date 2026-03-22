@@ -56,6 +56,21 @@ public class Enemy : Entity
     public float BossChargeRushTimer;
     public Vector2 BossChargeDir;
 
+    // Blowfish boss fields
+    public bool IsBurrowed;
+    public float BurrowTimer;      // time remaining underground
+    public float BurrowCooldown;   // cooldown between burrows
+    public float SpikeTimer;       // cooldown for spike shot
+    public float InflateTimer;     // cooldown for inflation pulse
+
+    // Tarnished Widow boss fields
+    public float WebSpitTimer;     // cooldown for web spit
+    public float PounceTimer;      // cooldown for pounce
+    public bool IsPouncing;
+    public float PounceRushTimer;
+    public Vector2 PounceDir;
+    public float SummonTimer;      // cooldown for spiderling summons
+
     // Boss melee attack fields
     public bool HasMeleeAttack;
     public float MeleeAttackCooldown;
@@ -135,6 +150,17 @@ public class Enemy : Entity
         IsBossCharging = false;
         BossChargeRushTimer = 0;
         BossChargeDir = Vector2.Zero;
+        IsBurrowed = false;
+        BurrowTimer = 0;
+        BurrowCooldown = 0;
+        SpikeTimer = 0;
+        InflateTimer = 0;
+        WebSpitTimer = 0;
+        PounceTimer = 0;
+        IsPouncing = false;
+        PounceRushTimer = 0;
+        PounceDir = Vector2.Zero;
+        SummonTimer = 0;
         IsArmed = false;
         WeaponSpriteIndex = 0;
         ShootCooldown = 0;

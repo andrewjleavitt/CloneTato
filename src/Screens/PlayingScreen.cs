@@ -419,6 +419,7 @@ public class PlayingScreen
         {
             var enemy = state.Enemies[i];
             if (!enemy.Active) continue;
+            if (enemy.IsBurrowed) continue; // Blowfish boss: invisible while burrowed
 
             byte alpha = (byte)(enemy.DeathAlpha * 255);
             Color tint;

@@ -239,7 +239,7 @@ public static class WeaponSystem
         for (int e = 0; e < state.Enemies.Count; e++)
         {
             var enemy = state.Enemies[e];
-            if (!enemy.Active || enemy.IsDying) continue;
+            if (!enemy.Active || enemy.IsDying || enemy.IsBurrowed) continue;
 
             float dist = Vector2.Distance(player.Position, enemy.Position);
             if (dist > weapon.Range + enemy.Radius) continue;
@@ -435,7 +435,7 @@ public static class WeaponSystem
         for (int e = 0; e < state.Enemies.Count; e++)
         {
             var enemy = state.Enemies[e];
-            if (!enemy.Active || enemy.IsDying) continue;
+            if (!enemy.Active || enemy.IsDying || enemy.IsBurrowed) continue;
             float dist = Vector2.Distance(pos, enemy.Position);
             if (dist > radius + enemy.Radius) continue;
 
