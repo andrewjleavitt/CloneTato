@@ -54,9 +54,9 @@ Go through every character in the Sprite Gallery. For each one:
 | slash | right | `R Slash.png` | 5 | 12 | [x] Wired |
 | slash | up | `attack slash up.png` | 7 | 12 | [x] Wired |
 | slash | down | `Slash Down.png` | 7 | 12 | [x] Wired |
-| chop | right | `R CHop.png` | 4 | — | [ ] Not wired |
-| chop | up | `Chop Up.png` | 4 | — | [ ] Not wired |
-| chop | down | `Chop Down.png` | 4 | — | [ ] Not wired |
+| chop | right | `R CHop.png` | 4 | 12 | [x] Wired |
+| chop | up | `Chop Up.png` | 4 | 12 | [x] Wired |
+| chop | down | `Chop Down.png` | 4 | 12 | [x] Wired |
 | move | right | `R move.png` | 8 | — | [ ] Not wired |
 | move | up | `Move Up.png` | 8 | — | [ ] Not wired |
 | move | down | `Move Down.png` | 8 | — | [ ] Not wired |
@@ -301,10 +301,10 @@ Go through every character in the Sprite Gallery. For each one:
 
 | Row | Frames (est.) | Animation | Status |
 |-----|---------------|-----------|--------|
-| 0 | 1-3 | deploy/static | [ ] Not wired |
+| 0 | 1-3 | deploy/static | [ ] Not wired (unused) |
 | 1 | 8 | idle | [x] Wired |
 | 2 | 8 | walk | [x] Wired |
-| 3 | ~10 | attack (arms extend?) | [ ] Not wired — needs gallery review |
+| 3 | ~10 | attack (arms extend?) | [x] Wired |
 | 4 | ~10 | death (breaks apart) | [x] Wired |
 
 - [x] Row 3 attack animation wired
@@ -320,7 +320,7 @@ Go through every character in the Sprite Gallery. For each one:
 |-----|--------|-----------|--------|
 | 0 | 8 | idle (antenna wobble) | [x] Wired |
 | 1 | 8 | walk | [x] Wired |
-| 2 | 8 | attack (blue energy pulse) | [ ] Not wired — needs gallery review |
+| 2 | 8 | attack (blue energy pulse) | [x] Wired |
 | 3 | 8 | death | [x] Wired |
 
 - [x] Row 2 attack animation wired
@@ -336,9 +336,9 @@ Go through every character in the Sprite Gallery. For each one:
 |-----|--------|-----------|--------|
 | 0 | 6 | idle | [x] Wired |
 | 1 | 6 | walk | [x] Wired |
-| 2 | 6 | unknown — needs review | [ ] Not wired |
-| 3 | 6 | unknown — needs review | [ ] Not wired |
-| 4 | 6 | death? | [x] Wired (row 3 used) |
+| 2 | 6 | attack | [x] Wired |
+| 3 | 6 | death | [x] Wired |
+| 4 | 6 | unused | — |
 
 - [x] Row 2 attack animation wired
 - [x] Loot enemy (flee behavior, no contact damage, big drops)
@@ -351,9 +351,9 @@ Go through every character in the Sprite Gallery. For each one:
 
 | Row | Frames (est.) | Animation | Status |
 |-----|---------------|-----------|--------|
-| 0 | ~8 | idle | [ ] Not loaded |
-| 1 | ~6 | walk | [ ] Not loaded |
-| 2 | ~24 | plant/attack/death (long sequence) | [ ] Not loaded |
+| 0 | 8 | idle | [x] Wired |
+| 1 | 8 | walk | [x] Wired |
+| 2 | 24 | plant/attack + death (split) | [x] Wired |
 
 - [x] Loaded into game (DefIndex 17)
 - [x] Attack + death animations wired
