@@ -51,6 +51,21 @@ public static class EnemySystem
                 continue;
             }
 
+            // Enrage check — trigger once when HP drops below 50%
+            if (enemy.CanEnrage && !enemy.IsEnraged && enemy.CurrentHP <= enemy.MaxHP / 2)
+            {
+                enemy.IsEnraged = true;
+                var def = EnemyDatabase.Enemies[enemy.DefIndex];
+                enemy.Speed *= def.EnrageSpeedMult;
+                enemy.ContactDamage = (int)(enemy.ContactDamage * def.EnrageDamageMult);
+                if (enemy.HasMeleeAttack)
+                {
+                    enemy.MeleeAttackDamage = (int)(enemy.MeleeAttackDamage * def.EnrageDamageMult);
+                    enemy.MeleeAttackCooldown *= 0.7f; // attacks faster when enraged
+                }
+                enemy.FlashTimer = 0.3f; // visible enrage flash
+            }
+
             Vector2 dir = playerPos - enemy.Position;
             float dist = dir.Length();
 

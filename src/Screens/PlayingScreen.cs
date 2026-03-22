@@ -385,9 +385,19 @@ public class PlayingScreen
             if (!enemy.Active) continue;
 
             byte alpha = (byte)(enemy.DeathAlpha * 255);
-            Color tint = enemy.FlashTimer > 0
-                ? new Color((byte)255, (byte)80, (byte)80, alpha)
-                : new Color((byte)229, (byte)229, (byte)229, alpha);
+            Color tint;
+            if (enemy.FlashTimer > 0)
+                tint = new Color((byte)255, (byte)80, (byte)80, alpha);
+            else if (enemy.IsEnraged)
+            {
+                // Pulsing red-orange tint for enraged enemies
+                float pulse = (MathF.Sin((float)Raylib_cs.Raylib.GetTime() * 8f) + 1f) * 0.5f;
+                byte r = (byte)(200 + (int)(55 * pulse));
+                byte g = (byte)(100 + (int)(60 * pulse));
+                tint = new Color(r, g, (byte)80, alpha);
+            }
+            else
+                tint = new Color((byte)229, (byte)229, (byte)229, alpha);
 
             // Try STRANDED animated sprite — bosses use dedicated boss sprite
             AnimatedSprite? eSprite;

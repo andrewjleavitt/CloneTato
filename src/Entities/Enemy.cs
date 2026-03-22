@@ -63,6 +63,13 @@ public class Enemy : Entity
     // Index into EnemyDatabase.Enemies (for STRANDED sprite lookup)
     public int DefIndex;
 
+    // Enrage state (Relic Guardian at 50% HP)
+    public bool IsEnraged;
+    public bool CanEnrage; // set on init for eligible enemies
+
+    // Frontal damage reduction
+    public float FrontalDamageReduction;
+
     public void Init(EnemyDef def, Vector2 spawnPos, float scaleFactor = 1f)
     {
         Position = spawnPos;
@@ -110,6 +117,9 @@ public class Enemy : Entity
         MeleeAttackRange = 0;
         MeleeAttackDamage = 0;
         MeleeAttackHit = false;
+        IsEnraged = false;
+        CanEnrage = def.EnragesAtLowHP;
+        FrontalDamageReduction = def.FrontalDamageReduction;
 
         // Loot enemies (flee behavior) — no contact damage, despawn timer
         if (def.Behavior == EnemyBehavior.Flee)
@@ -199,6 +209,31 @@ public class Enemy : Entity
     }
 
     public float DeathAlpha => IsDying ? Math.Clamp(DeathTimer / DeathDuration, 0f, 1f) : 1f;
+
+    /// <summary>
+    /// Apply frontal damage reduction for shield-bearing enemies.
+    /// damageSourcePos is where the damage is coming from (projectile, player, etc).
+    /// Returns the modified damage amount.
+    /// </summary>
+    public int ApplyFrontalReduction(int damage, Vector2 damageSourcePos)
+    {
+        if (FrontalDamageReduction <= 0) return damage;
+
+        // "Front" = the direction the enemy is moving (velocity direction)
+        if (Velocity.LengthSquared() < 1f) return damage;
+
+        Vector2 facing = Vector2.Normalize(Velocity);
+        Vector2 toSource = Vector2.Normalize(damageSourcePos - Position);
+
+        // dot > 0 means the damage source is in front of the enemy
+        float dot = Vector2.Dot(facing, toSource);
+        if (dot > 0.3f) // ~72° frontal cone
+        {
+            float reduction = FrontalDamageReduction * Math.Clamp((dot - 0.3f) / 0.7f, 0f, 1f);
+            return Math.Max(1, (int)(damage * (1f - reduction)));
+        }
+        return damage;
+    }
 }
 
 public enum EnemyBehavior

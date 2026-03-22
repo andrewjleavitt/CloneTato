@@ -202,6 +202,7 @@ public static class CollisionSystem
                     bool crit = Random.Shared.NextSingle() < player.ComputedStats.CritChance;
                     if (crit) damage = (int)(damage * player.ComputedStats.CritDamage);
                     damage = (int)(damage * player.ComputedStats.DamageMultiplier);
+                    damage = enemy.ApplyFrontalReduction(damage, proj.Position);
 
                     enemy.CurrentHP -= damage;
                     enemy.FlashTimer = 0.1f;

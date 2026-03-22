@@ -30,6 +30,14 @@ public class EnemyDef
     public int ProjectileCount = 1;     // ranged only: projectiles per shot (e.g., 3 for spread)
     public float ProjectileSpread;      // ranged only: spread angle in radians
 
+    // Enrage (speed/damage boost at low HP)
+    public bool EnragesAtLowHP;         // triggers enrage at 50% HP
+    public float EnrageSpeedMult = 1.5f;
+    public float EnrageDamageMult = 1.3f;
+
+    // Frontal damage reduction (shield-bearers)
+    public float FrontalDamageReduction; // 0 = none, 0.5 = 50% reduction from front
+
     // Kamikaze params
     public float FuseDuration;          // seconds until self-destruct
     public float ExplosionRadius;       // blast radius
@@ -102,6 +110,7 @@ public static class EnemyDatabase
             AttackType = EnemyAttackType.Melee,
             AttackCooldown = 1.4f, AttackRange = 28f,
             AttackAnimDuration = 0.4f, AttackDamageMultiplier = 1.3f,
+            FrontalDamageReduction = 0.5f,
         },
         new()
         {
@@ -145,6 +154,7 @@ public static class EnemyDatabase
             AttackType = EnemyAttackType.Melee,
             AttackCooldown = 2.2f, AttackRange = 38f,
             AttackAnimDuration = 0.6f, AttackDamageMultiplier = 1.6f,
+            EnragesAtLowHP = true,
         },
         // Robots (index 10-13)
         new()
@@ -165,6 +175,7 @@ public static class EnemyDatabase
             AttackType = EnemyAttackType.Melee,
             AttackCooldown = 1.5f, AttackRange = 30f,
             AttackAnimDuration = 0.45f, AttackDamageMultiplier = 1.4f,
+            FrontalDamageReduction = 0.4f,
         },
         new()
         {

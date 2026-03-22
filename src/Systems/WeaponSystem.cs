@@ -254,6 +254,7 @@ public static class WeaponSystem
             // Hit!
             bool crit = Random.Shared.NextSingle() < player.ComputedStats.CritChance;
             int finalDamage = crit ? (int)(damage * player.ComputedStats.CritDamage) : damage;
+            finalDamage = enemy.ApplyFrontalReduction(finalDamage, player.Position);
 
             enemy.CurrentHP -= finalDamage;
             enemy.FlashTimer = 0.1f;
@@ -444,6 +445,7 @@ public static class WeaponSystem
 
             bool crit = Random.Shared.NextSingle() < player.ComputedStats.CritChance;
             if (crit) finalDamage = (int)(finalDamage * player.ComputedStats.CritDamage);
+            finalDamage = enemy.ApplyFrontalReduction(finalDamage, pos);
 
             enemy.CurrentHP -= finalDamage;
             enemy.FlashTimer = 0.1f;
