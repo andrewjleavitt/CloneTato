@@ -149,5 +149,13 @@ public static class PlayerSystem
             player.AnimTimer += dt;
 
         state.TotalTimeSurvived += dt;
+
+        // Combo timer decay
+        if (state.ComboTimer > 0)
+        {
+            state.ComboTimer -= dt;
+            if (state.ComboTimer <= 0)
+                state.ComboCount = 0;
+        }
     }
 }

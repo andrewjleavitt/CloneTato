@@ -92,6 +92,16 @@ public static class UIRenderer
             DrawTextSmall(enemyText, Constants.LogicalWidth - enemyText.Length * 5 - 8, 14, Color.Red);
         }
 
+        // Combo indicator (top right, below enemies)
+        if (state.ComboCount >= 3)
+        {
+            float comboMult = 1f + Math.Min(state.ComboCount - 1, 20) * 0.05f;
+            string comboText = $"x{state.ComboCount} ({comboMult:F2}x)";
+            Color comboColor = state.ComboCount >= 15 ? Color.Gold
+                : state.ComboCount >= 8 ? Color.Orange : Color.White;
+            DrawTextSmall(comboText, Constants.LogicalWidth - comboText.Length * 5 - 8, 24, comboColor);
+        }
+
         // Dash cooldown indicator (below XP bar)
         int dashY = xpY + 6;
         float dashCD = Math.Max(0.15f, Constants.DashCooldown - state.Player.ComputedStats.DashCooldownReduction);

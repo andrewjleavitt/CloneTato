@@ -86,6 +86,12 @@ public class GameState
     public int TotalDamageDealt;
     public float TotalTimeSurvived;
 
+    // Combo kill system
+    public int ComboCount;
+    public float ComboTimer;
+    public const float ComboWindow = 1.5f; // seconds between kills to maintain combo
+    public int BestCombo;
+
     // Entity pools
     public const int MaxEnemies = 300;
     public const int MaxProjectiles = 500;
@@ -181,6 +187,9 @@ public class GameState
         TotalEnemiesKilled = 0;
         TotalDamageDealt = 0;
         TotalTimeSurvived = 0;
+        ComboCount = 0;
+        ComboTimer = 0;
+        BestCombo = 0;
     }
 
     public void StartWave()
@@ -275,6 +284,18 @@ public class GameState
         TotalEnemiesKilled++;
         EnemiesKilledThisWave++;
 
+        // Combo tracking
+        if (ComboTimer > 0)
+            ComboCount++;
+        else
+            ComboCount = 1;
+        ComboTimer = ComboWindow;
+        if (ComboCount > BestCombo) BestCombo = ComboCount;
+
+        // Combo multiplier: 1.0x at 1 kill, scales up with kills
+        // 5 kills = 1.25x, 10 kills = 1.5x, 20 kills = 2.0x
+        float comboMult = 1f + Math.Min(ComboCount - 1, 20) * 0.05f;
+
         // Loot enemies burst extra drops in a ring
         if (enemy.IsLootEnemy)
         {
@@ -286,9 +307,9 @@ public class GameState
                 if (orb == null) break;
                 float angle = o * (MathF.PI * 2f / orbCount);
                 var offset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 12f;
-                orb.Init(enemy.Position + offset, Math.Max(1, enemy.XPValue / orbCount));
+                orb.Init(enemy.Position + offset, Math.Max(1, (int)(enemy.XPValue * comboMult / orbCount)));
             }
-            Gold += enemy.GoldValue;
+            Gold += (int)(enemy.GoldValue * comboMult);
 
             // Always drop a health pickup
             var hp = GetInactiveHealthPickup();
@@ -296,14 +317,15 @@ public class GameState
             return;
         }
 
-        // XP orbs
-        int normalOrbCount = 1 + enemy.XPValue / 3;
+        // XP orbs (with combo multiplier)
+        int xpValue = (int)(enemy.XPValue * comboMult);
+        int normalOrbCount = 1 + xpValue / 3;
         for (int o = 0; o < normalOrbCount; o++)
         {
             var orb = GetInactiveXPOrb();
-            orb?.Init(enemy.Position, Math.Max(1, enemy.XPValue / normalOrbCount));
+            orb?.Init(enemy.Position, Math.Max(1, xpValue / normalOrbCount));
         }
-        Gold += enemy.GoldValue;
+        Gold += (int)(enemy.GoldValue * comboMult);
 
         // Armed enemies have a 30% chance to drop a health pickup
         if (enemy.IsArmed && Random.Shared.NextSingle() < 0.30f)
