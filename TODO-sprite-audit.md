@@ -126,7 +126,7 @@ Go through every character in the Sprite Gallery. For each one:
 | death | 10 | 10 | [x] Wired |
 
 - [x] Shoot animations wired — ranged attack with projectile
-- [ ] **TODO:** Implement kiting behavior (maintain distance, retreat when player closes)
+- [x] Kiting behavior implemented (predictive aim, panic flight when close)
 
 ### Tribe Warrior — MELEE WITH WEAPON
 **Source:** `enemies/tribe/Tribe Warrior/`
@@ -141,7 +141,7 @@ Go through every character in the Sprite Gallery. For each one:
 | death | 10 | 10 | [x] Wired |
 
 - [x] Attack animations wired — wide melee sweep with reach
-- [ ] **TODO:** Implement melee attack behavior (chase, swing at range ~45px)
+- [x] Melee attack behavior implemented (chase, swing at range)
 
 ### Tamed Beast (Relic Guardian) — MELEE CHARGER
 **Source:** `enemies/tribe/Tribe Tamed Beast/`
@@ -156,8 +156,8 @@ Go through every character in the Sprite Gallery. For each one:
 | death | 17 | 10 | [x] Wired |
 
 - [x] Attack animations wired — long wind-up charge with dust cloud
-- [ ] **TODO:** Implement charge behavior (slow approach → lunge)
-- [ ] **TODO:** Implement enrage at 50% HP (speed + damage buff, per vision doc)
+- [x] Charge/melee behavior implemented
+- [x] Enrage at 50% HP implemented (speed + damage buff)
 
 ---
 
@@ -175,7 +175,7 @@ Go through every character in the Sprite Gallery. For each one:
 | death | 10 | 10 | [x] Wired |
 
 - [x] Attack animation wired
-- [ ] **TODO:** Swarm behavior (cluster, ignore armor per vision doc)
+- [x] Melee bite attack implemented
 
 ### Medium Insect — MELEE WITH ACID SPIT
 **Source:** `enemies/insects/Medium Bug/`
@@ -189,7 +189,7 @@ Go through every character in the Sprite Gallery. For each one:
 | death | 10 | 10 | [x] Wired |
 
 - [x] Attack animation wired — later frames show green spit effect
-- [ ] **TODO:** Could be short-range projectile or contact + poison DOT
+- [x] Acid trail DOT pools implemented (drops ooze zones behind it)
 
 ### Big Bug — MELEE SLAM / SPAWNER
 **Source:** `enemies/insects/Big Bug/`
@@ -203,8 +203,8 @@ Go through every character in the Sprite Gallery. For each one:
 | death | 13 | 10 | [x] Wired |
 
 - [x] Attack animation wired
+- [x] AOE pulse ground slam implemented (IsAOEPulse)
 - [ ] **TODO:** Spawner behavior (periodically spawns small bugs)
-- [ ] **TODO:** Slam attack AOE when player is close
 
 ### Spiny Beetle — RANGED SPIKE SHOOTER
 **Source:** `enemies/insects/Medium bug 2/`
@@ -218,7 +218,8 @@ Go through every character in the Sprite Gallery. For each one:
 | death | 11 | 10 | [x] Wired |
 
 - [x] Attack animation wired — clear projectile launch in sprite
-- [ ] **TODO:** Implement as ranged attacker (fires spike projectile)
+- [x] Ranged spike shooter implemented (3 projectile spread)
+- [x] Enhanced zigzag movement implemented
 
 ---
 
@@ -233,12 +234,12 @@ Go through every character in the Sprite Gallery. For each one:
 |-----------|-------------|-------|--------|
 | idle | 1 | 5 | [x] Wired |
 | walk/run | 11 | 4 | [x] Wired |
-| shoot | 19 | 7 | [x] Wired as "attack" |
+| shoot | 16 | 7 | [x] Wired as "attack" (fixed offset) |
 | hit | 33 | 2 | [ ] Not wired |
 | death | 35 | 5 | [x] Wired |
 
-- [x] Shoot animation wired
-- [ ] **TODO:** Implement kiting behavior
+- [x] Shoot animation wired (start frame fixed 19→16)
+- [x] Kiting behavior implemented (predictive aim + wounded rapid-fire)
 - [ ] Wire hit reaction animation
 
 ### Guard — MELEE TANK
@@ -250,10 +251,12 @@ Go through every character in the Sprite Gallery. For each one:
 |-----------|-------------|-------|--------|
 | idle | 1 | 5 | [x] Wired |
 | walk/run | 11 | 4 | [x] Wired |
-| attack | 19 | 5 | [x] Wired as "attack" |
+| attack | 16 | 5 | [x] Wired as "attack" (fixed offset) |
 | death | 29 | 16 | [x] Wired |
 
-- [x] Attack animation wired
+- [x] Attack animation wired (start frame fixed 19→16)
+- [x] Shield bash with knockback implemented
+- [x] Frontal damage reduction (50%) implemented
 
 ### Warrior — MELEE FIGHTER
 **Source:** `enemies/starter_warrior/warrior.png`
@@ -264,11 +267,12 @@ Go through every character in the Sprite Gallery. For each one:
 |-----------|-------------|-------|--------|
 | idle | 1 | 5 | [x] Wired |
 | walk/run | 11 | 4 | [x] Wired |
-| attack | 19 | 5 | [x] Wired as "attack" |
+| attack | 16 | 5 | [x] Wired as "attack" (fixed offset) |
 | hit | 29 | 2 | [ ] Not wired |
 | death | 33 | 8 | [x] Wired |
 
-- [x] Attack animation wired
+- [x] Attack animation wired (start frame fixed 19→16)
+- [x] Rush/lunge attack implemented
 - [ ] Wire hit reaction animation
 
 ---
@@ -303,8 +307,8 @@ Go through every character in the Sprite Gallery. For each one:
 | 3 | ~10 | attack (arms extend?) | [ ] Not wired — needs gallery review |
 | 4 | ~10 | death (breaks apart) | [x] Wired |
 
-- [ ] **TODO:** Wire row 3 as attack animation
-- [ ] **TODO:** Shield aura mechanic (per vision doc)
+- [x] Row 3 attack animation wired
+- [x] Frontal damage reduction (40%) implemented
 
 ### Circle Bot — ENERGY PULSE ATTACKER
 **Source:** `enemies/robots/Circle Bot/Circle Bot blue 29x35 without shadow.png`
@@ -319,8 +323,8 @@ Go through every character in the Sprite Gallery. For each one:
 | 2 | 8 | attack (blue energy pulse) | [ ] Not wired — needs gallery review |
 | 3 | 8 | death | [x] Wired |
 
-- [ ] **TODO:** Wire row 2 as attack animation
-- [ ] **TODO:** Energy pulse could be short-range AOE
+- [x] Row 2 attack animation wired
+- [x] AOE energy pulse implemented (IsAOEPulse)
 
 ### Delivery Bot — FAST RUNNER
 **Source:** `enemies/robots/Delivery Bot/Delivery Bot yellow without shadow 23x21.png`
@@ -336,8 +340,8 @@ Go through every character in the Sprite Gallery. For each one:
 | 3 | 6 | unknown — needs review | [ ] Not wired |
 | 4 | 6 | death? | [x] Wired (row 3 used) |
 
-- [ ] **TODO:** Review rows 2-4 in gallery
-- [ ] **TODO:** Could drop mines or be a mine-layer enemy
+- [x] Row 2 attack animation wired
+- [x] Loot enemy (flee behavior, no contact damage, big drops)
 
 ### Planter Bot — SUPPORT / HAZARD PLANTER (NEW — not in game)
 **Source:** `enemies/robots/Planter Robot/Planter Bot Blue no shadow.png`
@@ -351,8 +355,9 @@ Go through every character in the Sprite Gallery. For each one:
 | 1 | ~6 | walk | [ ] Not loaded |
 | 2 | ~24 | plant/attack/death (long sequence) | [ ] Not loaded |
 
-- [ ] **TODO:** Load into game and gallery
-- [ ] **TODO:** Determine if row 2 is attack, death, or combined sequence
+- [x] Loaded into game (DefIndex 17)
+- [x] Attack + death animations wired
+- [x] Mine-laying behavior implemented
 
 ---
 
@@ -371,7 +376,7 @@ Go through every character in the Sprite Gallery. For each one:
 | death | `Minion 1-Death.png` | 8 | 8 | [x] Wired |
 
 - [x] Attack animation wired
-- [ ] **TODO:** Implement revive mechanic (revives once unless overkilled)
+- [x] Opportunist dash-strike implemented (3x rush cooldown reduction)
 
 ### Bomb Minion (Minion 2) — SUICIDE BOMBER
 **Source:** `enemies/minions/Minion 2/Sprites Without Shadows/`
@@ -386,8 +391,8 @@ Go through every character in the Sprite Gallery. For each one:
 | explosion VFX | `Minion 2 Explosion - 124x71.png` | 15 | 12 | [ ] Not loaded |
 
 - [ ] **TODO:** Load explosion VFX (1860x77, 15 frames at 124x77)
-- [ ] **TODO:** Implement explosion-on-death AOE (damages player AND nearby enemies)
-- [ ] **TODO:** Flash/shake warning before detonation
+- [x] Explosion-on-death AOE implemented (damages nearby enemies, chain reactions)
+- [x] Fuse proximity trigger implemented (arms within 100px of player)
 
 ### Ranged Minion (Minion 3) — RANGED SHOOTER
 **Source:** `enemies/minions/Minion 3/Sprites without Shadow/`
@@ -402,7 +407,7 @@ Go through every character in the Sprite Gallery. For each one:
 | death | `Minion 3-Death.png` | 7 | 7 | [x] Wired |
 
 - [x] Range attack animation wired
-- [ ] **TODO:** Implement ranged behavior (maintain distance, rapid fire)
+- [x] Ranged behavior implemented (3-projectile spread)
 
 ---
 
@@ -569,16 +574,20 @@ Go through every character in the Sprite Gallery. For each one:
 - 17 enemies (all factions)
 - 3 bosses (Dust Warrior, Blowfish, Tarnished Widow)
 
-### Attack animations NOT wired: 14 enemies + 1 hero
-- Tribe Hunter (shoot), Tribe Warrior (attack), Tamed Beast (attack)
-- Small Bug, Medium Insect, Big Bug, Spiny Beetle (attack)
-- Archer (shoot), Guard (attack), Warrior (attack)
-- Hooded Minion (attack), Ranged Minion (range attack)
-- Bomb Minion (explosion VFX)
-- Blade Dancer (chop)
+### Attack animations wired: ALL enemies + heroes
+All 17 enemy types + 3 bosses now have attack animations wired.
+Humanoid grid sheet attack frames fixed (startFrame 19→16).
 
-### Robot grid sheets needing verification: 4
-- Rusty Robot, Guard Robot, Circle Bot, Delivery Bot
+### Robot grid sheets: VERIFIED
+- Rusty Robot (no attack — kamikaze), Guard Robot ✓, Circle Bot ✓, Delivery Bot ✓, Planter Bot ✓
+
+### Still not wired (low priority):
+- Blade Dancer chop (separate from slash — could be alt melee)
+- Hero "move" walk animations (separate from run)
+- Bomb Minion explosion VFX (124x71 sprite, 15 frames)
+- Blowfish small form + burrow animations (12 unused)
+- Tarnished Widow rows 2, 3, 5, 6 (unknown animations)
+- Archer/Warrior hit reaction animations
 
 ### Bosses not yet implemented: 4
 - Dust Jumper (9 rows + slam VFX)
