@@ -1,12 +1,14 @@
-# Untitled Sci-Fi Western Action RPG — Game Design Document
+# Dead Meridian — Game Design Document
 
 *Working document. Everything here is open to revision.*
 
 ## Vision
 
-A top-down action RPG set on a lawless frontier planet at the edge of settled space. Tone sits between Firefly's scrappy warmth, Andor's grounded tension, and The Mandalorian's lone-gunslinger mystique. The player is a newcomer — arrived for their own reasons — who gets pulled into the web of a world that's more complicated than it looks.
+A top-down turn-based RPG set on a lawless frontier planet at the edge of settled space. Tone sits between Firefly's scrappy warmth, Andor's grounded tension, and The Mandalorian's lone-gunslinger mystique. The player is a bounty hunter — arrived to collect a target — who gets pulled into the web of a world that's more complicated than it looks.
 
-Pixel art. Tight combat. Characters you remember. Secrets worth finding.
+Pixel art. Tactical combat. Characters you remember. Secrets worth finding.
+
+A completely different pace from Drift. Where Drift is adrenaline and reflexes, Dead Meridian is choices and consequences. You think, then you act.
 
 ## Pillars
 
@@ -21,22 +23,26 @@ Pixel art. Tight combat. Characters you remember. Secrets worth finding.
 
 ### The Planet
 
-A remote desert world on the fringe of civilized space. Once a corporate mining colony, now largely abandoned by the corps and left to whoever stayed behind. The landscape is harsh — cracked desert, dust storms, and ancient rock formations — but not dead. Life has adapted. People have adapted.
+A remote desert world on the fringe of civilized space. Officially: a decommissioned mining colony, abandoned when the ore dried up. The landscape is harsh — cracked desert, dust storms, and ancient rock formations — but not dead. Life has adapted. People have adapted.
+
+The official story is a lie.
+
+Dead Meridian was never a mining colony. A military contractor — **[NAME TBD]** — used the planet as a black site. The ruins of an ancient race were discovered here, and the corp came to study (or weaponize) what they found. The mining operation was a cover story. The settlers were window dressing — warm bodies to make the colony look civilian on paper.
 
 The planet has layers:
-- **Surface**: What everyone sees. Frontier towns, tribal territories, merchant routes, wildlife.
-- **Underneath**: Pre-corporate ruins. Something was here before the mining corps arrived. Ancient structures buried under sand. Technology that doesn't match anything known.
-- **The Secret**: What the ruins actually are, who built them, and why the corps really left. This is the central mystery.
+- **Surface**: What everyone sees and believes. Frontier towns, tribal territories, merchant routes, wildlife. A forgotten mining world.
+- **Underneath**: Ancient ruins that predate human presence by millennia. Technology that doesn't match anything known. The corp didn't stumble on these — **the ruins are why they came.**
+- **The Secret**: What the corp found in the deepest ruins, what they did with it, and why they "left" (did they actually leave, or just go deeper?). This is the central mystery.
 
 ### Factions
 
 | Faction | Role | Analog |
 |---------|------|--------|
 | **Settlers** | Frontier townspeople. Farmers, mechanics, bartenders. Just trying to get by. | Firefly's border moon settlers |
-| **The Tribes** | Indigenous groups who were here before the corps. Know more about the ruins than they let on. | Tusken Raiders meets Fremen |
-| **Remnant Corp** | Skeleton crew of corporate security still running ops. What are they still doing here? | The Empire's quiet reach |
+| **The Tribes** | Indigenous groups who were here before the corp. Watched the corp dig in the wrong places and said nothing. Know far more about the ruins than they let on. | Tusken Raiders meets Fremen |
+| **Remnant Corp** | Skeleton crew of military contractor personnel still running ops. The black site was never fully decommissioned. They're still on mission. | The Empire's quiet reach |
 | **Scavengers** | Raiders and opportunists picking over what the corps left behind. | Jawas meets Reavers (less horrifying) |
-| **The Order** | Scholars/monks studying the ruins. Neutral but secretive. May not be what they seem. | Jedi archives crossed with a frontier monastery |
+| **The Order** | Scholars/monks studying the ruins. Neutral but secretive. May not be what they seem. Are they independent — or the corp's research division with the logos scraped off? | Jedi archives crossed with a frontier monastery |
 
 ### Key Locations (mapped to biomes)
 
@@ -53,9 +59,9 @@ The planet has layers:
 ## Player Character
 
 ### Identity
-The player character has a past but it's lightly sketched — enough to motivate arrival on the planet, vague enough for player projection. They're not a blank slate (they have opinions, a voice in dialog) but they're not a fully predetermined character either.
+Player-named bounty hunter. They have a voice — opinions, dry humor, reactions in dialog — but the player chooses their name and makes the key decisions. Not a blank slate, not a fixed protagonist. Somewhere in between.
 
-**Arrival hook**: You came here looking for someone. Or something. The opening establishes your reason, and the main quest gradually reveals that your personal search is tangled up with the planet's deeper secrets.
+**Arrival hook**: You're here for a bounty. Someone on Dead Meridian has a price on their head, and you've been hired to collect. Simple job. Except your target is tangled up in something much bigger, and the deeper you dig, the less the bounty matters.
 
 ### Combat Style
 Dual-mode, matching the STRANDED hero variants:
@@ -65,13 +71,15 @@ Dual-mode, matching the STRANDED hero variants:
 The player can switch between loadouts (or blend them). Not a class system — more of a playstyle spectrum. You find weapons, you use what you like.
 
 ### Companion
-One companion travels with you. They have:
-- Their own personality and dialog
-- Idle, move, gather, and attack animations (already in assets)
-- Opinions about your choices
-- A personal quest line
+A small droid that's been with you for as long as you can remember. It was there before the bounty hunting, before everything. You trust it completely.
 
-The companion isn't a party member you manage — they're a character who's with you. Think Grogu, Cassian's contacts, Kaylee. They react, they help, they sometimes disagree.
+- Has always been with you — not a tutorial unlock, not earned. Just *there*.
+- Its own personality: curious, mouthy, loyal, occasionally scared
+- Opinions about your choices (and not shy about sharing them)
+- A personal quest line — **the droid has secrets**. Things it hasn't told you. Things about where it came from, who made it, and why it's with *you* specifically.
+- Possible connection to the ancient race / ruins (TBD — but the implication is rich)
+
+Not a party member you manage — a character who's with you. Think R2-D2's loyalty crossed with HK-47's commentary. They act in combat (action points of their own?) but you don't micromanage them.
 
 ### Progression
 - **No XP/leveling** — progression comes from gear, story access, and player skill
@@ -84,13 +92,16 @@ The companion isn't a party member you manage — they're a character who's with
 ## Core Mechanics
 
 ### Combat
-Action RPG combat — real-time, skill-based, moderately punishing.
+Turn-based tactical combat with action points. A completely different register from Drift.
 
-- **Ranged**: Aim with mouse, fire with click. Ammo is scarce enough to matter.
-- **Melee**: Close-range attacks with timing windows. Dodge roll for defense.
-- **Dodge roll**: Invincibility frames. Already implemented in NukeDesert skeleton.
-- **Enemy variety**: Different enemies require different tactics. Bugs swarm, robots shoot, tribe warriors flank.
-- **No bullet sponges**: Enemies die in reasonable hits. So does the player. Fights are fast and lethal.
+- **Action Points (AP)**: Each turn you have a pool of AP. Moving costs AP. Shooting costs AP. Using an item costs AP. Positioning matters.
+- **Ranged**: Guns have range, accuracy, and ammo. Ammo is scarce — every shot should feel like a decision.
+- **Melee**: Close-range, higher damage, but you have to spend AP getting there. Risk/reward.
+- **Cover**: Use obstacles and terrain for defensive bonuses. Top-down tactical positioning.
+- **The droid gets turns**: Companion acts on its own turn with limited AP. Can scan, distract, or attack. You don't control it directly — it makes its own choices (informed by its personality and your relationship).
+- **Enemy variety**: Different enemies require different tactics. Bugs swarm, robots suppress, tribe warriors flank.
+- **Lethality**: You can take a beating, but healing is scarce. Fights are won by smart positioning and resource management, not attrition.
+- **Avoidable fights**: Some encounters can be talked out of, snuck around, or defused. Combat is a choice, not a default.
 
 ### Exploration
 - Top-down movement through connected areas
@@ -124,8 +135,8 @@ Action RPG combat — real-time, skill-based, moderately punishing.
 - Player arrives at Dustport. Establish the town, key NPCs, and the surface-level status quo.
 - Take odd jobs to earn trust and credits.
 - Hear rumors about the ruins, the tribes, and why the corp never fully left.
-- Companion joins you (or you find them).
-- First trip into The Barrens — encounter hostile fauna and scavengers.
+- The droid is with you from the start — your only constant.
+- First trip into The Barrens — tracking your bounty's trail. Encounter hostile fauna and scavengers.
 
 ### Act 2 — Descent
 - Access to the Overgrown Vaults. First contact with pre-corp ruins.
@@ -164,11 +175,15 @@ Not a "good/bad" binary. More like different truths about the world and your pla
 
 ## Open Questions
 
-- [ ] What is the player looking for? (A person? A ship? A signal? Their past?)
-- [ ] What is the central secret of the ruins?
-- [ ] What is the companion's deal? Why are they alone?
-- [ ] Should there be a "wanted" system (Remnant Corp bounty on you)?
+- [x] ~~What is the player looking for?~~ **A bounty.** Someone on Dead Meridian with a price on their head.
+- [ ] Who is the bounty target? Likely someone who discovered the black site truth. The price on their head isn't justice — it's a cover-up.
+- [ ] What is the central secret of the ruins? What did the corp find, and did they weaponize it?
+- [ ] What's the corp's name? What do they look like from the outside? (Military contractor — think Weyland-Yutani, Cerberus, the ISB)
+- [x] ~~What is the companion's deal?~~ **A droid that's always been with you. Has secrets — possibly connected to the ancient race.**
+- [ ] What are the droid's secrets specifically? Who made it? Why is it with the player?
+- [ ] Should there be a "wanted" system (corp bounty on you)?
+- [x] ~~Who are "the corps"?~~ **A military contractor that used Dead Meridian as a black site.** Mining was the cover story. The ruins were the real objective. The "pullout" may not have been real — Remnant Corp is still on mission.
 - [ ] How many weapons total? 8-12 feels right for meaningful variety.
 - [ ] Is there a mount/vehicle for desert traversal, or is it all on foot?
-- [ ] Name for the planet. Name for the game.
+- [x] ~~Name for the planet. Name for the game.~~ **Dead Meridian** — the planet and the title.
 - [ ] Music and sound direction — the Kenney sounds are placeholder. What's the target?

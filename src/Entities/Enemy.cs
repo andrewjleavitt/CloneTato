@@ -70,6 +70,7 @@ public class Enemy : Entity
     public float PounceRushTimer;
     public Vector2 PounceDir;
     public float SummonTimer;      // cooldown for spiderling summons
+    public string BossAttackAnim = ""; // which attack animation to play (e.g. "attack_spit", "pounce_up")
 
     // Boss melee attack fields
     public bool HasMeleeAttack;

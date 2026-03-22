@@ -1,12 +1,12 @@
-# Sci-Fi Western Action RPG — Technical Architecture
+# Dead Meridian — Technical Architecture
 
 *Plan for building on DesertEngine + STRANDED assets. Not implementation yet — just the map.*
 
 ## Project Structure
 
 ```
-DesertRPG/
-├── DesertRPG.csproj          # New executable, references DesertEngine
+DeadMeridian/
+├── DeadMeridian.csproj          # New executable, references DesertEngine
 ├── src/
 │   ├── Core/
 │   │   ├── RPGGameState.cs       # Central state: player, NPCs, quests, area
@@ -24,9 +24,12 @@ DesertRPG/
 │   │   ├── Enemy.cs              # Hostile entities (reuse + extend from engine)
 │   │   └── Interactable.cs       # Chests, workbenches, signs, doors
 │   ├── Combat/
-│   │   ├── WeaponSystem.cs       # Gun + blade handling, switching
-│   │   ├── DodgeRoll.cs          # i-frame dodge (port from NukeDesert)
-│   │   └── DamageSystem.cs       # Damage calc, knockback, death
+│   │   ├── TurnManager.cs        # Turn order, AP tracking, turn phases
+│   │   ├── ActionSystem.cs       # Move, shoot, melee, use item — all cost AP
+│   │   ├── CoverSystem.cs        # Obstacle-based defense bonuses
+│   │   ├── CompanionAI.cs        # Droid's autonomous combat decisions
+│   │   ├── WeaponSystem.cs       # Gun + blade stats, ammo, range, accuracy
+│   │   └── DamageSystem.cs       # Damage calc, armor, death
 │   ├── Dialog/
 │   │   ├── DialogSystem.cs       # Typewriter text, choice rendering
 │   │   ├── DialogData.cs         # Conversation trees (node-based)
@@ -74,18 +77,16 @@ DesertRPG/
 | System | Status | Notes |
 |--------|--------|-------|
 | Room transitions | Adapt | Change from random to authored area connections |
-| Dodge roll | Port | i-frame system, nearly 1:1 |
-| Weapon swap (Q) | Port | Two weapon slots |
-| Ammo/reload | Port | Scarcity-based ammo |
-| Manual aim+fire | Port | Mouse aim, click to shoot |
+| Ammo tracking | Adapt | Scarcity-based ammo as turn-based resource |
 
-### From CloneTato (selective)
+*Note: Dodge roll, real-time aim, and real-time weapon swap are NOT relevant for turn-based. These stay in Drift/NukeDesert.*
+
+### From Drift (selective)
 | System | Status | Notes |
 |--------|--------|-------|
 | STRANDED sprite loading | Port | Animation system, multi-atlas management |
-| Enemy definitions | Adapt | Stat blocks, AI patterns |
+| Enemy definitions | Adapt | Stat blocks → turn-based stat blocks |
 | Terrain/scatter generation | Adapt | Per-area decoration spawning |
-| Screen shake | Port | Combat feel |
 | Shop UI | Adapt | Merchant interface base |
 
 ## New Systems to Build
@@ -94,16 +95,19 @@ DesertRPG/
 1. **Area system**: Define areas as data (tilemap + entity placements + exits). Load and transition between them.
 2. **NPC interaction**: Proximity check → interact prompt → trigger dialog/shop/quest.
 3. **Dialog system**: 9-patch text box, typewriter effect, branching choices. Data-driven (JSON dialog trees).
+4. **Turn-based combat**: The big new system. Turn manager, AP pool, move/shoot/melee/item actions, enemy AI turns, companion autonomous turns.
 
 ### Priority 2 — Game loop
-4. **Quest system**: Flag-based state tracking. Quests define conditions and outcomes. NPCs check quest state for dialog branching.
-5. **Inventory**: Simple item list. Weapons, key items, consumables. Grid UI.
-6. **Save/load**: Serialize player position, inventory, quest flags, faction rep, current area to JSON.
+5. **Quest system**: Flag-based state tracking. Quests define conditions and outcomes. NPCs check quest state for dialog branching.
+6. **Inventory**: Simple item list. Weapons, key items, consumables. Grid UI.
+7. **Save/load**: Serialize player position, inventory, quest flags, faction rep, current area to JSON.
 
 ### Priority 3 — Depth
-7. **Companion AI**: Follow player, idle when player idles, assist in combat, trigger contextual dialog.
-8. **Faction reputation**: Numeric rep per faction. Gates dialog options, quest availability, area access.
-9. **Authored encounters**: Scripted combat setups per area (ambushes, boss fights, defense scenarios).
+8. **Companion AI (combat)**: Droid makes its own decisions in combat based on personality, situation, and relationship with player.
+9. **Companion AI (exploration)**: Follow player, contextual banter, react to world, gather animation on points of interest.
+10. **Faction reputation**: Numeric rep per faction. Gates dialog options, quest availability, area access.
+11. **Cover system**: Obstacles provide defense bonuses during tactical combat. Destructible cover for depth.
+12. **Avoidable encounters**: Some fights can be talked out of or snuck past. Dialog checks, stealth AP costs.
 
 ## Data-Driven Design
 

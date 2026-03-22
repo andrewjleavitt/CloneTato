@@ -1,4 +1,4 @@
-# Sci-Fi Western Action RPG — STRANDED Asset Inventory
+# Dead Meridian — STRANDED Asset Inventory
 
 *What we have, what it becomes, and what's missing.*
 
