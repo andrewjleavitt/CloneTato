@@ -175,7 +175,14 @@ public class PlayingScreen
 
     public void Draw(GameState state)
     {
-        Raylib.ClearBackground(new Color(55, 35, 38, 255));
+        Color bgColor = state.CurrentBiome switch
+        {
+            1 => new Color(55, 35, 38, 255),
+            2 => new Color(60, 28, 25, 255),
+            3 => new Color(28, 28, 40, 255),
+            _ => new Color(55, 35, 38, 255),
+        };
+        Raylib.ClearBackground(bgColor);
 
         Raylib.BeginMode2D(_camera.Camera);
 
@@ -193,33 +200,16 @@ public class PlayingScreen
             {
                 if (strandedTerrain)
                 {
-                    // Blood Desert palette: dark muted tones
                     if (zone.Type == TerrainType.Sand)
                     {
-                        // Darker sand patches — subtle lighter areas on the dark ground
-                        Raylib.DrawCircleV(zone.Position, zone.Radius,
-                            new Color(35, 22, 18, 100));
-                        Raylib.DrawCircleLinesV(zone.Position, zone.Radius,
-                            new Color(50, 30, 25, 80));
-                        // Inner shadow ring
-                        Raylib.DrawCircleLinesV(zone.Position, zone.Radius - 3f,
-                            new Color(40, 25, 20, 50));
+                        var (sandFill, sandEdge, sandInner) = GetBiomeSandColors(state.CurrentBiome);
+                        Raylib.DrawCircleV(zone.Position, zone.Radius, sandFill);
+                        Raylib.DrawCircleLinesV(zone.Position, zone.Radius, sandEdge);
+                        Raylib.DrawCircleLinesV(zone.Position, zone.Radius - 3f, sandInner);
                     }
                     else
                     {
-                        // Decorative patches — dark organic variation
-                        Color fill = zone.DecoTileSet switch
-                        {
-                            0 => new Color(30, 20, 25, 70),  // dark crimson
-                            1 => new Color(25, 18, 30, 60),  // dark purple
-                            _ => new Color(35, 30, 25, 55),  // dark earth
-                        };
-                        Color edge = zone.DecoTileSet switch
-                        {
-                            0 => new Color(60, 25, 30, 90),
-                            1 => new Color(40, 25, 50, 80),
-                            _ => new Color(50, 40, 30, 70),
-                        };
+                        var (fill, edge) = GetBiomeDecoColors(state.CurrentBiome, zone.DecoTileSet);
                         Raylib.DrawCircleV(zone.Position, zone.Radius, fill);
                         Raylib.DrawCircleLinesV(zone.Position, zone.Radius, edge);
                     }
@@ -298,7 +288,7 @@ public class PlayingScreen
         }
 
         // Arena boundary
-        Color borderColor = strandedTerrain ? new Color(80, 30, 25, 220) : Color.Brown;
+        Color borderColor = strandedTerrain ? GetBiomeBorderColor(state.CurrentBiome) : Color.Brown;
         float borderWidth = strandedTerrain ? 3f : 2f;
         Raylib.DrawRectangleLinesEx(
             new Rectangle(0, 0, Constants.ArenaWidth, Constants.ArenaHeight),
@@ -493,7 +483,18 @@ public class PlayingScreen
             {
                 float pct = (float)enemy.CurrentHP / enemy.MaxHP;
                 int bw = enemy.IsBoss ? 40 : 20;
-                int yOff = (enemy.IsBoss && state.Assets.BossSprite != null) ? 38 : (int)(16 * enemy.Scale);
+                int yOff;
+                if (enemy.IsBoss && state.Assets.BossSprite != null)
+                    yOff = 38;
+                else if (eSprite != null)
+                {
+                    // Position bar above the sprite's visual top
+                    float spriteHalfH = eSprite.FrameHeight * enemy.Scale * 0.5f;
+                    float pivotY = eSprite.PivotOffsetY * enemy.Scale;
+                    yOff = (int)(spriteHalfH + MathF.Abs(pivotY)) + 2;
+                }
+                else
+                    yOff = (int)(16 * enemy.Scale);
                 Raylib.DrawRectangle((int)enemy.Position.X - bw / 2, (int)enemy.Position.Y - yOff, bw, 3, Color.DarkGray);
                 Raylib.DrawRectangle((int)enemy.Position.X - bw / 2, (int)enemy.Position.Y - yOff,
                     (int)(bw * pct), 3, enemy.IsBoss ? Color.Yellow : Color.Red);
@@ -678,13 +679,67 @@ public class PlayingScreen
     // Lighter ground variant (shifted right in tileset)
     private static readonly Rectangle _groundTileSrcAlt = new(0, 64, 96, 64);
 
+    private static Color GetBiomeBaseColor(int biome) => biome switch
+    {
+        1 => new Color(75, 48, 50, 255),   // The Waste: warm dark mauve
+        2 => new Color(85, 40, 35, 255),   // Blood Desert: deep red-brown
+        3 => new Color(40, 38, 55, 255),   // The Temple: cold dark blue-grey
+        _ => new Color(75, 48, 50, 255),
+    };
+
+    private static Color GetBiomeBorderColor(int biome) => biome switch
+    {
+        1 => new Color(80, 30, 25, 220),
+        2 => new Color(100, 35, 25, 220),
+        3 => new Color(50, 45, 70, 220),
+        _ => new Color(80, 30, 25, 220),
+    };
+
+    private static Color GetBiomeTileTint(int biome) => biome switch
+    {
+        1 => new Color(255, 255, 255, 100),   // neutral warm
+        2 => new Color(255, 200, 180, 110),   // red-tinted
+        3 => new Color(180, 190, 255, 90),    // blue-tinted
+        _ => new Color(255, 255, 255, 100),
+    };
+
+    private static (Color fill, Color edge, Color inner) GetBiomeSandColors(int biome) => biome switch
+    {
+        1 => (new Color(35, 22, 18, 100), new Color(50, 30, 25, 80), new Color(40, 25, 20, 50)),
+        2 => (new Color(50, 20, 15, 110), new Color(70, 30, 20, 90), new Color(55, 25, 18, 60)),
+        3 => (new Color(25, 25, 40, 100), new Color(35, 35, 55, 80), new Color(30, 28, 45, 50)),
+        _ => (new Color(35, 22, 18, 100), new Color(50, 30, 25, 80), new Color(40, 25, 20, 50)),
+    };
+
+    private static (Color fill, Color edge) GetBiomeDecoColors(int biome, int decoSet) => biome switch
+    {
+        1 => decoSet switch
+        {
+            0 => (new Color(30, 20, 25, 70), new Color(60, 25, 30, 90)),
+            1 => (new Color(25, 18, 30, 60), new Color(40, 25, 50, 80)),
+            _ => (new Color(35, 30, 25, 55), new Color(50, 40, 30, 70)),
+        },
+        2 => decoSet switch
+        {
+            0 => (new Color(45, 18, 15, 75), new Color(80, 30, 20, 90)),   // blood red
+            1 => (new Color(40, 22, 12, 65), new Color(65, 35, 18, 85)),   // dark rust
+            _ => (new Color(50, 28, 20, 60), new Color(70, 40, 25, 75)),   // dusty brown
+        },
+        3 => decoSet switch
+        {
+            0 => (new Color(20, 18, 35, 70), new Color(35, 30, 60, 90)),   // dark indigo
+            1 => (new Color(28, 20, 40, 65), new Color(45, 30, 65, 80)),   // deep violet
+            _ => (new Color(22, 25, 32, 55), new Color(35, 38, 50, 70)),   // slate grey
+        },
+        _ => (new Color(30, 20, 25, 70), new Color(60, 25, 30, 90)),
+    };
+
     private void DrawArenaFloor(GameState state)
     {
         if (state.Assets.HasStrandedTerrain)
         {
-            // Blood Desert palette: warm dark mauve base
             Raylib.DrawRectangle(0, 0, Constants.ArenaWidth, Constants.ArenaHeight,
-                new Color(75, 48, 50, 255));
+                GetBiomeBaseColor(state.CurrentBiome));
 
             float camLeft = _camera.Camera.Target.X - Constants.LogicalWidth / 2f;
             float camTop = _camera.Camera.Target.Y - Constants.LogicalHeight / 2f;
@@ -714,13 +769,13 @@ public class PlayingScreen
                             flipH ? -src.Width : src.Width,
                             flipV ? -src.Height : src.Height);
                         var dest = new Rectangle(col * tileW, row * tileH, tileW, tileH);
-                        // Subdued — let the dark base show through
+                        // Subdued — let the dark base show through, tinted per biome
                         Raylib.DrawTexturePro(state.Assets.BloodDesertTileset, drawSrc, dest,
-                            Vector2.Zero, 0f, new Color((byte)255, (byte)255, (byte)255, (byte)100));
+                            Vector2.Zero, 0f, GetBiomeTileTint(state.CurrentBiome));
                     }
 
-                // Sparse red dot particles
-                DrawRedDotParticles(camLeft, camTop, camRight, camBottom);
+                // Sparse ambient particles
+                DrawAmbientParticles(camLeft, camTop, camRight, camBottom, state.CurrentBiome);
             }
             else
             {
@@ -790,13 +845,8 @@ public class PlayingScreen
         }
     }
 
-    /// <summary>
-    /// Draw deterministic red dot particles matching the Blood Desert reference aesthetic.
-    /// Uses spatial hashing so dots are stable (no flicker) and camera-culled.
-    /// </summary>
-    private static void DrawRedDotParticles(float camLeft, float camTop, float camRight, float camBottom)
+    private static void DrawAmbientParticles(float camLeft, float camTop, float camRight, float camBottom, int biome)
     {
-        // Sparse grid — ~1 dot per 48x48 cell, only ~15% of cells
         int cellSize = 48;
         int startCol = (int)(camLeft / cellSize) - 1;
         int startRow = (int)(camTop / cellSize) - 1;
@@ -808,15 +858,22 @@ public class PlayingScreen
             {
                 int h = col * 374761393 + row * 668265263;
                 h = (h ^ (h >> 13)) * 1274126177;
-                if ((h & 0xFF) > 38) continue; // ~15%
+                if ((h & 0xFF) > 38) continue;
 
                 float x = col * cellSize + ((h >> 8) & 0x1F);
                 float y = row * cellSize + ((h >> 13) & 0x1F);
 
                 if (x < 0 || x > Constants.ArenaWidth || y < 0 || y > Constants.ArenaHeight) continue;
 
-                byte r = (byte)(160 + ((h >> 18) & 0x3F));
-                Raylib.DrawRectangle((int)x, (int)y, 1, 1, new Color(r, (byte)30, (byte)20, (byte)140));
+                byte v = (byte)(160 + ((h >> 18) & 0x3F));
+                Color c = biome switch
+                {
+                    1 => new Color(v, (byte)30, (byte)20, (byte)140),         // warm red
+                    2 => new Color(v, (byte)15, (byte)10, (byte)160),         // deep crimson
+                    3 => new Color((byte)40, (byte)30, v, (byte)130),         // cold blue
+                    _ => new Color(v, (byte)30, (byte)20, (byte)140),
+                };
+                Raylib.DrawRectangle((int)x, (int)y, 1, 1, c);
             }
     }
 

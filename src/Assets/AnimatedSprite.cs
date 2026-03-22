@@ -369,21 +369,22 @@ public static class AnimationLoader
         var sprite = new AnimatedSprite();
         int cols = 10; // 320 / 32 = 10
 
-        // Row 0: idle/walk down (7 frames visible, use 7)
-        sprite.AddAnimation("idle_down", FromGrid(tex, 32, 32, cols, 0, 7, 8));
-        sprite.AddAnimation("run_down", FromGrid(tex, 32, 32, cols, 0, 7, 10));
-        // Row 1: idle/walk right (8 frames)
-        sprite.AddAnimation("idle_right", FromGrid(tex, 32, 32, cols, 10, 8, 8));
-        sprite.AddAnimation("run_right", FromGrid(tex, 32, 32, cols, 10, 8, 10));
-        // Row 2: idle/walk up (8 frames)
+        // Row 0: idle (5 frames, front-facing standing/bob)
+        sprite.AddAnimation("idle_down", FromGrid(tex, 32, 32, cols, 0, 5, 8));
+        // Row 1: walk down (4 frames, front-facing walk cycle)
+        sprite.AddAnimation("run_down", FromGrid(tex, 32, 32, cols, 10, 4, 10));
+        // Row 3: walk right (4 frames from 8-frame repeating cycle, side-facing)
+        sprite.AddAnimation("idle_right", FromGrid(tex, 32, 32, cols, 30, 4, 8));
+        sprite.AddAnimation("run_right", FromGrid(tex, 32, 32, cols, 30, 4, 10));
+        // Row 2: walk up (8 frames, back-facing walk cycle)
         sprite.AddAnimation("idle_up", FromGrid(tex, 32, 32, cols, 20, 8, 8));
         sprite.AddAnimation("run_up", FromGrid(tex, 32, 32, cols, 20, 8, 10));
-        // Row 3: hit/dodge (4 frames)
-        sprite.AddAnimation("roll_down", FromGrid(tex, 32, 32, cols, 30, 4, 10, false));
-        sprite.AddAnimation("roll_right", FromGrid(tex, 32, 32, cols, 30, 4, 10, false));
-        sprite.AddAnimation("roll_up", FromGrid(tex, 32, 32, cols, 30, 4, 10, false));
-        // Rows 4-5: death (blue sparkle effect, ~14 frames across 2 rows)
-        sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 40, 14, 10, false));
+        // Row 4: hit reaction (2 frames, used for dodge roll)
+        sprite.AddAnimation("roll_down", FromGrid(tex, 32, 32, cols, 40, 2, 10, false));
+        sprite.AddAnimation("roll_right", FromGrid(tex, 32, 32, cols, 40, 2, 10, false));
+        sprite.AddAnimation("roll_up", FromGrid(tex, 32, 32, cols, 40, 2, 10, false));
+        // Row 5: death sparkle (10 frames, fading particle effect)
+        sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 50, 10, 10, false));
 
         sprite.PivotOffsetY = -4f;
         sprite.Play("idle_down");
@@ -436,8 +437,8 @@ public static class AnimationLoader
         sprite.AddAnimation("attack_up", LoadStrip($"{dir}/Tribe Hunter-Shoot Up.png", 34, 37, 12, false));
         sprite.AddAnimation("attack_down", LoadStrip($"{dir}/Tribe Hunter-Shoot down.png", 34, 37, 12, false));
 
-        // Hunter body is centered horizontally; feet near bottom of 37px frame
-        sprite.PivotOffsetY = -4f;
+        // Hunter body sits high in 34x37 frame; cloak extends below
+        sprite.PivotOffsetY = -6f;
 
         sprite.Play("idle_down");
         return sprite;
@@ -464,8 +465,8 @@ public static class AnimationLoader
         sprite.AddAnimation("attack_up", LoadStrip($"{dir}/Tribe Warrior-Attack Up.png", 62, 69, 12, false));
         sprite.AddAnimation("attack_down", LoadStrip($"{dir}/Tribe Warrior-attack down.png", 62, 69, 12, false));
 
-        // Large frame (62x69) — warrior body is in upper portion, weapon extends left
-        sprite.PivotOffsetY = -10f;
+        // Large frame (62x69) — warrior body sits high, weapon extends left
+        sprite.PivotOffsetY = -12f;
 
         sprite.Play("idle_down");
         return sprite;
@@ -588,7 +589,7 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", FromGrid(tex, 32, 32, cols, 11, 4, 8));
         // attack: frames 19-23 (5 frames)
         sprite.AddAnimation("attack", FromGrid(tex, 32, 32, cols, 19, 5, 12, false));
-        sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 33, 8, 10, false));
+        sprite.AddAnimation("death", FromGrid(tex, 32, 32, cols, 32, 8, 10, false));
         // Warrior — feet near bottom of 32x32 frame
         sprite.PivotOffsetY = -4f;
         sprite.Play("idle_down");
@@ -611,7 +612,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_up", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Big Insect-moveidle.png", 72, 44, 8));
 
-        sprite.PivotOffsetY = -4f;
+        // Big bug (72x44) — body mass sits above center
+        sprite.PivotOffsetY = -6f;
         sprite.Play("idle_right");
         return sprite;
     }
@@ -654,7 +656,8 @@ public static class AnimationLoader
         sprite.AddAnimation("attack_up", LoadStrip($"{dir}/Tribe Tamed Beast-Attack Up.png", 76, 67, 12, false));
         sprite.AddAnimation("attack_down", LoadStrip($"{dir}/Tribe Tamed Beast-Attack Down.png", 76, 67, 12, false));
 
-        sprite.PivotOffsetY = -10f;
+        // Large frame (76x67) — beast body sits high, shadow at bottom
+        sprite.PivotOffsetY = -12f;
         sprite.Play("idle_down");
         return sprite;
     }
@@ -691,8 +694,11 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_right", FromGrid(tex, 26, 34, cols, 20, 8, 8));
         sprite.AddAnimation("walk_up", FromGrid(tex, 26, 34, cols, 20, 8, 8));
         sprite.AddAnimation("walk_down", FromGrid(tex, 26, 34, cols, 20, 8, 8));
+        // Row 3: attack (arms extend) — 10 frames
+        sprite.AddAnimation("attack", FromGrid(tex, 26, 34, cols, 30, 10, 12, false));
         sprite.AddAnimation("death", FromGrid(tex, 26, 34, cols, 40, 10, 10, false));
-        sprite.PivotOffsetY = -4f;
+        // Guard robot (26x34) — body above center, legs at bottom
+        sprite.PivotOffsetY = -5f;
         sprite.Play("idle_down");
         return sprite;
     }
@@ -710,8 +716,11 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_right", FromGrid(tex, 29, 35, cols, 8, 8, 10));
         sprite.AddAnimation("walk_up", FromGrid(tex, 29, 35, cols, 8, 8, 10));
         sprite.AddAnimation("walk_down", FromGrid(tex, 29, 35, cols, 8, 8, 10));
+        // Row 2: attack (blue energy pulse) — 8 frames
+        sprite.AddAnimation("attack", FromGrid(tex, 29, 35, cols, 16, 8, 12, false));
         sprite.AddAnimation("death", FromGrid(tex, 29, 35, cols, 24, 8, 10, false));
-        sprite.PivotOffsetY = -4f;
+        // Circle bot (29x35) — round body sits above center
+        sprite.PivotOffsetY = -5f;
         sprite.Play("idle_down");
         return sprite;
     }
@@ -729,6 +738,8 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_right", FromGrid(tex, 23, 21, cols, 6, 6, 10));
         sprite.AddAnimation("walk_up", FromGrid(tex, 23, 21, cols, 6, 6, 10));
         sprite.AddAnimation("walk_down", FromGrid(tex, 23, 21, cols, 6, 6, 10));
+        // Row 2: attack/shoot (6 frames)
+        sprite.AddAnimation("attack", FromGrid(tex, 23, 21, cols, 12, 6, 12, false));
         sprite.AddAnimation("death", FromGrid(tex, 23, 21, cols, 18, 6, 10, false));
         sprite.PivotOffsetY = -2f;
         sprite.Play("idle_down");
@@ -769,7 +780,37 @@ public static class AnimationLoader
         sprite.AddAnimation("walk_down", LoadStrip($"{dir}/Minion 2-Run.png", 13, 15, 8));
         sprite.AddAnimation("death", LoadStrip($"{dir}/Minion 2-Prep Explode.png", 13, 15, 4, false));
 
+        // Explosion VFX — large separate strip (124x77, 15 frames)
+        string explPath = basePath + "/enemies/minions/Minion 2/Minion 2 Explosion - 124x71.png";
+        if (File.Exists(explPath))
+            sprite.AddAnimation("explode", LoadStrip(explPath, 124, 77, 10, false));
+
         sprite.PivotOffsetY = -1f;
+        sprite.Play("idle_down");
+        return sprite;
+    }
+
+    public static AnimatedSprite? LoadPlanterBot(string basePath)
+    {
+        string path = basePath + "/enemies/robots/Planter Robot/Planter Bot Blue no shadow.png";
+        if (!File.Exists(path)) return null;
+        var tex = LoadTexturePoint(path);
+        var sprite = new AnimatedSprite();
+        int cols = 24; // 696 / 29 = 24
+        // Row 0: idle (8 frames)
+        sprite.AddAnimation("idle_right", FromGrid(tex, 29, 37, cols, 0, 8, 8));
+        sprite.AddAnimation("idle_up", FromGrid(tex, 29, 37, cols, 0, 8, 8));
+        sprite.AddAnimation("idle_down", FromGrid(tex, 29, 37, cols, 0, 8, 8));
+        // Row 1: walk (8 frames)
+        sprite.AddAnimation("walk_right", FromGrid(tex, 29, 37, cols, 24, 8, 10));
+        sprite.AddAnimation("walk_up", FromGrid(tex, 29, 37, cols, 24, 8, 10));
+        sprite.AddAnimation("walk_down", FromGrid(tex, 29, 37, cols, 24, 8, 10));
+        // Row 2: plant/attack (24 frames)
+        sprite.AddAnimation("attack", FromGrid(tex, 29, 37, cols, 48, 24, 12, false));
+        // Use end of attack as death
+        sprite.AddAnimation("death", FromGrid(tex, 29, 37, cols, 60, 12, 10, false));
+        // Planter bot (29x37) — body above center, treads at bottom
+        sprite.PivotOffsetY = -5f;
         sprite.Play("idle_down");
         return sprite;
     }
@@ -845,10 +886,11 @@ public static class AnimationLoader
     /// 0=TribeHunter, 1=SmallBug, 2=MediumInsect, 3=TribeWarrior, 4=Archer, 5=Guard, 6=Warrior
     /// 7=BigBug, 8=SpinyBeetle, 9=RelicGuardian, 10=RustyRobot, 11=GuardRobot
     /// 12=CircleBot, 13=DeliveryBot, 14=HoodedMinion, 15=BombMinion, 16=RangedMinion
+    /// 17=PlanterBot
     /// </summary>
     public static AnimatedSprite?[] LoadEnemySprites(string basePath)
     {
-        var sprites = new AnimatedSprite?[17];
+        var sprites = new AnimatedSprite?[18];
         sprites[0] = LoadTribeHunter(basePath);
         sprites[1] = LoadSmallBug(basePath);
         sprites[2] = LoadMediumInsect(basePath);
@@ -866,6 +908,7 @@ public static class AnimationLoader
         sprites[14] = LoadHoodedMinion(basePath);
         sprites[15] = LoadBombMinion(basePath);
         sprites[16] = LoadRangedMinion(basePath);
+        sprites[17] = LoadPlanterBot(basePath);
         return sprites;
     }
 

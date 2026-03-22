@@ -10,6 +10,7 @@ public class CharacterSelectScreen
 {
     private int _selectedIndex;
     private GameStateManager? _manager;
+    public int SelectedCharacterIndex => _selectedIndex;
 
     public void Update(float dt, GameState state, GameStateManager manager)
     {
@@ -27,12 +28,7 @@ public class CharacterSelectScreen
     private void StartRun(GameState state, GameStateManager manager)
     {
         if (!manager.Meta.CharacterUnlocked[_selectedIndex]) return;
-        var character = CharacterDatabase.Characters[_selectedIndex];
-        state.StartNewRun(character);
-        state.MetaBonus = manager.Meta.GetMetaBonus();
-        state.RecomputePlayerStats();
-        state.StartWave();
-        manager.TransitionTo(GameScreen.Playing);
+        manager.TransitionTo(GameScreen.BiomeSelect);
         state.Assets.PlaySoundVariant("select", 0.5f);
     }
 
@@ -130,8 +126,8 @@ public class CharacterSelectScreen
 
                 string hint = i switch
                 {
-                    1 => "Beat wave 10",
-                    2 => "Beat wave 20",
+                    1 => "Beat The Waste",
+                    2 => "Beat Blood Desert",
                     _ => "???",
                 };
                 UIRenderer.DrawTextSmall(hint, cx + 6, cardY + 120, new Color(120, 100, 80, 255));

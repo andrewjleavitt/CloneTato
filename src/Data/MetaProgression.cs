@@ -17,6 +17,10 @@ public class MetaProgression
     // Character unlocks (index into CharacterDatabase)
     public bool[] CharacterUnlocked { get; set; } = { true, false, false };
 
+    // Biome unlocks (1-indexed in gameplay, 0-indexed here)
+    // Biome 1 (The Waste) always unlocked; others unlock on prior biome completion
+    public bool[] BiomeUnlocked { get; set; } = { true, false, false };
+
     // Stat upgrades (each level gives a tiny boost)
     public int MaxHPLevel { get; set; }        // +0.5 per level
     public int MoveSpeedLevel { get; set; }    // +0.3 per level
@@ -103,10 +107,37 @@ public class MetaProgression
             CharacterUnlocked[0] = true; // first character always unlocked
         }
 
+        // Ensure biome array is correct size
+        if (BiomeUnlocked.Length < Constants.BiomeCount)
+        {
+            var old = BiomeUnlocked;
+            BiomeUnlocked = new bool[Constants.BiomeCount];
+            Array.Copy(old, BiomeUnlocked, Math.Min(old.Length, BiomeUnlocked.Length));
+            BiomeUnlocked[0] = true; // biome 1 always unlocked
+        }
+
         // Character 1 (Blade Dancer): beat The Waste (biome 1 = 10 waves)
         if (BestWave >= Constants.WavesPerBiome && CharacterUnlocked.Length > 1) CharacterUnlocked[1] = true;
         // Character 2 (Drifter): beat Blood Desert (biome 2 = 20 total waves)
         if (BestWave >= Constants.WavesPerBiome * 2 && CharacterUnlocked.Length > 2) CharacterUnlocked[2] = true;
+
+        // Retroactive biome unlocks based on BestWave (for existing saves)
+        if (BestWave >= Constants.WavesPerBiome && BiomeUnlocked.Length > 1) BiomeUnlocked[1] = true;
+        if (BestWave >= Constants.WavesPerBiome * 2 && BiomeUnlocked.Length > 2) BiomeUnlocked[2] = true;
+    }
+
+    public void UnlockBiome(int biomeNumber)
+    {
+        if (BiomeUnlocked.Length < Constants.BiomeCount)
+        {
+            var old = BiomeUnlocked;
+            BiomeUnlocked = new bool[Constants.BiomeCount];
+            Array.Copy(old, BiomeUnlocked, Math.Min(old.Length, BiomeUnlocked.Length));
+            BiomeUnlocked[0] = true;
+        }
+        int idx = biomeNumber - 1; // biomeNumber is 1-indexed
+        if (idx >= 0 && idx < BiomeUnlocked.Length)
+            BiomeUnlocked[idx] = true;
     }
 
     // Save/Load

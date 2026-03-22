@@ -106,6 +106,7 @@ public class SpriteGalleryScreen
             ("Hooded Minion", "MINIONS", 10f),
             ("Bomb Minion", "MINIONS", 5f),
             ("Ranged Minion", "MINIONS", 8f),
+            ("Planter Bot", "ROBOTS", 10f),
         };
 
         for (int i = 0; i < state.Assets.EnemySprites.Length; i++)
@@ -117,7 +118,7 @@ public class SpriteGalleryScreen
             foreach (var name in new[] { "idle_right", "idle_up", "idle_down",
                 "walk_right", "walk_up", "walk_down",
                 "attack", "attack_right", "attack_up", "attack_down",
-                "death" })
+                "explode", "death" })
             {
                 if (eSprite.HasAnimation(name)) anims.Add(name);
             }

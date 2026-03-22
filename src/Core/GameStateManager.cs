@@ -8,6 +8,7 @@ public enum GameScreen
 {
     MainMenu,
     CharacterSelect,
+    BiomeSelect,
     Playing,
     Shop,
     LevelUp,
@@ -37,7 +38,9 @@ public class GameStateManager
     public OverlayScreen ActiveOverlay { get; private set; } = OverlayScreen.None;
 
     private readonly MainMenuScreen _mainMenu = new();
+    public CharacterSelectScreen CharSelect => _charSelect;
     private readonly CharacterSelectScreen _charSelect = new();
+    private readonly BiomeSelectScreen _biomeSelect = new();
     private readonly PlayingScreen _playing = new();
     private readonly ShopScreen _shop = new();
     private readonly LevelUpScreen _levelUp = new();
@@ -122,6 +125,7 @@ public class GameStateManager
         {
             case GameScreen.MainMenu: _mainMenu.Update(dt, State, this); break;
             case GameScreen.CharacterSelect: _charSelect.Update(dt, State, this); break;
+            case GameScreen.BiomeSelect: _biomeSelect.Update(dt, State, this); break;
             case GameScreen.Playing: _playing.Update(dt, State, this); break;
             case GameScreen.Shop: _shop.Update(dt, State, this); break;
             case GameScreen.LevelUp: _levelUp.Update(dt, State, this); break;
@@ -141,6 +145,7 @@ public class GameStateManager
         {
             case GameScreen.MainMenu: _mainMenu.Draw(State, this); break;
             case GameScreen.CharacterSelect: _charSelect.Draw(State, this); break;
+            case GameScreen.BiomeSelect: _biomeSelect.Draw(State, this); break;
             case GameScreen.Playing: _playing.Draw(State); break;
             case GameScreen.Shop: _shop.Draw(State, this); break;
             case GameScreen.LevelUp: _levelUp.Draw(State, this); break;

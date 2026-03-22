@@ -113,259 +113,296 @@ Go through every character in the Sprite Gallery. For each one:
 
 ## ENEMIES — TRIBE
 
-### Tribe Hunter
+### Tribe Hunter — RANGED ATTACKER
 **Source:** `enemies/tribe/Tribe Hunter/`
 **Frame size:** 34x37, horizontal strips
+**Behavior:** Kites at range, shoots projectiles at player
 
 | Animation | Frames | FPS | Status |
 |-----------|--------|-----|--------|
 | idle (3 dirs) | 6 | 6 | [x] Wired |
 | walk (3 dirs) | 8 | 8 | [x] Wired |
+| shoot (3 dirs) | 7 | 12 | [x] Wired as attack_right/up/down |
 | death | 10 | 10 | [x] Wired |
-| shoot right | ? | — | [ ] Not wired (`Tribe Hunter-Shoot.png`) |
-| shoot up | ? | — | [ ] Not wired (`Tribe Hunter-Shoot Up.png`) |
-| shoot down | ? | — | [ ] Not wired (`Tribe Hunter-Shoot Down.png`) |
 
-- [ ] Wire shoot animations for ranged attack behavior
-- [ ] Verify hitbox radius 10, pivot offset Y=-4
+- [x] Shoot animations wired — ranged attack with projectile
+- [ ] **TODO:** Implement kiting behavior (maintain distance, retreat when player closes)
 
-### Tribe Warrior
+### Tribe Warrior — MELEE WITH WEAPON
 **Source:** `enemies/tribe/Tribe Warrior/`
 **Frame size:** 62x69, horizontal strips
+**Behavior:** Chase player, big sweeping weapon swing when in range
 
 | Animation | Frames | FPS | Status |
 |-----------|--------|-----|--------|
 | idle (3 dirs) | 6 | 6 | [x] Wired |
 | walk (3 dirs) | 8 | 8 | [x] Wired |
+| attack (3 dirs) | 11 | 12 | [x] Wired as attack_right/up/down |
 | death | 10 | 10 | [x] Wired |
-| attack right | ? | — | [ ] Not wired (`Tribe Warrior-attack.png`) |
-| attack up | ? | — | [ ] Not wired (`Tribe Warrior-Attack Up.png`) |
-| attack down | ? | — | [ ] Not wired (`Tribe Warrior-attack down.png`) |
 
-- [ ] Wire attack animations for melee behavior
-- [ ] Verify hitbox radius 12, pivot offset Y=-10
+- [x] Attack animations wired — wide melee sweep with reach
+- [ ] **TODO:** Implement melee attack behavior (chase, swing at range ~45px)
 
-### Tamed Beast (Relic Guardian)
+### Tamed Beast (Relic Guardian) — MELEE CHARGER
 **Source:** `enemies/tribe/Tribe Tamed Beast/`
 **Frame size:** 76x67, horizontal strips
+**Behavior:** Slow approach, big charge/lunge attack. Enrages below 50% HP (+speed, +damage)
 
 | Animation | Frames | FPS | Status |
 |-----------|--------|-----|--------|
 | idle (3 dirs) | 6 | 6 | [x] Wired |
 | walk/move (3 dirs) | 6 | 6 | [x] Wired |
-| death | 17 | — | [x] Wired |
-| attack LR | 16 | — | [ ] Not wired |
-| attack up | 16 | — | [ ] Not wired |
-| attack down | 16 | — | [ ] Not wired |
+| attack (3 dirs) | 16 | 12 | [x] Wired as attack_right/up/down |
+| death | 17 | 10 | [x] Wired |
 
-- [ ] Wire attack animations (16 frames each — charge/bite?)
-- [ ] Verify hitbox radius 14, pivot offset Y=-10
+- [x] Attack animations wired — long wind-up charge with dust cloud
+- [ ] **TODO:** Implement charge behavior (slow approach → lunge)
+- [ ] **TODO:** Implement enrage at 50% HP (speed + damage buff, per vision doc)
 
 ---
 
 ## ENEMIES — INSECTS
 
-### Small Bug
+### Small Bug — MELEE SWARM / BITE
 **Source:** `enemies/insects/Small Bug/`
 **Frame size:** 20x28, horizontal strips
+**Behavior:** Fast swarm, quick bite on contact. Spawn in large numbers.
 
 | Animation | Frames | FPS | Status |
 |-----------|--------|-----|--------|
-| idle/move | 6 | 6 | [x] Wired (reused for all dirs) |
+| idle/move | 6 | 6 | [x] Wired (reused all dirs) |
+| attack | 6 | 12 | [x] Wired — lunging bite |
 | death | 10 | 10 | [x] Wired |
-| attack | 6 | — | [ ] Not wired (`Small insect-Attack.png`) |
 
-- [ ] Verify hitbox radius 8, pivot offset Y=-3
+- [x] Attack animation wired
+- [ ] **TODO:** Swarm behavior (cluster, ignore armor per vision doc)
 
-### Medium Insect
+### Medium Insect — MELEE WITH ACID SPIT
 **Source:** `enemies/insects/Medium Bug/`
 **Frame size:** 34x37, horizontal strips
+**Behavior:** Chase, close-range acid spit (short-range projectile?)
 
 | Animation | Frames | FPS | Status |
 |-----------|--------|-----|--------|
 | idle/move | 6-8 | 6-8 | [x] Wired |
+| attack | 10 | 12 | [x] Wired — lunge + green acid venom |
 | death | 10 | 10 | [x] Wired |
-| attack | ? | — | [ ] Not wired (`Medium Insect-Attack.png`) |
 
-- [ ] Verify hitbox radius 9, pivot offset Y=-4
+- [x] Attack animation wired — later frames show green spit effect
+- [ ] **TODO:** Could be short-range projectile or contact + poison DOT
 
-### Big Bug
+### Big Bug — MELEE SLAM / SPAWNER
 **Source:** `enemies/insects/Big Bug/`
 **Frame size:** 72x44, horizontal strips
+**Behavior:** Slow tank, slam attack when close. Acts as spawner for small bugs.
 
 | Animation | Frames | FPS | Status |
 |-----------|--------|-----|--------|
-| idle/move | auto | 8 | [x] Wired |
-| death | auto | 13 | [x] Wired |
-| attack | 6 (72x44) | — | [ ] Not wired (`Big Insect-Attack.png`) |
+| idle/move | 8 | 8 | [x] Wired (reused all dirs) |
+| attack | 6 | 12 | [x] Wired — rears up, slams with green slash |
+| death | 13 | 10 | [x] Wired |
 
-- [ ] Verify hitbox radius 14, pivot offset Y=-4
+- [x] Attack animation wired
+- [ ] **TODO:** Spawner behavior (periodically spawns small bugs)
+- [ ] **TODO:** Slam attack AOE when player is close
 
-### Spiny Beetle (Medium Bug 2)
+### Spiny Beetle — RANGED SPIKE SHOOTER
 **Source:** `enemies/insects/Medium bug 2/`
 **Frame size:** 88x37, horizontal strips
+**Behavior:** Erratic movement, fires green spike projectiles
 
 | Animation | Frames | FPS | Status |
 |-----------|--------|-----|--------|
-| idle/move | auto | 8 | [x] Wired |
-| death | auto | 11 | [x] Wired |
-| attack | 8 (88x37) | — | [ ] Not wired (`Medium2 bug-Attack.png`) |
+| idle/move | 8 | 8 | [x] Wired (reused all dirs) |
+| attack | 8 | 12 | [x] Wired — launches green spike projectile |
+| death | 11 | 10 | [x] Wired |
 
-- [ ] Verify hitbox radius 11, pivot offset Y=-4
+- [x] Attack animation wired — clear projectile launch in sprite
+- [ ] **TODO:** Implement as ranged attacker (fires spike projectile)
 
 ---
 
 ## ENEMIES — HUMANOIDS (Starter Pack)
 
-### Archer
+### Archer — RANGED SHOOTER
 **Source:** `enemies/starter_archer/archer.png`
 **Frame size:** 32x32, grid 8 cols
+**Behavior:** Kites at range, shoots arrows
 
 | Animation | Start Frame | Count | Status |
 |-----------|-------------|-------|--------|
 | idle | 1 | 5 | [x] Wired |
 | walk/run | 11 | 4 | [x] Wired |
-| shoot | 19 | 7 | [ ] Not wired |
+| shoot | 19 | 7 | [x] Wired as "attack" |
 | hit | 33 | 2 | [ ] Not wired |
 | death | 35 | 5 | [x] Wired |
 
-- [ ] **Verify** grid layout — are frame start indices correct?
-- [ ] Wire shoot animation for ranged behavior
-- [ ] Verify hitbox radius 10, pivot offset Y=-4
+- [x] Shoot animation wired
+- [ ] **TODO:** Implement kiting behavior
+- [ ] Wire hit reaction animation
 
-### Guard
+### Guard — MELEE TANK
 **Source:** `enemies/starter_guard/guard.png`
 **Frame size:** 32x32, grid 16 cols
+**Behavior:** Slow chase, melee attack when close. Tanky.
 
 | Animation | Start Frame | Count | Status |
 |-----------|-------------|-------|--------|
 | idle | 1 | 5 | [x] Wired |
 | walk/run | 11 | 4 | [x] Wired |
-| attack | 19 | 5 | [ ] Not wired |
+| attack | 19 | 5 | [x] Wired as "attack" |
 | death | 29 | 16 | [x] Wired |
 
-- [ ] **Verify** grid layout with 16 cols — wider sheet, different row structure
-- [ ] Wire attack animation for melee behavior
-- [ ] Verify hitbox radius 12, pivot offset Y=-3
+- [x] Attack animation wired
 
-### Warrior
+### Warrior — MELEE FIGHTER
 **Source:** `enemies/starter_warrior/warrior.png`
 **Frame size:** 32x32, grid 8 cols
+**Behavior:** Chase, melee attack. Balanced stats.
 
 | Animation | Start Frame | Count | Status |
 |-----------|-------------|-------|--------|
 | idle | 1 | 5 | [x] Wired |
 | walk/run | 11 | 4 | [x] Wired |
-| attack | 19 | 5 | [ ] Not wired |
+| attack | 19 | 5 | [x] Wired as "attack" |
 | hit | 29 | 2 | [ ] Not wired |
 | death | 33 | 8 | [x] Wired |
 
-- [ ] **Verify** grid layout
-- [ ] Wire attack animation for melee behavior
-- [ ] Verify hitbox radius 11, pivot offset Y=-4
+- [x] Attack animation wired
+- [ ] Wire hit reaction animation
 
 ---
 
-## ENEMIES — ROBOTS (grid sheets — frame ranges ESTIMATED)
+## ENEMIES — ROBOTS (grid sheets)
 
-### Rusty Robot
+### Rusty Robot — KAMIKAZE RUSHER
 **Source:** `enemies/robots/Rusty Robot/Rusty Robot 20x29 without Shadow.png`
-**Frame size:** 20x29, grid (est. 8 cols)
+**Frame size:** 20x29, grid 8 cols × 2 rows (160x58)
+**Color variants:** Default, Grey, Purple
+**Behavior:** Fast rusher, contact damage only. No attack animation — just wobbles into you.
 
-| Animation | Start Frame | Count (est.) | Status |
-|-----------|-------------|--------------|--------|
-| idle | 0 | 8 | [x] Wired |
-| walk | 8 | 8 | [x] Wired |
-| death | 8 | 8 | [x] Wired (reuses walk — no real death anim?) |
+| Row | Frames | Animation | Status |
+|-----|--------|-----------|--------|
+| 0 | 8 | idle/wobble | [x] Wired |
+| 1 | 8 | run/wobble variant | [x] Wired as walk |
 
-- [ ] **NEEDS REVIEW:** Verify actual row/col layout. No confirmed death animation.
-- [ ] Verify hitbox radius 8, pivot offset Y=-3
+- No attack or death animation in sheet
+- [ ] **TODO:** Flash/explode on death (use generic VFX?)
 
-### Guard Robot
+### Guard Robot — TANK WITH SHIELD
 **Source:** `enemies/robots/Guard Robot/Robot 1 - Blue 26x34 without shadows.png`
-**Frame size:** 26x34, grid (est. 10 cols)
+**Frame size:** 26x34, grid 10 cols × 5 rows (260x170)
+**Color variants:** Blue, Red, Bronze, Green
+**Behavior:** Slow tank. Projects shield aura to nearby robots.
 
-| Animation | Start Frame | Count (est.) | Status |
-|-----------|-------------|--------------|--------|
-| idle | 10 | 8 | [x] Wired |
-| walk | 20 | 8 | [x] Wired |
-| death | 40 | 10 | [x] Wired |
+| Row | Frames (est.) | Animation | Status |
+|-----|---------------|-----------|--------|
+| 0 | 1-3 | deploy/static | [ ] Not wired |
+| 1 | 8 | idle | [x] Wired |
+| 2 | 8 | walk | [x] Wired |
+| 3 | ~10 | attack (arms extend?) | [ ] Not wired — needs gallery review |
+| 4 | ~10 | death (breaks apart) | [x] Wired |
 
-- [ ] **NEEDS REVIEW:** 5 rows estimated. Row 0 may be 1-3 frames. Rows 3-4 unknown.
-- [ ] Check for shield/attack animations in unused rows
-- [ ] Verify hitbox radius 11, pivot offset Y=-4
+- [ ] **TODO:** Wire row 3 as attack animation
+- [ ] **TODO:** Shield aura mechanic (per vision doc)
 
-### Circle Bot
+### Circle Bot — ENERGY PULSE ATTACKER
 **Source:** `enemies/robots/Circle Bot/Circle Bot blue 29x35 without shadow.png`
-**Frame size:** 29x35, grid (est. 8 cols)
+**Frame size:** 29x35, grid 8 cols × 4 rows (232x140)
+**Color variants:** Blue, Green, Purple
+**Behavior:** Erratic movement, energy pulse attack (blue glow visible in row 2)
 
-| Animation | Start Frame | Count (est.) | Status |
-|-----------|-------------|--------------|--------|
-| idle | 0 | 8 | [x] Wired |
-| walk | 8 | 8 | [x] Wired |
-| death | 24 | 8 | [x] Wired |
+| Row | Frames | Animation | Status |
+|-----|--------|-----------|--------|
+| 0 | 8 | idle (antenna wobble) | [x] Wired |
+| 1 | 8 | walk | [x] Wired |
+| 2 | 8 | attack (blue energy pulse) | [ ] Not wired — needs gallery review |
+| 3 | 8 | death | [x] Wired |
 
-- [ ] **NEEDS REVIEW:** Row 2 (frames 16-23) may be attack animation — not wired
-- [ ] Verify hitbox radius 10, pivot offset Y=-4
+- [ ] **TODO:** Wire row 2 as attack animation
+- [ ] **TODO:** Energy pulse could be short-range AOE
 
-### Delivery Bot
+### Delivery Bot — FAST RUNNER
 **Source:** `enemies/robots/Delivery Bot/Delivery Bot yellow without shadow 23x21.png`
-**Frame size:** 23x21, grid (est. 6 cols)
+**Frame size:** 23x21, grid 6 cols × 5 rows (138x105)
+**Color variants:** Yellow, Blue-Grey, Red
+**Behavior:** Fastest enemy. Could drop mines or just kamikaze contact.
 
-| Animation | Start Frame | Count (est.) | Status |
-|-----------|-------------|--------------|--------|
-| idle | 0 | 6 | [x] Wired |
-| walk | 6 | 6 | [x] Wired |
-| death | 18 | 6 | [x] Wired |
+| Row | Frames | Animation | Status |
+|-----|--------|-----------|--------|
+| 0 | 6 | idle | [x] Wired |
+| 1 | 6 | walk | [x] Wired |
+| 2 | 6 | unknown — needs review | [ ] Not wired |
+| 3 | 6 | unknown — needs review | [ ] Not wired |
+| 4 | 6 | death? | [x] Wired (row 3 used) |
 
-- [ ] **NEEDS REVIEW:** Rows 2-3 (frames 12-17) unknown — may have empty frames
-- [ ] Verify hitbox radius 7, pivot offset Y=-2
+- [ ] **TODO:** Review rows 2-4 in gallery
+- [ ] **TODO:** Could drop mines or be a mine-layer enemy
+
+### Planter Bot — SUPPORT / HAZARD PLANTER (NEW — not in game)
+**Source:** `enemies/robots/Planter Robot/Planter Bot Blue no shadow.png`
+**Frame size:** 29x37, grid 24 cols × 3 rows (696x111)
+**Color variants:** Blue, Red
+**Behavior:** Plants hazards/turrets on the ground? Long row 2 animation suggests planting action.
+
+| Row | Frames (est.) | Animation | Status |
+|-----|---------------|-----------|--------|
+| 0 | ~8 | idle | [ ] Not loaded |
+| 1 | ~6 | walk | [ ] Not loaded |
+| 2 | ~24 | plant/attack/death (long sequence) | [ ] Not loaded |
+
+- [ ] **TODO:** Load into game and gallery
+- [ ] **TODO:** Determine if row 2 is attack, death, or combined sequence
 
 ---
 
 ## ENEMIES — MINIONS
 
-### Hooded Minion (Minion 1)
+### Hooded Minion (Minion 1) — MELEE SCYTHE
 **Source:** `enemies/minions/Minion 1/Sprites Without Shadows/`
 **Frame size:** 33x36, horizontal strips
+**Behavior:** Chase, melee scythe slash. Revives once if not overkilled (per vision doc).
 
-| Animation | File | FPS | Status |
-|-----------|------|-----|--------|
-| idle | `Minion 1-idle.png` | 8 | [x] Wired |
-| walk/run | `Minion 1-Run.png` | 8 | [x] Wired |
-| death | `Minion 1-Death.png` | 8 | [x] Wired |
-| attack | `Minion 1-Attack.png` (10f, 33x36) | — | [ ] Not wired |
+| Animation | File | Frames | FPS | Status |
+|-----------|------|--------|-----|--------|
+| idle | `Minion 1-idle.png` | 8 | 8 | [x] Wired |
+| run | `Minion 1-Run.png` | 8 | 8 | [x] Wired |
+| attack | `Minion 1-Attack.png` | 10 | 12 | [x] Wired — purple scythe arc |
+| death | `Minion 1-Death.png` | 8 | 8 | [x] Wired |
 
-- [ ] Wire attack animation
-- [ ] Verify hitbox radius 10, pivot offset Y=-4
+- [x] Attack animation wired
+- [ ] **TODO:** Implement revive mechanic (revives once unless overkilled)
 
-### Bomb Minion (Minion 2)
+### Bomb Minion (Minion 2) — SUICIDE BOMBER
 **Source:** `enemies/minions/Minion 2/Sprites Without Shadows/`
-**Frame size:** 13x15, horizontal strips
+**Frame size:** 13x15 (body), 124x77 (explosion VFX)
+**Behavior:** Rushes player, explodes on contact or death. AOE damages player AND other enemies.
 
-| Animation | File | FPS | Status |
-|-----------|------|-----|--------|
-| idle | `Minion 2-Idle.png` | 8 | [x] Wired |
-| walk/run | `Minion 2-Run.png` | 8 | [x] Wired |
-| death (prep explode) | `Minion 2-Prep Explode.png` (4f) | 4 | [x] Wired |
-| explosion VFX | `Explosion 124x71.png` (15f) | — | [ ] Not wired |
+| Animation | File | Frames | FPS | Status |
+|-----------|------|--------|-----|--------|
+| idle | `Minion 2-Idle.png` | 8 | 8 | [x] Wired |
+| run | `Minion 2-Run.png` | 8 | 8 | [x] Wired |
+| prep explode | `Minion 2-Prep Explode.png` | 4 | 8 | [x] Wired as death |
+| explosion VFX | `Minion 2 Explosion - 124x71.png` | 15 | 12 | [ ] Not loaded |
 
-- [ ] Wire explosion VFX as on-death AOE visual
-- [ ] Verify hitbox radius 5, pivot offset Y=-1
+- [ ] **TODO:** Load explosion VFX (1860x77, 15 frames at 124x77)
+- [ ] **TODO:** Implement explosion-on-death AOE (damages player AND nearby enemies)
+- [ ] **TODO:** Flash/shake warning before detonation
 
-### Ranged Minion (Minion 3)
+### Ranged Minion (Minion 3) — RANGED SHOOTER
 **Source:** `enemies/minions/Minion 3/Sprites without Shadow/`
 **Frame size:** 25x15, horizontal strips
+**Behavior:** Stay at range, shoot rapidly. Squishy (low HP).
 
-| Animation | File | FPS | Status |
-|-----------|------|-----|--------|
-| idle | `Minion 3-Idle.png` | 8 | [x] Wired |
-| walk/run | `Minion 3-Run.png` | 8 | [x] Wired |
-| death | `Minion 3-Death.png` (7f) | 7 | [x] Wired |
-| range attack | `Minion 3-Range Attack.png` (15f, 25x15) | — | [ ] Not wired |
+| Animation | File | Frames | FPS | Status |
+|-----------|------|--------|-----|--------|
+| idle | `Minion 3-Idle.png` | 8 | 8 | [x] Wired |
+| run | `Minion 3-Run.png` | 8 | 8 | [x] Wired |
+| range attack | `Minion 3-Range Attack.png` | 15 | 12 | [x] Wired as "attack" |
+| death | `Minion 3-Death.png` | 7 | 7 | [x] Wired |
 
-- [ ] Wire range attack animation
-- [ ] Verify hitbox radius 8, pivot offset Y=-1
+- [x] Range attack animation wired
+- [ ] **TODO:** Implement ranged behavior (maintain distance, rapid fire)
 
 ---
 

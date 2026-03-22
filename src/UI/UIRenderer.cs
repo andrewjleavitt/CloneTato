@@ -54,8 +54,9 @@ public static class UIRenderer
         Raylib.DrawRectangle(barX, xpY, (int)(barW * xpPct), 3, Color.SkyBlue);
         DrawTextSmall($"Lv {state.Level}", barX + barW + 4, xpY - 1, Color.SkyBlue);
 
-        // Wave info (top center)
-        string waveText = $"Wave {state.CurrentWave}/{Constants.WavesPerBiome}";
+        // Wave info (top center) with biome name
+        string biomeName = Screens.BiomeSelectScreen.GetBiomeName(state.CurrentBiome);
+        string waveText = $"{biomeName} - Wave {state.CurrentWave}/{Constants.WavesPerBiome}";
         int textW = waveText.Length * 5;
         DrawTextSmall(waveText, Constants.LogicalWidth / 2 - textW / 2, 4, Color.White);
 
