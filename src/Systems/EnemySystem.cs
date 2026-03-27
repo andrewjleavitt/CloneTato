@@ -22,6 +22,14 @@ public static class EnemySystem
 
     public static void Update(float dt, GameState state)
     {
+        // Sandbox: keep all enemies invincible
+        if (state.SandboxMode)
+        {
+            for (int i = 0; i < state.Enemies.Count; i++)
+                if (state.Enemies[i].Active && !state.Enemies[i].IsDying)
+                    state.Enemies[i].CurrentHP = 999999;
+        }
+
         var playerPos = state.Player.Position;
         float time = (float)Raylib_cs.Raylib.GetTime();
 
@@ -762,8 +770,8 @@ public static class EnemySystem
             enemy.Position.Y = Math.Clamp(enemy.Position.Y, -20f, Constants.ArenaHeight + 20f);
             CollisionSystem.ResolveObstacleCollision(state, ref enemy.Position, enemy.Radius);
 
-            // Ooze damage to enemies
-            float oozeDmg = CollisionSystem.GetTerrainDamageRate(state, enemy.Position);
+            // Ooze damage to enemies (acid-trail enemies are immune)
+            float oozeDmg = enemy.LeavesAcidTrail ? 0 : CollisionSystem.GetTerrainDamageRate(state, enemy.Position);
             if (oozeDmg > 0)
             {
                 int dmg = Math.Max(1, (int)(oozeDmg * dt + 0.5f));

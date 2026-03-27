@@ -11,6 +11,10 @@ public static class PlayerSystem
     {
         var player = state.Player;
 
+        // Sandbox: player is invincible
+        if (state.SandboxMode)
+            player.InvincibilityTimer = 1f;
+
         // Dash cooldown
         if (player.DashCooldownTimer > 0)
             player.DashCooldownTimer -= dt;
@@ -46,8 +50,8 @@ public static class PlayerSystem
                 player.Position += player.Velocity * dt;
 
                 // Clamp to arena + obstacle collision
-                player.Position.X = Math.Clamp(player.Position.X, 12f, Constants.ArenaWidth - 12f);
-                player.Position.Y = Math.Clamp(player.Position.Y, 12f, Constants.ArenaHeight - 12f);
+                player.Position.X = Math.Clamp(player.Position.X, 12f, state.EffectiveArenaWidth - 12f);
+                player.Position.Y = Math.Clamp(player.Position.Y, 12f, state.EffectiveArenaHeight - 12f);
                 CollisionSystem.ResolveObstacleCollision(state, ref player.Position, player.Radius);
 
                 // Stay invincible during entire dash — don't tick down InvincibilityTimer
@@ -60,12 +64,21 @@ public static class PlayerSystem
         // Input
         Vector2 input = InputHelper.GetMoveInput();
 
-        // Gamepad aim: right stick overrides mouse for aim direction
-        Vector2 gamepadAim = InputHelper.GetAimInput();
-        if (gamepadAim.LengthSquared() > 0)
+        // BladeDancer: aim comes from movement direction (Hades-style), not right stick
+        if (player.HeroType == Data.HeroType.BladeDancer)
         {
-            // Set mouse world position relative to player for weapon aiming
-            state.MouseWorldPosition = player.Position + Vector2.Normalize(gamepadAim) * 80f;
+            if (input.LengthSquared() > 0.1f)
+                player.LastMoveDirection = Vector2.Normalize(input);
+            // Override aim to follow facing/move direction
+            state.MouseWorldPosition = player.Position + player.LastMoveDirection * 80f;
+        }
+        else if (InputHelper.GamepadAvailable)
+        {
+            // Gamepad aim: right stick sets aim, hold last direction when idle
+            Vector2 gamepadAim = InputHelper.GetAimInput();
+            if (gamepadAim.LengthSquared() > 0)
+                player.LastMoveDirection = Vector2.Normalize(gamepadAim);
+            state.MouseWorldPosition = player.Position + player.LastMoveDirection * 80f;
         }
 
         // Dash initiation
@@ -90,9 +103,13 @@ public static class PlayerSystem
             }
         }
 
-        // Face toward aim (with deadzone to prevent flicker)
-        Vector2 faceDir = state.MouseWorldPosition - player.Position;
-        if (MathF.Abs(faceDir.X) > 8f)
+        // Face toward aim (or move direction for BladeDancer)
+        Vector2 faceDir = player.HeroType == Data.HeroType.BladeDancer
+            ? player.LastMoveDirection
+            : state.MouseWorldPosition - player.Position;
+        // BladeDancer uses unit vector so deadzone is smaller
+        float facingDeadzone = player.HeroType == Data.HeroType.BladeDancer ? 0.1f : 8f;
+        if (MathF.Abs(faceDir.X) > facingDeadzone)
             player.FacingLeft = faceDir.X < 0;
 
         // Post-dash move speed buff
@@ -147,7 +164,21 @@ public static class PlayerSystem
 
         // Animation
         if (player.Velocity.LengthSquared() > 1f)
+        {
             player.AnimTimer += dt;
+
+            // Footstep sounds synced to walk cycle
+            player.FootstepTimer -= dt;
+            if (player.FootstepTimer <= 0)
+            {
+                state.Assets.PlaySoundVariant("move", 0.03f);
+                player.FootstepTimer = 0.22f; // ~4.5 steps/sec — crisp, quick cadence
+            }
+        }
+        else
+        {
+            player.FootstepTimer = 0f; // first step plays immediately on move start
+        }
 
         state.TotalTimeSurvived += dt;
 
@@ -158,5 +189,15 @@ public static class PlayerSystem
             if (state.ComboTimer <= 0)
                 state.ComboCount = 0;
         }
+
+        // Adrenaline Rush timers
+        if (state.Passives.AdrenalineTimer > 0)
+        {
+            state.Passives.AdrenalineTimer -= dt;
+            if (state.Passives.AdrenalineTimer <= 0)
+                state.Passives.AdrenalineKills = 0;
+        }
+        if (state.Passives.AdrenalineActive > 0)
+            state.Passives.AdrenalineActive -= dt;
     }
 }

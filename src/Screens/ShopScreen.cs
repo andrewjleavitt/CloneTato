@@ -93,20 +93,33 @@ public class ShopScreen
 
         if (_shopItems[index] is WeaponDef weapon)
         {
-            bool canAfford = state.Gold >= weapon.Cost;
-            bool hasSlot = state.EquippedWeapons.Count < Constants.MaxWeaponSlots;
-            if (canAfford && hasSlot)
+            if (state.Gold < weapon.Cost) return;
+
+            state.Gold -= weapon.Cost;
+            var newWeapon = new WeaponInstance(weapon);
+
+            // Replace or add to the appropriate slot
+            int slotIndex = weapon.Slot == WeaponSlot.Primary ? 0 : 1;
+
+            if (slotIndex < state.EquippedWeapons.Count)
             {
-                state.Gold -= weapon.Cost;
-                var newWeapon = new WeaponInstance(weapon);
+                // Replace existing weapon in this slot
+                state.EquippedWeapons[slotIndex] = newWeapon;
+                state.WeaponCooldowns[slotIndex] = 0f;
+                state.WeaponClipAmmo[slotIndex] = newWeapon.ClipSize;
+                state.WeaponReloadTimers[slotIndex] = 0f;
+            }
+            else
+            {
+                // Add to empty slot (secondary when only primary exists)
                 state.EquippedWeapons.Add(newWeapon);
                 state.WeaponCooldowns.Add(0f);
                 state.WeaponClipAmmo.Add(newWeapon.ClipSize);
                 state.WeaponReloadTimers.Add(0f);
                 state.WeaponOrbitAngles.Add(0f);
-                _shopItems.RemoveAt(index);
-                state.Assets.PlaySoundVariant("select", 0.5f);
             }
+            _shopItems.RemoveAt(index);
+            state.Assets.PlaySoundVariant("select", 0.5f);
         }
         else if (_shopItems[index] is ItemDef item)
         {
@@ -125,15 +138,29 @@ public class ShopScreen
     {
         _shopItems.Clear();
         int maxTier = 1 + state.CurrentWave / 5;
+        bool isBladeDancer = state.Player.HeroType == HeroType.BladeDancer;
 
-        var availableWeapons = WeaponDatabase.Weapons.Where(w => w.ShopTier <= maxTier).ToList();
+        var availableWeapons = WeaponDatabase.Weapons.Where(w =>
+        {
+            if (w.ShopTier > maxTier) return false;
+            // Melee weapons only for BladeDancer
+            if (w.Type == WeaponType.Melee && !isBladeDancer) return false;
+            // BladeDancer doesn't need primary gun offers (their melee is innate)
+            // But they DO want secondary weapons
+            return true;
+        }).ToList();
+
         var availableItems = ItemDatabase.Items.Where(i => i.ShopTier <= maxTier).ToList();
 
         Shuffle(availableWeapons);
         Shuffle(availableItems);
 
-        for (int i = 0; i < Math.Min(2, availableWeapons.Count); i++)
-            _shopItems.Add(availableWeapons[i]);
+        // Offer 1 primary + 1 secondary weapon (if available)
+        var primary = availableWeapons.FirstOrDefault(w => w.Slot == WeaponSlot.Primary);
+        var secondary = availableWeapons.FirstOrDefault(w => w.Slot == WeaponSlot.Secondary);
+        if (primary != null) _shopItems.Add(primary);
+        if (secondary != null) _shopItems.Add(secondary);
+
         for (int i = 0; i < Math.Min(2, availableItems.Count); i++)
             _shopItems.Add(availableItems[i]);
     }
@@ -252,27 +279,23 @@ public class ShopScreen
 
             if (_shopItems[i] is WeaponDef weapon)
             {
-                state.Assets.Weapons.Draw(weapon.SpriteIndex, cx + cardW / 2 - 12, cardY + 3, Color.White);
-                UIRenderer.DrawTextSmall(weapon.Name, cx + 4, cardY + 28, Color.White);
-                UIRenderer.DrawTextSmall($"DMG:{weapon.BaseDamage:F0} SPD:{weapon.FireRate:F1}", cx + 4, cardY + 38, Color.LightGray);
-                bool canAfford = state.Gold >= weapon.Cost;
-                bool hasSlot = state.EquippedWeapons.Count < Constants.MaxWeaponSlots;
-                UIRenderer.DrawTextSmall($"${weapon.Cost}", cx + 4, cardY + 52,
-                    canAfford && hasSlot ? Color.Green : Color.Red);
-                if (!hasSlot)
-                    UIRenderer.DrawTextSmall("FULL", cx + 50, cardY + 52, Color.Red);
+                // Slot label
+                string slotLabel = weapon.Slot == WeaponSlot.Secondary ? "[SECONDARY]" : "[PRIMARY]";
+                Color slotColor = weapon.Slot == WeaponSlot.Secondary ? Color.Orange : Color.SkyBlue;
+                UIRenderer.DrawTextSmall(slotLabel, cx + 4, cardY + 3, slotColor);
 
-                if (hovered && Raylib.IsMouseButtonPressed(MouseButton.Left) && canAfford && hasSlot)
+                state.Assets.Weapons.Draw(weapon.SpriteIndex, cx + cardW / 2 - 12, cardY + 12, Color.White);
+                UIRenderer.DrawTextSmall(weapon.Name, cx + 4, cardY + 36, Color.White);
+                UIRenderer.DrawTextSmall($"DMG:{weapon.BaseDamage:F0} SPD:{weapon.FireRate:F1}", cx + 4, cardY + 46, Color.LightGray);
+                bool canAfford = state.Gold >= weapon.Cost;
+                UIRenderer.DrawTextSmall($"${weapon.Cost}", cx + 4, cardY + 58,
+                    canAfford ? Color.Green : Color.Red);
+
+                if (hovered && Raylib.IsMouseButtonPressed(MouseButton.Left) && canAfford)
                 {
-                    state.Gold -= weapon.Cost;
-                    var newWeapon = new WeaponInstance(weapon);
-                    state.EquippedWeapons.Add(newWeapon);
-                    state.WeaponCooldowns.Add(0f);
-                    state.WeaponClipAmmo.Add(newWeapon.ClipSize);
-                    state.WeaponReloadTimers.Add(0f);
-                    state.WeaponOrbitAngles.Add(0f);
-                    _shopItems.RemoveAt(i);
-                    state.Assets.PlaySoundVariant("select", 0.5f);
+                    _navRow = 1;
+                    _navCol = i;
+                    TryBuyItem(state, i);
                 }
             }
             else if (_shopItems[i] is ItemDef item)
@@ -285,11 +308,9 @@ public class ShopScreen
 
                 if (hovered && Raylib.IsMouseButtonPressed(MouseButton.Left) && state.Gold >= item.Cost)
                 {
-                    state.Gold -= item.Cost;
-                    state.OwnedItems.Add(item);
-                    _shopItems.RemoveAt(i);
-                    state.RecomputePlayerStats();
-                    state.Assets.PlaySoundVariant("coin", 0.5f);
+                    _navRow = 1;
+                    _navCol = i;
+                    TryBuyItem(state, i);
                 }
             }
         }

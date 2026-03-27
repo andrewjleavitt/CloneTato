@@ -23,6 +23,20 @@ public class PlayingScreen
         if (Raylib.IsKeyPressed(KeyboardKey.F3))
             _debugOverlay = !_debugOverlay;
 
+        // F5: toggle sandbox mode (small arena, invincible boss, no waves)
+        if (Raylib.IsKeyPressed(KeyboardKey.F5))
+        {
+            var character = Data.CharacterDatabase.Characters[manager.CharSelect.SelectedCharacterIndex];
+            state.SandboxMode = !state.SandboxMode;
+            state.StartNewRun(character);
+            if (!state.SandboxMode)
+            {
+                state.CurrentBiome = 1;
+                state.StartWave();
+            }
+            return;
+        }
+
         // Hitstop — freeze all game updates for impact feel
         if (_hitstopTimer > 0)
         {
@@ -44,6 +58,10 @@ public class PlayingScreen
         var mouseLogical = Display.ScreenToLogical(Raylib.GetMousePosition());
         state.MouseWorldPosition = Raylib.GetScreenToWorld2D(mouseLogical, _camera.Camera);
         state.IsFiring = InputHelper.IsFireDown();
+        state.IsFirePressed = InputHelper.IsFirePressed();
+        state.IsSecondaryFiring = InputHelper.IsSecondaryFirePressed();
+        state.IsSecondaryDown = InputHelper.IsSecondaryFireDown();
+        state.IsSpecialActivated = InputHelper.IsSpecialPressed();
 
         // Update hero animation state
         UpdateHeroAnimation(dt, state);
@@ -51,6 +69,7 @@ public class PlayingScreen
         // Update all systems
         PlayerSystem.Update(dt, state);
         WeaponSystem.Update(dt, state);
+        SpecialAbilitySystem.Update(state);
         EnemySystem.Update(dt, state);
         WaveSystem.Update(dt, state);
 
@@ -306,7 +325,7 @@ public class PlayingScreen
         Color borderColor = strandedTerrain ? GetBiomeBorderColor(state.CurrentBiome) : Color.Brown;
         float borderWidth = strandedTerrain ? 3f : 2f;
         Raylib.DrawRectangleLinesEx(
-            new Rectangle(0, 0, Constants.ArenaWidth, Constants.ArenaHeight),
+            new Rectangle(0, 0, state.EffectiveArenaWidth, state.EffectiveArenaHeight),
             borderWidth, borderColor);
 
         // Mines
@@ -704,8 +723,9 @@ public class PlayingScreen
             }
         }
 
-        // Targeting reticle (fixed distance from player)
-        DrawReticle(state);
+        // Targeting reticle (fixed distance from player) — hidden for BladeDancer (Hades-style directional combat)
+        if (state.Player.HeroType != Data.HeroType.BladeDancer)
+            DrawReticle(state);
 
         // Debug overlay: hitboxes, pivots, attack ranges (F3 toggle)
         if (_debugOverlay)
@@ -822,6 +842,12 @@ public class PlayingScreen
         for (int w = 0; w < state.EquippedWeapons.Count; w++)
         {
             var weapon = state.EquippedWeapons[w];
+
+            // BladeDancer's melee weapon is part of their hero animation — don't draw orbiting sprite
+            if (weapon.Def.Type == Data.WeaponType.Melee &&
+                state.Player.HeroType == Data.HeroType.BladeDancer)
+                continue;
+
             Vector2 weaponPos = WeaponSystem.GetWeaponWorldPosition(state, w);
             float angle = WeaponSystem.GetWeaponDrawAngle(state, w);
 
@@ -971,7 +997,7 @@ public class PlayingScreen
     {
         if (state.Assets.HasStrandedTerrain)
         {
-            Raylib.DrawRectangle(0, 0, Constants.ArenaWidth, Constants.ArenaHeight,
+            Raylib.DrawRectangle(0, 0, state.EffectiveArenaWidth, state.EffectiveArenaHeight,
                 GetBiomeBaseColor(state.CurrentBiome));
 
             float camLeft = _camera.Camera.Target.X - Constants.LogicalWidth / 2f;
@@ -985,8 +1011,8 @@ public class PlayingScreen
             {
                 int startCol = Math.Max(0, (int)(camLeft / tileW) - 1);
                 int startRow = Math.Max(0, (int)(camTop / tileH) - 1);
-                int endCol = Math.Min(Constants.ArenaWidth / tileW + 1, (int)(camRight / tileW) + 2);
-                int endRow = Math.Min(Constants.ArenaHeight / tileH + 1, (int)(camBottom / tileH) + 2);
+                int endCol = Math.Min(state.EffectiveArenaWidth / tileW + 1, (int)(camRight / tileW) + 2);
+                int endRow = Math.Min(state.EffectiveArenaHeight / tileH + 1, (int)(camBottom / tileH) + 2);
 
                 for (int row = startRow; row < endRow; row++)
                     for (int col = startCol; col < endCol; col++)
@@ -1013,8 +1039,8 @@ public class PlayingScreen
                 int tileSize = 32;
                 int startCol = Math.Max(0, (int)(camLeft / tileSize) - 1);
                 int startRow = Math.Max(0, (int)(camTop / tileSize) - 1);
-                int endCol = Math.Min(Constants.ArenaWidth / tileSize, (int)(camRight / tileSize) + 2);
-                int endRow = Math.Min(Constants.ArenaHeight / tileSize, (int)(camBottom / tileSize) + 2);
+                int endCol = Math.Min(state.EffectiveArenaWidth / tileSize, (int)(camRight / tileSize) + 2);
+                int endRow = Math.Min(state.EffectiveArenaHeight / tileSize, (int)(camBottom / tileSize) + 2);
 
                 for (int row = startRow; row < endRow; row++)
                     for (int col = startCol; col < endCol; col++)
@@ -1142,6 +1168,12 @@ public class PlayingScreen
             anim = "death";
         else if (player.IsDashing)
             anim = $"roll_{dir}";
+        else if (player.MeleeAnimTimer > 0 && player.HeroType == Data.HeroType.BladeDancer)
+        {
+            // BladeDancer alternates between slash and chop attacks
+            string attackType = (player.MeleeAttackCount % 2 == 0) ? "slash" : "chop";
+            anim = hero.HasAnimation($"{attackType}_{dir}") ? $"{attackType}_{dir}" : $"slash_{dir}";
+        }
         else if (player.MeleeAnimTimer > 0 && hero.HasAnimation($"slash_{dir}"))
             anim = $"slash_{dir}";
         else if (moving)

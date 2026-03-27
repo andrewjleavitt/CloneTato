@@ -31,6 +31,35 @@ public class AssetManager
     public Texture2D[] LargeScatterTextures { get; private set; } = Array.Empty<Texture2D>(); // larger accent props
     public bool HasStrandedTerrain => ObstacleTextures.Length > 0;
 
+    // Obstacle indices: 0-8 = blood desert (trees, rocks, skulls, statue)
+    //                   9   = swamp massive tree
+    //                  10-12 = temple relics (1, 2, 3)
+    // Per-biome valid obstacle indices and radii
+    public static readonly int[] WasteObstacles = { 0, 1, 2, 3, 4, 5, 6, 7, 8 }; // all desert props
+    public static readonly int[] SwampObstacles = { 0, 1, 2, 3, 4, 5, 9 };        // trees + rocks + massive tree
+    public static readonly int[] TempleObstacles = { 5, 8, 10, 11, 12 };           // rock, statue, relics
+    // Per-biome scatter filter — indices into GroundScatterTextures
+    // Blood desert scatter sorted: cactus(0), dark_patch(1), grass1-8(2-9), gravel_large(10),
+    //   gravel_small(11), gravel_strip(12), low_rock1(13), low_rock2(14), pebbles1-3(15-17),
+    //   small_cross1-2(18-19) — approximate order from sorted dir listing
+    public static readonly int[] WasteScatter = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 }; // all
+    public static readonly int[] SwampScatter = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17 }; // grass, rocks, pebbles — no cactus/crosses
+    public static readonly int[] TempleScatter = { 10, 11, 12, 13, 14, 15, 16, 17 }; // gravel, rocks, pebbles only
+
+    public static int[] GetBiomeObstacles(int biome) => biome switch
+    {
+        2 => SwampObstacles, 3 => TempleObstacles, _ => WasteObstacles,
+    };
+    public static int[] GetBiomeScatter(int biome) => biome switch
+    {
+        2 => SwampScatter, 3 => TempleScatter, _ => WasteScatter,
+    };
+    // Hitbox radii for STRANDED obstacle textures (matching load order)
+    // 0-4=Tree1-5(20), 5=BigRock(22), 6=Skull(25), 7=SkullGrassy(25), 8=statue(12),
+    // 9=MassiveTree(30), 10-12=Relics(20)
+    public static readonly float[] ObstacleRadii =
+        { 20f, 20f, 20f, 20f, 20f, 22f, 25f, 25f, 12f, 30f, 20f, 20f, 20f };
+
     // STRANDED terrain tilesets per biome
     public Texture2D BloodDesertTileset { get; private set; }
     public Texture2D TempleTileset { get; private set; }
@@ -149,7 +178,7 @@ public class AssetManager
         string propsDir = strandedPath + "/terrain/blood_desert/Separate Sprites";
         if (!Directory.Exists(propsDir)) return;
 
-        // Large obstacle props (collidable) — trees, rocks, skulls, statue
+        // Large obstacle props (collidable) — indices 0-8: trees, rocks, skulls, statue
         string[] obstacleFiles =
         {
             "Tree1.png", "Tree2.png", "Tree3.png", "Tree4.png", "Tree5.png",
@@ -162,6 +191,34 @@ public class AssetManager
             if (File.Exists(path))
                 obsList.Add(LoadTexturePoint(path));
         }
+
+        // Index 9: Swamp massive tree
+        string massiveTreePath = strandedPath + "/terrain/swamps/massive tree.png";
+        if (File.Exists(massiveTreePath))
+            obsList.Add(LoadTexturePoint(massiveTreePath));
+
+        // Indices 10-12: Temple relics (extract first frame from composite spritesheets)
+        string[] relicPaths =
+        {
+            strandedPath + "/terrain/relics/Relic 1/Relic 1 - 105x93.png",
+            strandedPath + "/terrain/relics/Relic 2/Relic 2 - 101x106.png",
+            strandedPath + "/terrain/relics/Relic 3/Relic 3 - 111x99.png",
+        };
+        int[][] relicFrameSizes = { new[] { 105, 93 }, new[] { 101, 106 }, new[] { 111, 99 } };
+        for (int i = 0; i < relicPaths.Length; i++)
+        {
+            if (File.Exists(relicPaths[i]))
+            {
+                var img = Raylib.LoadImage(relicPaths[i]);
+                // Crop to first frame (top-left region)
+                Raylib.ImageCrop(ref img, new Rectangle(0, 0, relicFrameSizes[i][0], relicFrameSizes[i][1]));
+                var tex = Raylib.LoadTextureFromImage(img);
+                Raylib.SetTextureFilter(tex, TextureFilter.Point);
+                Raylib.UnloadImage(img);
+                obsList.Add(tex);
+            }
+        }
+
         ObstacleTextures = obsList.ToArray();
 
         // Small ground scatter from ground_scatter/ directory (grass, pebbles, gravel — subtle)

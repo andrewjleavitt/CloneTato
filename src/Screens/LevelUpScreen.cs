@@ -7,36 +7,38 @@ namespace CloneTato.Screens;
 
 public class LevelUpScreen
 {
-    private readonly StatUpgrade[] _choices = new StatUpgrade[3];
+    private readonly Upgrade[] _choices = new Upgrade[3];
     private bool _initialized;
     private int _selected;
 
-    private record StatUpgrade(string Name, string Description, Stats Bonus);
+    private record Upgrade(string Name, string Description, Stats Bonus, Action<Passives>? PassiveEffect = null);
 
-    private static readonly StatUpgrade[] AllUpgrades =
+    private static readonly Upgrade[] AllUpgrades =
     {
-        new("Max HP +15", "+15 Maximum HP", new Stats { MaxHP = 15 }),
-        new("Max HP +25", "+25 Maximum HP", new Stats { MaxHP = 25 }),
-        new("Speed +10", "+10 Move Speed", new Stats { MoveSpeed = 10f }),
-        new("Speed +18", "+18 Move Speed", new Stats { MoveSpeed = 18f }),
-        new("Damage +8%", "+8% Damage", new Stats { DamageMultiplier = 0.08f }),
-        new("Damage +15%", "+15% Damage", new Stats { DamageMultiplier = 0.15f }),
-        new("Atk Speed +10%", "+10% Attack Speed", new Stats { AttackSpeedMultiplier = 0.10f }),
-        new("Atk Speed +18%", "+18% Attack Speed", new Stats { AttackSpeedMultiplier = 0.18f }),
-        new("Armor +2", "+2 Armor", new Stats { Armor = 2 }),
-        new("Armor +4", "+4 Armor", new Stats { Armor = 4 }),
+        // --- Stat upgrades (one tier each) ---
+        new("Max HP +20", "+20 Maximum HP", new Stats { MaxHP = 20 }),
+        new("Speed +12", "+12 Move Speed", new Stats { MoveSpeed = 12f }),
+        new("Damage +10%", "+10% Damage", new Stats { DamageMultiplier = 0.10f }),
+        new("Atk Speed +12%", "+12% Attack Speed", new Stats { AttackSpeedMultiplier = 0.12f }),
+        new("Armor +3", "+3 Armor", new Stats { Armor = 3 }),
         new("Dodge +5%", "+5% Dodge Chance", new Stats { DodgeChance = 0.05f }),
         new("Crit +5%", "+5% Crit Chance", new Stats { CritChance = 0.05f }),
         new("Pickup +15", "+15 Pickup Range", new Stats { PickupRange = 15f }),
         new("XP +10%", "+10% XP Gain", new Stats { XPMultiplier = 0.10f }),
-        new("Reload +15%", "+15% Reload Speed", new Stats { ReloadSpeedMultiplier = 0.15f }),
-        new("Reload +25%", "+25% Reload Speed", new Stats { ReloadSpeedMultiplier = 0.25f }),
-        new("Dash Speed", "+80 Dash Speed", new Stats { DashSpeedBonus = 80f }),
+
+        // --- Dash upgrades ---
         new("Dash Cooldown", "-0.12s Dash Cooldown", new Stats { DashCooldownReduction = 0.12f }),
-        new("Long Dash", "+0.06s Dash Duration", new Stats { DashDurationBonus = 0.06f }),
         new("Dash: Atk Speed", "30% atk speed after dash", new Stats { PostDashAttackSpeed = 0.3f }),
         new("Dash: Move", "25% move speed after dash", new Stats { PostDashMoveSpeed = 0.25f }),
         new("Dash: Invuln", "0.5s invuln after dash", new Stats { PostDashInvuln = 0.5f }),
+
+        // --- Mechanical passives ---
+        new("Ricochet", "Shots bounce to 1 enemy", default, p => p.Ricochet += 1),
+        new("Vampiric", "Melee kills heal 2 HP", default, p => p.VampiricHeal += 2),
+        new("Thorns", "Hit attackers for 15 dmg", default, p => p.ThornsDamage += 15),
+        new("Explosive Kills", "Kills trigger AOE blast", default, p => p.ExplosiveKills = true),
+        new("Overclock", "Secondary CD -25%", default, p => p.OverclockMult += 0.25f),
+        new("Adrenaline Rush", "3 kills in 2s = atk burst", default, p => { p.AdrenalineWindow = 2f; p.AdrenalineBoost += 0.4f; }),
     };
 
     public void Update(float dt, GameState state, GameStateManager manager)
@@ -58,8 +60,16 @@ public class LevelUpScreen
 
     private void ChooseUpgrade(GameState state, GameStateManager manager, int index)
     {
-        state.LevelBonus = state.LevelBonus + _choices[index].Bonus;
+        var choice = _choices[index];
+
+        // Apply stat bonus
+        state.LevelBonus = state.LevelBonus + choice.Bonus;
         state.RecomputePlayerStats();
+
+        // Apply passive effect
+        if (choice.PassiveEffect != null)
+            choice.PassiveEffect(state.Passives);
+
         state.PendingLevelUps--;
         if (state.PendingLevelUps <= 0)
             state.LevelUpPending = false;
@@ -113,11 +123,18 @@ public class LevelUpScreen
 
             if (hovered) _selected = i;
 
-            Color bg = (hovered || selected) ? new Color(80, 60, 40, 255) : new Color(50, 35, 25, 255);
-            Raylib.DrawRectangle(cx, cardY, cardW, cardH, bg);
-            Raylib.DrawRectangleLines(cx, cardY, cardW, cardH, (hovered || selected) ? Color.Gold : Color.Gray);
+            // Mechanical passives get a distinct card color
+            bool isMechanical = _choices[i].PassiveEffect != null;
+            Color bg = (hovered || selected)
+                ? (isMechanical ? new Color(40, 70, 80, 255) : new Color(80, 60, 40, 255))
+                : (isMechanical ? new Color(25, 45, 50, 255) : new Color(50, 35, 25, 255));
+            Color border = (hovered || selected) ? Color.Gold : Color.Gray;
 
-            UIRenderer.DrawTextSmall(_choices[i].Name, cx + 6, cardY + 8, Color.White);
+            Raylib.DrawRectangle(cx, cardY, cardW, cardH, bg);
+            Raylib.DrawRectangleLines(cx, cardY, cardW, cardH, border);
+
+            Color nameColor = isMechanical ? new Color(100, 220, 255, 255) : Color.White;
+            UIRenderer.DrawTextSmall(_choices[i].Name, cx + 6, cardY + 8, nameColor);
             UIRenderer.DrawTextSmall(_choices[i].Description, cx + 6, cardY + 22, Color.LightGray);
 
             if (hovered && Raylib.IsMouseButtonPressed(MouseButton.Left))

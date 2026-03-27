@@ -2,6 +2,7 @@ using System.Numerics;
 using CloneTato.Assets;
 using CloneTato.Data;
 using CloneTato.Entities;
+using Raylib_cs;
 
 namespace CloneTato.Core;
 
@@ -40,11 +41,24 @@ public class GameState
     public List<ItemDef> OwnedItems = new();
 
     public Vector2 MouseWorldPosition; // mouse cursor in world space
-    public bool IsFiring; // true while mouse button is held
+    public bool IsFiring; // true while primary fire button is held (RT / left click)
+    public bool IsFirePressed; // true on the frame primary fire is first pressed
+    public bool IsSecondaryFiring; // true on the frame secondary fire is pressed (LT / right click)
+    public bool IsSecondaryDown;   // true while secondary fire is held (for hold-through-cooldown)
+    public bool IsSpecialActivated; // true on the frame special ability is pressed (LB / Q)
+
+    // Special ability cooldown (hero-specific, not a weapon)
+    public float SpecialCooldown;
+    public float SpecialMaxCooldown;
 
     public Stats ItemBonus;
     public Stats LevelBonus;
     public Stats MetaBonus;
+    public Passives Passives = new(); // mechanical passive upgrades (ricochet, thorns, etc.)
+
+    public bool SandboxMode; // small arena, invincible boss, no waves — for movement testing
+    public int EffectiveArenaWidth => SandboxMode ? Constants.LogicalWidth : Constants.ArenaWidth;
+    public int EffectiveArenaHeight => SandboxMode ? Constants.LogicalHeight : Constants.ArenaHeight;
 
     public int CurrentBiome = 1;
     public int CurrentWave;
@@ -93,7 +107,7 @@ public class GameState
     public int BestCombo;
 
     // Entity pools
-    public const int MaxEnemies = 300;
+    public const int MaxEnemies = 500;
     public const int MaxProjectiles = 500;
     public const int MaxXPOrbs = 400;
     public const int MaxDamageNumbers = 100;
@@ -170,10 +184,14 @@ public class GameState
         WeaponReloadTimers.Add(0f);
         WeaponOrbitAngles.Add(0f);
 
+        SpecialCooldown = 0f;
+        SpecialMaxCooldown = Systems.SpecialAbilitySystem.GetMaxCooldown(character.HeroType);
+
         GenerateArena();
 
         ItemBonus = default;
         LevelBonus = default;
+        Passives = new Passives();
 
         CurrentBiome = 1;
         CurrentWave = 0;
@@ -190,6 +208,38 @@ public class GameState
         ComboCount = 0;
         ComboTimer = 0;
         BestCombo = 0;
+
+        if (SandboxMode)
+            SetupSandbox();
+    }
+
+    private void SetupSandbox()
+    {
+        // Spawn a boss near center-right, invincible and harmless
+        var bossEnemy = GetInactiveEnemy();
+        if (bossEnemy != null)
+        {
+            float arenaW = SandboxMode ? Constants.LogicalWidth : Constants.ArenaWidth;
+            float arenaH = SandboxMode ? Constants.LogicalHeight : Constants.ArenaHeight;
+            var bossPos = new Vector2(arenaW * 0.65f, arenaH * 0.5f);
+            var bossDef = Data.EnemyDatabase.Enemies[0]; // use first enemy def as base
+            bossEnemy.InitAsBoss(bossDef, bossPos, 1f);
+            bossEnemy.DefIndex = 0;
+            bossEnemy.BossSpriteType = CurrentBiome switch
+            {
+                2 => 1, 3 => 2, _ => 0,
+            };
+            bossEnemy.CurrentHP = 999999;
+            bossEnemy.ContactDamage = 0;
+            bossEnemy.MeleeAttackDamage = 0;
+            bossEnemy.HasMeleeAttack = false;
+            bossEnemy.Speed = 0; // stationary
+        }
+
+        // Place player at center-left
+        Player.Position = new Vector2(
+            (SandboxMode ? Constants.LogicalWidth : Constants.ArenaWidth) * 0.35f,
+            (SandboxMode ? Constants.LogicalHeight : Constants.ArenaHeight) * 0.5f);
     }
 
     public void StartWave()
@@ -284,6 +334,16 @@ public class GameState
         TotalEnemiesKilled++;
         EnemiesKilledThisWave++;
 
+        // Vampiric: heal on any kill
+        if (Passives.VampiricHeal > 0)
+        {
+            Player.CurrentHP = Math.Min(
+                Player.CurrentHP + Passives.VampiricHeal,
+                Player.ComputedStats.MaxHP);
+            var healNum = GetInactiveDamageNumber();
+            healNum?.Init(Player.Position, $"+{Passives.VampiricHeal}", Color.Green);
+        }
+
         // Combo tracking
         if (ComboTimer > 0)
             ComboCount++;
@@ -291,6 +351,43 @@ public class GameState
             ComboCount = 1;
         ComboTimer = ComboWindow;
         if (ComboCount > BestCombo) BestCombo = ComboCount;
+
+        // Explosive Kills: small AOE blast on every kill
+        if (Passives.ExplosiveKills)
+        {
+            const float blastRadius = 40f;
+            const int blastDamage = 8;
+            for (int j = 0; j < Enemies.Count; j++)
+            {
+                var other = Enemies[j];
+                if (!other.Active || other.IsDying || other == enemy) continue;
+                if (Vector2.Distance(enemy.Position, other.Position) < blastRadius)
+                {
+                    other.CurrentHP -= blastDamage;
+                    other.FlashTimer = 0.1f;
+                    if (other.CurrentHP <= 0 && !other.IsDying)
+                        HandleEnemyDeath(other);
+                }
+            }
+            SpawnExplosionVFX(enemy.Position, blastRadius * 0.6f);
+        }
+
+        // Adrenaline Rush: track kill streak
+        if (Passives.AdrenalineWindow > 0)
+        {
+            if (Passives.AdrenalineTimer > 0)
+                Passives.AdrenalineKills++;
+            else
+                Passives.AdrenalineKills = 1;
+            Passives.AdrenalineTimer = Passives.AdrenalineWindow;
+
+            // Trigger burst on 3+ kills in window
+            if (Passives.AdrenalineKills >= 3)
+            {
+                Passives.AdrenalineActive = 3f; // 3 seconds of attack speed boost
+                Passives.AdrenalineKills = 0;
+            }
+        }
 
         // Combo multiplier: 1.0x at 1 kill, scales up with kills
         // 5 kills = 1.25x, 10 kills = 1.5x, 20 kills = 2.0x
@@ -408,10 +505,6 @@ public class GameState
         }
     }
 
-    // Hitbox radii for STRANDED obstacle textures (matching ObstacleTextures load order)
-    // Tree1-5(106x72), Big Rock(107x53), Skull(139x89), Skull Grassy(139x92), statue(53x54)
-    private static readonly float[] StrandedObstacleRadii = { 20f, 20f, 20f, 20f, 20f, 22f, 25f, 25f, 12f };
-
     private void GenerateArena()
     {
         Obstacles.Clear();
@@ -419,101 +512,105 @@ public class GameState
         TerrainZones.Clear();
         GroundScatterProps.Clear();
 
+        // Sandbox: tiny empty arena, no obstacles or zones
+        if (SandboxMode) return;
+
         var rng = Random.Shared;
         float centerX = Constants.ArenaWidth / 2f;
         float centerY = Constants.ArenaHeight / 2f;
-        float safeRadius = 80f; // keep spawn area clear
+        float safeRadius = 80f;
 
         bool useStranded = Assets.HasStrandedTerrain;
-        int obstacleCount = rng.Next(8, 15);
+        int[] biomeObs = AssetManager.GetBiomeObstacles(CurrentBiome);
+        int[] biomeScatter = AssetManager.GetBiomeScatter(CurrentBiome);
 
-        for (int i = 0; i < obstacleCount; i++)
+        // --- Pattern-based placement (2-4 formations) ---
+        int patternCount = rng.Next(2, 5);
+        for (int p = 0; p < patternCount; p++)
         {
-            for (int attempt = 0; attempt < 20; attempt++)
+            // Pick a random center for this formation, away from spawn
+            Vector2 patCenter = Vector2.Zero;
+            bool found = false;
+            for (int attempt = 0; attempt < 30; attempt++)
             {
-                float x = rng.NextSingle() * (Constants.ArenaWidth - 80) + 40;
-                float y = rng.NextSingle() * (Constants.ArenaHeight - 80) + 40;
-
-                int texIdx = useStranded ? rng.Next(Assets.ObstacleTextures.Length) : 0;
-                float radius = useStranded ? StrandedObstacleRadii[texIdx] : 7f;
-
-                if (Vector2.Distance(new Vector2(x, y), new Vector2(centerX, centerY)) < safeRadius + radius)
+                patCenter = new Vector2(
+                    rng.NextSingle() * (Constants.ArenaWidth - 200) + 100,
+                    rng.NextSingle() * (Constants.ArenaHeight - 200) + 100);
+                if (Vector2.Distance(patCenter, new Vector2(centerX, centerY)) < safeRadius + 60f)
                     continue;
-
-                bool overlaps = false;
-                foreach (var other in Obstacles)
-                {
-                    if (Vector2.Distance(new Vector2(x, y), other.Position) < radius + other.Radius + 20f)
-                    { overlaps = true; break; }
-                }
-                if (overlaps) continue;
-
-                if (useStranded)
-                {
-                    Obstacles.Add(new Obstacle
-                    {
-                        Position = new Vector2(x, y),
-                        Radius = radius,
-                        TextureIndex = texIdx,
-                        UseStranded = true,
-                        Active = true,
-                    });
-                }
-                else
-                {
-                    int[] treeSprites = { 3 * 18 + 3, 3 * 18 + 8 };
-                    Obstacles.Add(new Obstacle
-                    {
-                        Position = new Vector2(x, y),
-                        Radius = radius,
-                        SpriteIndex = treeSprites[rng.Next(treeSprites.Length)],
-                        Active = true,
-                    });
-                }
+                found = true;
                 break;
             }
+            if (!found) continue;
+
+            float rotation = rng.NextSingle() * MathF.PI * 2f;
+            int pattern = CurrentBiome switch
+            {
+                3 => rng.Next(4), // temple gets shrine pattern
+                _ => rng.Next(3), // waste/swamp: grove, corridor, outpost
+            };
+
+            switch (pattern)
+            {
+                case 0: // Grove — 3-4 obstacles clustered with scatter ring
+                    PlaceGrovePattern(rng, patCenter, rotation, biomeObs, biomeScatter, useStranded);
+                    break;
+                case 1: // Corridor — parallel obstacles creating a lane
+                    PlaceCorridorPattern(rng, patCenter, rotation, biomeObs, useStranded);
+                    break;
+                case 2: // Outpost — obstacle + barrels nearby
+                    PlaceOutpostPattern(rng, patCenter, rotation, biomeObs, useStranded);
+                    break;
+                case 3: // Shrine — ring of obstacles with open center (temple)
+                    PlaceShrinePattern(rng, patCenter, rotation, biomeObs, biomeScatter, useStranded);
+                    break;
+            }
         }
 
-        // Ground scatter decorations (non-collidable)
-        if (useStranded)
+        // --- Fill remaining with random singles (up to target) ---
+        int targetObstacles = rng.Next(10, 16);
+        int remaining = targetObstacles - Obstacles.Count;
+        for (int i = 0; i < remaining; i++)
         {
-            // Small subtle scatter (grass, pebbles, gravel) — dense
-            if (Assets.GroundScatterTextures.Length > 0)
-            {
-                int scatterCount = rng.Next(40, 70);
-                for (int i = 0; i < scatterCount; i++)
-                {
-                    float x = rng.NextSingle() * Constants.ArenaWidth;
-                    float y = rng.NextSingle() * Constants.ArenaHeight;
-                    GroundScatterProps.Add(new GroundScatter
-                    {
-                        Position = new Vector2(x, y),
-                        TextureIndex = rng.Next(Assets.GroundScatterTextures.Length),
-                        FlipH = rng.NextSingle() < 0.5f,
-                    });
-                }
-            }
+            TryPlaceRandomObstacle(rng, centerX, centerY, safeRadius, biomeObs, useStranded);
+        }
 
-            // Large accent props (swords, hands, poles) — sparse
-            if (Assets.LargeScatterTextures.Length > 0)
+        // --- Ground scatter (biome-filtered) ---
+        if (useStranded && Assets.GroundScatterTextures.Length > 0 && biomeScatter.Length > 0)
+        {
+            int scatterCount = rng.Next(40, 70);
+            for (int i = 0; i < scatterCount; i++)
             {
-                int accentCount = rng.Next(5, 12);
-                for (int i = 0; i < accentCount; i++)
+                float x = rng.NextSingle() * Constants.ArenaWidth;
+                float y = rng.NextSingle() * Constants.ArenaHeight;
+                GroundScatterProps.Add(new GroundScatter
                 {
-                    float x = rng.NextSingle() * (Constants.ArenaWidth - 40) + 20;
-                    float y = rng.NextSingle() * (Constants.ArenaHeight - 40) + 20;
-                    GroundScatterProps.Add(new GroundScatter
-                    {
-                        Position = new Vector2(x, y),
-                        TextureIndex = rng.Next(Assets.LargeScatterTextures.Length),
-                        FlipH = rng.NextSingle() < 0.5f,
-                        IsLarge = true,
-                    });
-                }
+                    Position = new Vector2(x, y),
+                    TextureIndex = biomeScatter[rng.Next(biomeScatter.Length)],
+                    FlipH = rng.NextSingle() < 0.5f,
+                });
             }
         }
 
-        // Place 4-8 barrels
+        // Large accent props — waste/swamp only (swords/poles don't fit temple)
+        if (useStranded && Assets.LargeScatterTextures.Length > 0 && CurrentBiome != 3)
+        {
+            int accentCount = rng.Next(5, 12);
+            for (int i = 0; i < accentCount; i++)
+            {
+                float x = rng.NextSingle() * (Constants.ArenaWidth - 40) + 20;
+                float y = rng.NextSingle() * (Constants.ArenaHeight - 40) + 20;
+                GroundScatterProps.Add(new GroundScatter
+                {
+                    Position = new Vector2(x, y),
+                    TextureIndex = rng.Next(Assets.LargeScatterTextures.Length),
+                    FlipH = rng.NextSingle() < 0.5f,
+                    IsLarge = true,
+                });
+            }
+        }
+
+        // --- Barrels (4-8) ---
         int barrelCount = rng.Next(4, 9);
         for (int i = 0; i < barrelCount; i++)
         {
@@ -526,7 +623,6 @@ public class GameState
                 if (Vector2.Distance(pos, new Vector2(centerX, centerY)) < safeRadius + 12f)
                     continue;
 
-                // Don't overlap obstacles or other barrels
                 bool overlaps = false;
                 foreach (var obs in Obstacles)
                 {
@@ -534,31 +630,27 @@ public class GameState
                     { overlaps = true; break; }
                 }
                 if (!overlaps)
-                {
                     foreach (var other in Barrels)
-                    {
                         if (Vector2.Distance(pos, other.Position) < 24f)
                         { overlaps = true; break; }
-                    }
-                }
                 if (overlaps) continue;
 
-                var type = rng.NextSingle() < 0.55f ? BarrelType.Explosive : BarrelType.Toxic;
+                var type = CurrentBiome switch
+                {
+                    2 => rng.NextSingle() < 0.3f ? BarrelType.Explosive : BarrelType.Toxic, // swamp: more toxic
+                    _ => rng.NextSingle() < 0.55f ? BarrelType.Explosive : BarrelType.Toxic,
+                };
                 int hp = type == BarrelType.Explosive ? 3 : 5;
                 Barrels.Add(new Barrel
                 {
-                    Position = pos,
-                    Radius = 8f,
-                    Type = type,
-                    CurrentHP = hp,
-                    MaxHP = hp,
-                    Active = true,
+                    Position = pos, Radius = 8f, Type = type,
+                    CurrentHP = hp, MaxHP = hp, Active = true,
                 });
                 break;
             }
         }
 
-        // Place 3-5 terrain zones
+        // --- Terrain zones (biome-specific mix) ---
         int zoneCount = rng.Next(3, 6);
         for (int i = 0; i < zoneCount; i++)
         {
@@ -567,27 +659,43 @@ public class GameState
                 float x = rng.NextSingle() * (Constants.ArenaWidth - 160) + 80;
                 float y = rng.NextSingle() * (Constants.ArenaHeight - 160) + 80;
                 float radius = 40f + rng.NextSingle() * 30f;
-                var type = rng.NextSingle() < 0.65f ? TerrainType.Sand : TerrainType.Oasis;
 
-                // Don't place center of zone too close to spawn
                 if (Vector2.Distance(new Vector2(x, y), new Vector2(centerX, centerY)) < safeRadius)
                     continue;
 
-                TerrainZones.Add(new TerrainZone
+                // Biome-specific zone types
+                TerrainType type = CurrentBiome switch
+                {
+                    2 => rng.NextSingle() < 0.5f       // swamp: ooze pools + oasis bogs
+                        ? TerrainType.Ooze : TerrainType.Oasis,
+                    3 => rng.NextSingle() < 0.7f        // temple: mostly sand (stone dust), rare oasis
+                        ? TerrainType.Sand : TerrainType.Oasis,
+                    _ => rng.NextSingle() < 0.65f        // waste: sand + oasis (original)
+                        ? TerrainType.Sand : TerrainType.Oasis,
+                };
+
+                var zone = new TerrainZone
                 {
                     Position = new Vector2(x, y),
                     Radius = radius,
                     Type = type,
                     Active = true,
-                });
+                };
+
+                // Swamp ooze zones are permanent but weaker than barrel ooze
+                if (type == TerrainType.Ooze && CurrentBiome == 2)
+                {
+                    zone.DamagePerSecond = 5f;
+                    zone.Duration = 0; // permanent
+                }
+
+                TerrainZones.Add(zone);
                 break;
             }
         }
 
-        // Pick one decorative tile set for this run (0=green grass, 1=purple grass, 2=metallic)
+        // Decorative patches
         int decoSet = rng.Next(3);
-
-        // Place 3-6 decorative patches
         int decoCount = rng.Next(3, 7);
         for (int i = 0; i < decoCount; i++)
         {
@@ -609,6 +717,187 @@ public class GameState
                     Active = true,
                 });
                 break;
+            }
+        }
+    }
+
+    // --- Arena pattern helpers ---
+
+    private bool TryPlaceObstacle(Vector2 pos, float safeRadius, int texIdx, bool useStranded)
+    {
+        float centerX = Constants.ArenaWidth / 2f;
+        float centerY = Constants.ArenaHeight / 2f;
+        float radius = useStranded && texIdx < AssetManager.ObstacleRadii.Length
+            ? AssetManager.ObstacleRadii[texIdx] : 7f;
+
+        if (pos.X < 40 || pos.X > Constants.ArenaWidth - 40 ||
+            pos.Y < 40 || pos.Y > Constants.ArenaHeight - 40)
+            return false;
+        if (Vector2.Distance(pos, new Vector2(centerX, centerY)) < safeRadius + radius)
+            return false;
+
+        foreach (var other in Obstacles)
+            if (Vector2.Distance(pos, other.Position) < radius + other.Radius + 15f)
+                return false;
+
+        if (useStranded)
+        {
+            Obstacles.Add(new Obstacle
+            {
+                Position = pos, Radius = radius,
+                TextureIndex = texIdx, UseStranded = true, Active = true,
+            });
+        }
+        else
+        {
+            int[] treeSprites = { 3 * 18 + 3, 3 * 18 + 8 };
+            Obstacles.Add(new Obstacle
+            {
+                Position = pos, Radius = radius,
+                SpriteIndex = treeSprites[Random.Shared.Next(treeSprites.Length)], Active = true,
+            });
+        }
+        return true;
+    }
+
+    private void TryPlaceRandomObstacle(Random rng, float centerX, float centerY,
+        float safeRadius, int[] biomeObs, bool useStranded)
+    {
+        for (int attempt = 0; attempt < 20; attempt++)
+        {
+            float x = rng.NextSingle() * (Constants.ArenaWidth - 80) + 40;
+            float y = rng.NextSingle() * (Constants.ArenaHeight - 80) + 40;
+            int texIdx = useStranded ? biomeObs[rng.Next(biomeObs.Length)] : 0;
+            if (TryPlaceObstacle(new Vector2(x, y), safeRadius, texIdx, useStranded))
+                break;
+        }
+    }
+
+    /// <summary>Grove: 3-4 obstacles clustered tightly with dense scatter ring.</summary>
+    private void PlaceGrovePattern(Random rng, Vector2 center, float rotation,
+        int[] biomeObs, int[] biomeScatter, bool useStranded)
+    {
+        int count = rng.Next(3, 5);
+        float spread = 35f + rng.NextSingle() * 15f;
+        for (int i = 0; i < count; i++)
+        {
+            float angle = rotation + (MathF.PI * 2f / count) * i + (rng.NextSingle() - 0.5f) * 0.5f;
+            float dist = spread * (0.6f + rng.NextSingle() * 0.4f);
+            Vector2 pos = center + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * dist;
+            int texIdx = useStranded ? biomeObs[rng.Next(biomeObs.Length)] : 0;
+            TryPlaceObstacle(pos, 80f, texIdx, useStranded);
+        }
+
+        // Dense scatter ring around the grove
+        if (useStranded && biomeScatter.Length > 0)
+        {
+            int scatterCount = rng.Next(6, 12);
+            for (int i = 0; i < scatterCount; i++)
+            {
+                float angle = rng.NextSingle() * MathF.PI * 2f;
+                float dist = rng.NextSingle() * (spread + 20f);
+                GroundScatterProps.Add(new GroundScatter
+                {
+                    Position = center + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * dist,
+                    TextureIndex = biomeScatter[rng.Next(biomeScatter.Length)],
+                    FlipH = rng.NextSingle() < 0.5f,
+                });
+            }
+        }
+    }
+
+    /// <summary>Corridor: 4-6 obstacles in two parallel rows creating a lane.</summary>
+    private void PlaceCorridorPattern(Random rng, Vector2 center, float rotation,
+        int[] biomeObs, bool useStranded)
+    {
+        int pairsCount = rng.Next(2, 4);
+        float spacing = 50f + rng.NextSingle() * 20f;
+        float width = 40f + rng.NextSingle() * 15f;
+        Vector2 dir = new(MathF.Cos(rotation), MathF.Sin(rotation));
+        Vector2 perp = new(-dir.Y, dir.X);
+
+        for (int i = 0; i < pairsCount; i++)
+        {
+            float offset = (i - (pairsCount - 1) * 0.5f) * spacing;
+            Vector2 rowCenter = center + dir * offset;
+            int texIdx = useStranded ? biomeObs[rng.Next(biomeObs.Length)] : 0;
+            TryPlaceObstacle(rowCenter + perp * width * 0.5f, 80f, texIdx, useStranded);
+            texIdx = useStranded ? biomeObs[rng.Next(biomeObs.Length)] : 0;
+            TryPlaceObstacle(rowCenter - perp * width * 0.5f, 80f, texIdx, useStranded);
+        }
+    }
+
+    /// <summary>Outpost: 1-2 obstacles with 2-3 barrels nearby.</summary>
+    private void PlaceOutpostPattern(Random rng, Vector2 center, float rotation,
+        int[] biomeObs, bool useStranded)
+    {
+        int texIdx = useStranded ? biomeObs[rng.Next(biomeObs.Length)] : 0;
+        TryPlaceObstacle(center, 80f, texIdx, useStranded);
+
+        // Second obstacle nearby
+        if (rng.NextSingle() < 0.5f)
+        {
+            float angle = rotation + MathF.PI * 0.7f;
+            texIdx = useStranded ? biomeObs[rng.Next(biomeObs.Length)] : 0;
+            TryPlaceObstacle(center + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 35f,
+                80f, texIdx, useStranded);
+        }
+
+        // Barrels clustered near the obstacle
+        for (int b = 0; b < rng.Next(2, 4); b++)
+        {
+            float angle = rotation + b * MathF.PI * 0.6f + rng.NextSingle() * 0.4f;
+            Vector2 bPos = center + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * (25f + rng.NextSingle() * 15f);
+            if (bPos.X < 40 || bPos.X > Constants.ArenaWidth - 40 ||
+                bPos.Y < 40 || bPos.Y > Constants.ArenaHeight - 40) continue;
+
+            bool overlaps = false;
+            foreach (var obs in Obstacles)
+                if (Vector2.Distance(bPos, obs.Position) < obs.Radius + 12f)
+                { overlaps = true; break; }
+            foreach (var other in Barrels)
+                if (Vector2.Distance(bPos, other.Position) < 20f)
+                { overlaps = true; break; }
+            if (overlaps) continue;
+
+            var type = rng.NextSingle() < 0.55f ? BarrelType.Explosive : BarrelType.Toxic;
+            int hp = type == BarrelType.Explosive ? 3 : 5;
+            Barrels.Add(new Barrel
+            {
+                Position = bPos, Radius = 8f, Type = type,
+                CurrentHP = hp, MaxHP = hp, Active = true,
+            });
+        }
+    }
+
+    /// <summary>Shrine: 3-5 obstacles in a ring with open center and scatter. Temple-flavored.</summary>
+    private void PlaceShrinePattern(Random rng, Vector2 center, float rotation,
+        int[] biomeObs, int[] biomeScatter, bool useStranded)
+    {
+        int count = rng.Next(3, 6);
+        float ringRadius = 40f + rng.NextSingle() * 20f;
+        for (int i = 0; i < count; i++)
+        {
+            float angle = rotation + (MathF.PI * 2f / count) * i;
+            Vector2 pos = center + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * ringRadius;
+            int texIdx = useStranded ? biomeObs[rng.Next(biomeObs.Length)] : 0;
+            TryPlaceObstacle(pos, 80f, texIdx, useStranded);
+        }
+
+        // Scatter inside the shrine ring
+        if (useStranded && biomeScatter.Length > 0)
+        {
+            int scatterCount = rng.Next(4, 8);
+            for (int i = 0; i < scatterCount; i++)
+            {
+                float angle = rng.NextSingle() * MathF.PI * 2f;
+                float dist = rng.NextSingle() * ringRadius * 0.7f;
+                GroundScatterProps.Add(new GroundScatter
+                {
+                    Position = center + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * dist,
+                    TextureIndex = biomeScatter[rng.Next(biomeScatter.Length)],
+                    FlipH = rng.NextSingle() < 0.5f,
+                });
             }
         }
     }

@@ -225,6 +225,12 @@ public static class CollisionSystem
                         state.Assets.PlaySoundVariant("explosion", 0.3f);
                     }
 
+                    // Ricochet: spawn a bounced projectile toward nearest other enemy
+                    if (state.Passives.Ricochet > 0 && !proj.IsExplosive)
+                    {
+                        SpawnRicochet(state, proj, enemy, state.Passives.Ricochet);
+                    }
+
                     if (proj.PierceCount <= 0)
                     {
                         proj.Active = false;
@@ -266,6 +272,18 @@ public static class CollisionSystem
                     player.CurrentHP -= damage;
                     player.InvincibilityTimer = Constants.PlayerInvincibilityTime;
                     player.FlashTimer = 0.15f;
+
+                    // Thorns: reflect damage back to attacker
+                    if (state.Passives.ThornsDamage > 0 && !enemy.IsDying)
+                    {
+                        enemy.CurrentHP -= state.Passives.ThornsDamage;
+                        enemy.FlashTimer = 0.1f;
+                        var thornNum = state.GetInactiveDamageNumber();
+                        thornNum?.Init(enemy.Position, state.Passives.ThornsDamage.ToString(),
+                            new Color((byte)180, (byte)100, (byte)255, (byte)255));
+                        if (enemy.CurrentHP <= 0 && !enemy.IsDying)
+                            state.HandleEnemyDeath(enemy);
+                    }
 
                     // Player knockback away from enemy
                     Vector2 knockDir = Vector2.Normalize(player.Position - enemy.Position);
@@ -466,5 +484,42 @@ public static class CollisionSystem
                 orb.Velocity = dir * attractSpeed;
             }
         }
+    }
+
+    /// <summary>
+    /// Ricochet: find the nearest enemy (not the one just hit) and spawn a new projectile toward it.
+    /// bounceCount decreases with each bounce so chains are finite.
+    /// </summary>
+    private static void SpawnRicochet(GameState state, Entities.Projectile source,
+        Entities.Enemy hitEnemy, int bounceCount)
+    {
+        const float ricochetRange = 120f;
+        float bestDist = ricochetRange;
+        Entities.Enemy? target = null;
+
+        for (int i = 0; i < state.Enemies.Count; i++)
+        {
+            var e = state.Enemies[i];
+            if (!e.Active || e.IsDying || e.IsBurrowed || e == hitEnemy) continue;
+            float d = Vector2.Distance(source.Position, e.Position);
+            if (d < bestDist)
+            {
+                bestDist = d;
+                target = e;
+            }
+        }
+
+        if (target == null) return;
+
+        var proj = state.GetInactiveProjectile();
+        if (proj == null) return;
+
+        Vector2 dir = Vector2.Normalize(target.Position - source.Position);
+        float speed = source.Velocity.Length();
+        if (speed < 50f) speed = 200f;
+
+        // Ricochet does 70% damage, no further bouncing (bounceCount not passed to new proj)
+        proj.Init(source.Position, dir * speed, (int)(source.Damage * 0.7f),
+            0.5f, 0, source.ProjectileColor);
     }
 }

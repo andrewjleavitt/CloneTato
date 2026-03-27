@@ -39,6 +39,8 @@ while (!Raylib.WindowShouldClose() && !manager.QuitRequested)
 {
     float dt = Raylib.GetFrameTime();
 
+    // Capture previous trigger states BEFORE polling new input
+    InputHelper.UpdateInputState();
     // Poll SDL gamepad
     InputHelper.UpdateGamepad();
 

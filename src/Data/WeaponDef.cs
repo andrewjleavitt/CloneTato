@@ -9,11 +9,26 @@ public enum WeaponType
     Melee,  // instant arc damage, no projectiles
 }
 
+public enum FireMode
+{
+    HoldAuto,    // hold button to fire continuously (SMG, Minigun, Laser)
+    TapSemi,     // each press = one shot (Pistol, Shotgun, Sniper)
+    TapCooldown, // one activation then cooldown (Grenade, Rocket — secondaries)
+}
+
+public enum WeaponSlot
+{
+    Primary,   // main weapon, RT / left click
+    Secondary, // tactical weapon, LT / right click, cooldown-based
+}
+
 public class WeaponDef
 {
     public string Name = "";
     public int SpriteIndex;
     public WeaponType Type = WeaponType.Auto;
+    public FireMode FireMode = FireMode.HoldAuto;
+    public WeaponSlot Slot = WeaponSlot.Primary;
     public float BaseDamage;
     public float FireRate; // attacks per second
     public float ProjectileSpeed;
@@ -27,6 +42,7 @@ public class WeaponDef
     public int ClipSize = 0;       // 0 = unlimited (melee, mines)
     public float ReloadTime = 1.0f; // seconds to reload
     public int MaxUpgradeLevel = 5;
+    public float CooldownTime = 0f; // seconds, for TapCooldown secondaries (0 = use 1/FireRate)
 
     // Melee specific
     public float MeleeArc = MathF.PI * 0.6f; // swing arc width in radians
@@ -97,147 +113,167 @@ public static class WeaponDatabase
 {
     public static readonly WeaponDef[] Weapons =
     {
-        // === AUTO GUNS (Tier 1) ===
+        // === PRIMARY GUNS (Tier 1) ===
+        // Balanced for single-weapon system (was 6-weapon orbit). ~3.5x old damage.
         new()
         {
             Name = "Pistol", SpriteIndex = 0, Type = WeaponType.Auto,
-            BaseDamage = 12, FireRate = 2.5f, ProjectileSpeed = 250f,
-            Range = 150f, PierceCount = 0, ClipSize = 8, ReloadTime = 1.2f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.TapSemi,
+            BaseDamage = 38, FireRate = 3.5f, ProjectileSpeed = 280f,
+            Range = 180f, PierceCount = 0, ClipSize = 12, ReloadTime = 0.9f,
             ShopTier = 1, Cost = 40, ProjectileColor = Color.Yellow,
         },
         new()
         {
             Name = "SMG", SpriteIndex = 1, Type = WeaponType.Auto,
-            BaseDamage = 6, FireRate = 6f, ProjectileSpeed = 220f,
-            Range = 120f, PierceCount = 0, Spread = 0.15f, ClipSize = 20, ReloadTime = 1.0f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.HoldAuto,
+            BaseDamage = 14, FireRate = 8f, ProjectileSpeed = 260f,
+            Range = 150f, PierceCount = 0, Spread = 0.12f, ClipSize = 30, ReloadTime = 0.8f,
             ShopTier = 1, Cost = 50, ProjectileColor = Color.Orange,
         },
         new()
         {
             Name = "Shotgun", SpriteIndex = 2, Type = WeaponType.Auto,
-            BaseDamage = 8, FireRate = 1.2f, ProjectileSpeed = 200f,
-            Range = 100f, PierceCount = 0, Spread = 0.4f, BurstCount = 5, ClipSize = 4, ReloadTime = 1.5f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.TapSemi,
+            BaseDamage = 18, FireRate = 1.5f, ProjectileSpeed = 230f,
+            Range = 110f, PierceCount = 0, Spread = 0.35f, BurstCount = 6, ClipSize = 6, ReloadTime = 1.2f,
             ShopTier = 1, Cost = 55, ProjectileColor = Color.Red,
         },
         new()
         {
             Name = "Crossbow", SpriteIndex = 3, Type = WeaponType.Auto,
-            BaseDamage = 25, FireRate = 1.0f, ProjectileSpeed = 300f,
-            Range = 200f, PierceCount = 2, ClipSize = 1, ReloadTime = 0.8f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.TapSemi,
+            BaseDamage = 75, FireRate = 1.2f, ProjectileSpeed = 340f,
+            Range = 220f, PierceCount = 2, ClipSize = 1, ReloadTime = 0.6f,
             ShopTier = 1, Cost = 60, ProjectileColor = Color.SkyBlue,
         },
 
-        // === MELEE (Tier 1-2) ===
+        // === MELEE (BladeDancer primary only) ===
         new()
         {
             Name = "Knife", SpriteIndex = 10, Type = WeaponType.Melee,
-            BaseDamage = 10, FireRate = 3.5f, Range = 28f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.HoldAuto,
+            BaseDamage = 30, FireRate = 4.0f, Range = 30f,
             MeleeArc = MathF.PI * 0.5f, ShopTier = 1, Cost = 35,
         },
         new()
         {
             Name = "Sword", SpriteIndex = 11, Type = WeaponType.Melee,
-            BaseDamage = 20, FireRate = 1.8f, Range = 35f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.HoldAuto,
+            BaseDamage = 55, FireRate = 2.2f, Range = 38f,
             MeleeArc = MathF.PI * 0.7f, ShopTier = 1, Cost = 50,
         },
         new()
         {
             Name = "Spear", SpriteIndex = 12, Type = WeaponType.Melee,
-            BaseDamage = 18, FireRate = 2.2f, Range = 42f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.HoldAuto,
+            BaseDamage = 48, FireRate = 2.8f, Range = 48f,
             MeleeArc = MathF.PI * 0.3f, ShopTier = 2, Cost = 75,
         },
         new()
         {
             Name = "Hammer", SpriteIndex = 13, Type = WeaponType.Melee,
-            BaseDamage = 40, FireRate = 0.8f, Range = 32f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.HoldAuto,
+            BaseDamage = 120, FireRate = 1.0f, Range = 36f,
             MeleeArc = MathF.PI * 0.9f, ShopTier = 2, Cost = 95,
         },
 
-        // === AUTO GUNS (Tier 2) ===
+        // === PRIMARY GUNS (Tier 2) ===
         new()
         {
             Name = "Rifle", SpriteIndex = 4, Type = WeaponType.Auto,
-            BaseDamage = 18, FireRate = 2.0f, ProjectileSpeed = 280f,
-            Range = 180f, PierceCount = 1, ClipSize = 10, ReloadTime = 1.3f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.TapSemi,
+            BaseDamage = 55, FireRate = 2.8f, ProjectileSpeed = 320f,
+            Range = 200f, PierceCount = 1, ClipSize = 15, ReloadTime = 1.0f,
             ShopTier = 2, Cost = 90, ProjectileColor = Color.Gold,
         },
         new()
         {
             Name = "Dual Pistols", SpriteIndex = 5, Type = WeaponType.Auto,
-            BaseDamage = 10, FireRate = 4.0f, ProjectileSpeed = 250f,
-            Range = 140f, PierceCount = 0, Spread = 0.1f, ClipSize = 16, ReloadTime = 1.1f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.HoldAuto,
+            BaseDamage = 28, FireRate = 5.5f, ProjectileSpeed = 280f,
+            Range = 160f, PierceCount = 0, Spread = 0.08f, ClipSize = 24, ReloadTime = 0.9f,
             ShopTier = 2, Cost = 85, ProjectileColor = Color.Yellow,
         },
         new()
         {
             Name = "Sniper", SpriteIndex = 6, Type = WeaponType.Auto,
-            BaseDamage = 45, FireRate = 0.6f, ProjectileSpeed = 400f,
-            Range = 250f, PierceCount = 3, ClipSize = 3, ReloadTime = 1.8f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.TapSemi,
+            BaseDamage = 150, FireRate = 0.8f, ProjectileSpeed = 450f,
+            Range = 280f, PierceCount = 3, ClipSize = 4, ReloadTime = 1.4f,
             ShopTier = 2, Cost = 100, ProjectileColor = Color.White,
         },
 
-        // === MANUAL SPECIALS (Tier 2-3) ===
+        // === SECONDARY WEAPONS (Tier 2-3, cooldown-based) ===
         new()
         {
             Name = "Grenade", SpriteIndex = 14, Type = WeaponType.Manual,
-            BaseDamage = 35, FireRate = 0.8f, ProjectileSpeed = 180f,
-            Range = 160f, ExplosionRadius = 40f, ClipSize = 3, ReloadTime = 2.0f,
+            Slot = WeaponSlot.Secondary, FireMode = FireMode.TapCooldown,
+            BaseDamage = 100, FireRate = 0.8f, ProjectileSpeed = 200f,
+            Range = 180f, ExplosionRadius = 50f, CooldownTime = 2.5f,
             ShopTier = 2, Cost = 80, ProjectileColor = Color.DarkGreen,
         },
         new()
         {
             Name = "Mine Layer", SpriteIndex = 15, Type = WeaponType.Manual,
-            BaseDamage = 50, FireRate = 0.5f, Range = 30f,
-            ExplosionRadius = 35f, IsMine = true, MineProximity = 22f,
+            Slot = WeaponSlot.Secondary, FireMode = FireMode.TapCooldown,
+            BaseDamage = 140, FireRate = 0.5f, Range = 30f,
+            ExplosionRadius = 45f, IsMine = true, MineProximity = 25f, CooldownTime = 3.0f,
             ShopTier = 2, Cost = 70, ProjectileColor = Color.Gray,
         },
         new()
         {
             Name = "Bomb", SpriteIndex = 16, Type = WeaponType.Manual,
-            BaseDamage = 80, FireRate = 0.3f, ProjectileSpeed = 140f,
-            Range = 120f, ExplosionRadius = 55f, ClipSize = 1, ReloadTime = 2.5f,
+            Slot = WeaponSlot.Secondary, FireMode = FireMode.TapCooldown,
+            BaseDamage = 220, FireRate = 0.3f, ProjectileSpeed = 150f,
+            Range = 140f, ExplosionRadius = 65f, CooldownTime = 4.5f,
             ShopTier = 3, Cost = 130, ProjectileColor = Color.Orange,
         },
 
-        // === AUTO GUNS (Tier 3) ===
+        // === PRIMARY GUNS (Tier 3) ===
         new()
         {
             Name = "Minigun", SpriteIndex = 7, Type = WeaponType.Auto,
-            BaseDamage = 5, FireRate = 10f, ProjectileSpeed = 220f,
-            Range = 130f, PierceCount = 0, Spread = 0.2f, ClipSize = 50, ReloadTime = 2.0f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.HoldAuto,
+            BaseDamage = 15, FireRate = 12f, ProjectileSpeed = 260f,
+            Range = 160f, PierceCount = 0, Spread = 0.18f, ClipSize = 60, ReloadTime = 1.6f,
             ShopTier = 3, Cost = 140, ProjectileColor = Color.Orange,
         },
         new()
         {
+            Name = "Laser", SpriteIndex = 9, Type = WeaponType.Auto,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.HoldAuto,
+            BaseDamage = 10, FireRate = 18f, ProjectileSpeed = 400f,
+            Range = 200f, PierceCount = 2, ClipSize = 40, ReloadTime = 1.2f,
+            ShopTier = 3, Cost = 130, ProjectileColor = Color.Lime,
+        },
+
+        // === SECONDARY WEAPONS (Tier 3, cooldown-based) ===
+        new()
+        {
             Name = "Rocket", SpriteIndex = 8, Type = WeaponType.Auto,
-            BaseDamage = 60, FireRate = 0.4f, ProjectileSpeed = 150f,
-            Range = 200f, PierceCount = 0, ExplosionRadius = 45f, ClipSize = 2, ReloadTime = 2.2f,
+            Slot = WeaponSlot.Secondary, FireMode = FireMode.TapCooldown,
+            BaseDamage = 180, FireRate = 0.4f, ProjectileSpeed = 170f,
+            Range = 220f, PierceCount = 0, ExplosionRadius = 55f, CooldownTime = 3.5f,
             ShopTier = 3, Cost = 150, ProjectileColor = Color.Red,
         },
         new()
         {
-            Name = "Laser", SpriteIndex = 9, Type = WeaponType.Auto,
-            BaseDamage = 3, FireRate = 15f, ProjectileSpeed = 350f,
-            Range = 180f, PierceCount = 1, ClipSize = 30, ReloadTime = 1.5f,
-            ShopTier = 3, Cost = 130, ProjectileColor = Color.Lime,
-        },
-
-        // === LOCK-ON (Tier 3) ===
-        new()
-        {
             Name = "Missile Launcher", SpriteIndex = 18, Type = WeaponType.Auto,
-            BaseDamage = 25, FireRate = 0.25f, ProjectileSpeed = 120f,
-            Range = 300f, PierceCount = 0, ExplosionRadius = 30f,
-            ClipSize = 10, ReloadTime = 3.0f,
+            Slot = WeaponSlot.Secondary, FireMode = FireMode.TapCooldown,
+            BaseDamage = 35, FireRate = 0.25f, ProjectileSpeed = 140f,
+            Range = 320f, PierceCount = 0, ExplosionRadius = 35f,
+            CooldownTime = 5.0f,
             ShopTier = 3, Cost = 160, ProjectileColor = Color.Red,
-            IsLockOn = true, MissileCount = 10, MissileTurnRate = 6f,
+            IsLockOn = true, MissileCount = 12, MissileTurnRate = 7f,
         },
 
-        // === MELEE (Tier 3) ===
+        // === MELEE (Tier 3, BladeDancer only) ===
         new()
         {
             Name = "Cleaver", SpriteIndex = 17, Type = WeaponType.Melee,
-            BaseDamage = 55, FireRate = 1.2f, Range = 38f,
+            Slot = WeaponSlot.Primary, FireMode = FireMode.HoldAuto,
+            BaseDamage = 160, FireRate = 1.4f, Range = 42f,
             MeleeArc = MathF.PI * 0.8f, ShopTier = 3, Cost = 120,
         },
     };

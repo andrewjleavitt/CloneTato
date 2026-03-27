@@ -101,15 +101,9 @@ public class GameOverScreen
         DrawStat("Dodge", $"{stats.DodgeChance * 100:F0}%", rightX, ref y, Color.SkyBlue);
         DrawStat("Pickup", $"{stats.PickupRange:F0}", rightX, ref y, Color.Lime);
         DrawStat("XP Mult", $"{stats.XPMultiplier:F2}x", rightX, ref y, Color.SkyBlue);
-        DrawStat("Reload Spd", $"{stats.ReloadSpeedMultiplier:F2}x", rightX, ref y, Color.SkyBlue);
-
         // Dash stats (only show if non-default)
-        if (stats.DashSpeedBonus > 0)
-            DrawStat("Dash Spd", $"+{stats.DashSpeedBonus:F0}", rightX, ref y, Color.Purple);
         if (stats.DashCooldownReduction > 0)
             DrawStat("Dash CD", $"-{stats.DashCooldownReduction:F2}s", rightX, ref y, Color.Purple);
-        if (stats.DashDurationBonus > 0)
-            DrawStat("Dash Dur", $"+{stats.DashDurationBonus:F2}s", rightX, ref y, Color.Purple);
         if (stats.PostDashAttackSpeed > 0)
             DrawStat("Post-Dash AS", $"+{stats.PostDashAttackSpeed * 100:F0}%", rightX, ref y, Color.Gold);
         if (stats.PostDashMoveSpeed > 0)

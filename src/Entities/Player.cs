@@ -30,6 +30,13 @@ public class Player : Entity
 
     // Melee attack animation
     public float MeleeAnimTimer; // > 0 means currently showing attack anim
+    public int MeleeAttackCount;  // alternates slash/chop for BladeDancer
+
+    // BladeDancer: aim comes from movement direction, not right stick
+    public Vector2 LastMoveDirection = new(1, 0); // last non-zero move input
+
+    // Footstep sound timing
+    public float FootstepTimer;
 
     public Player()
     {

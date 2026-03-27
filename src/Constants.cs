@@ -15,7 +15,7 @@ public static class Constants
     public const int SpriteSize = 24;
     public const int TileSpacing = 1;
 
-    public const int MaxWeaponSlots = 6;
+    public const int MaxWeaponSlots = 2; // Primary + Secondary
     public const int WavesPerBiome = 10;
     public const int BiomeCount = 3;
 
@@ -30,9 +30,9 @@ public static class Constants
     // Max concurrent enemies on screen per biome
     public static int BiomeEnemyCap(int biome) => biome switch
     {
-        2 => 50,
-        3 => 60,
-        _ => 40,
+        2 => 80,
+        3 => 100,
+        _ => 60,
     };
 
     public const float PlayerInvincibilityTime = 0.5f;

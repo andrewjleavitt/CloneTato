@@ -80,34 +80,26 @@ public static class InputHelper
         if (Raylib.IsKeyDown(settings.GetKey(GameAction.MoveLeft)) || Raylib.IsKeyDown(KeyboardKey.Left)) input.X -= 1;
         if (Raylib.IsKeyDown(settings.GetKey(GameAction.MoveRight)) || Raylib.IsKeyDown(KeyboardKey.Right)) input.X += 1;
 
-        // SDL gamepad left stick
+        // SDL gamepad left stick (radial deadzone with rescaling)
         if (_sdl?.Connected == true)
         {
             float gx = _sdl.GetAxis(SdlGamepad.AXIS_LEFTX);
             float gy = _sdl.GetAxis(SdlGamepad.AXIS_LEFTY);
-            if (MathF.Abs(gx) > DeadZone || MathF.Abs(gy) > DeadZone)
-            {
-                input.X += gx;
-                input.Y += gy;
-            }
+            var stick = ApplyRadialDeadzone(gx, gy);
+            input.X += stick.X;
+            input.Y += stick.Y;
         }
         // Raylib fallback
         else if (Raylib.IsGamepadAvailable(0))
         {
             float gx = Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftX);
             float gy = Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftY);
-            if (MathF.Abs(gx) > DeadZone || MathF.Abs(gy) > DeadZone)
-            {
-                input.X += gx;
-                input.Y += gy;
-            }
+            var stick = ApplyRadialDeadzone(gx, gy);
+            input.X += stick.X;
+            input.Y += stick.Y;
         }
 
         if (input.LengthSquared() > 1f)
-            input = Vector2.Normalize(input);
-        else if (input.LengthSquared() > 0.001f && input.LengthSquared() < 1f)
-        { } // keep analog magnitude
-        else if (input.LengthSquared() > 0)
             input = Vector2.Normalize(input);
 
         return input;
@@ -115,21 +107,19 @@ public static class InputHelper
 
     public static Vector2 GetAimInput()
     {
-        // SDL gamepad right stick
+        // SDL gamepad right stick (radial deadzone with rescaling)
         if (_sdl?.Connected == true)
         {
             float gx = _sdl.GetAxis(SdlGamepad.AXIS_RIGHTX);
             float gy = _sdl.GetAxis(SdlGamepad.AXIS_RIGHTY);
-            if (gx * gx + gy * gy > DeadZone * DeadZone)
-                return new Vector2(gx, gy);
+            return ApplyRadialDeadzone(gx, gy);
         }
         // Raylib fallback
-        else if (Raylib.IsGamepadAvailable(0))
+        if (Raylib.IsGamepadAvailable(0))
         {
             float gx = Raylib.GetGamepadAxisMovement(0, GamepadAxis.RightX);
             float gy = Raylib.GetGamepadAxisMovement(0, GamepadAxis.RightY);
-            if (gx * gx + gy * gy > DeadZone * DeadZone)
-                return new Vector2(gx, gy);
+            return ApplyRadialDeadzone(gx, gy);
         }
 
         return Vector2.Zero;
@@ -159,11 +149,56 @@ public static class InputHelper
     public static bool IsFirePressed()
     {
         if (Raylib.IsMouseButtonPressed(MouseButton.Left)) return true;
-        // SDL: X button as single-shot fire
-        if (_sdl?.IsButtonPressed(SdlGamepad.BUTTON_X) == true) return true;
+        // SDL: RT axis rising edge (trigger just crossed threshold)
+        if (_sdl?.Connected == true && _sdl.GetAxis(SdlGamepad.AXIS_TRIGGERRIGHT) > 0.3f && !_prevRT) return true;
         // Raylib fallback
         if (Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, GamepadButton.RightTrigger2)) return true;
         return false;
+    }
+
+    // Secondary weapon: right mouse / LT trigger (rising edge)
+    public static bool IsSecondaryFirePressed()
+    {
+        if (Raylib.IsMouseButtonPressed(MouseButton.Right)) return true;
+        // SDL: LT axis crosses threshold (rising edge via state tracking)
+        if (_sdl?.Connected == true && _sdl.GetAxis(SdlGamepad.AXIS_TRIGGERLEFT) > 0.3f && !_prevLT) return true;
+        // Raylib fallback
+        if (Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, GamepadButton.LeftTrigger2)) return true;
+        return false;
+    }
+
+    // Secondary weapon held: right mouse / LT trigger (sustained)
+    public static bool IsSecondaryFireDown()
+    {
+        if (Raylib.IsMouseButtonDown(MouseButton.Right)) return true;
+        // SDL: LT axis above threshold
+        if (_sdl?.Connected == true && _sdl.GetAxis(SdlGamepad.AXIS_TRIGGERLEFT) > 0.3f) return true;
+        // Raylib fallback
+        if (Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonDown(0, GamepadButton.LeftTrigger2)) return true;
+        return false;
+    }
+
+    // Special ability: Q key / LB button
+    public static bool IsSpecialPressed()
+    {
+        if (Raylib.IsKeyPressed(KeyboardKey.Q)) return true;
+        // SDL: LB button
+        if (_sdl?.IsButtonPressed(SdlGamepad.BUTTON_LEFTSHOULDER) == true) return true;
+        // Raylib fallback
+        if (Raylib.IsGamepadAvailable(0) && Raylib.IsGamepadButtonPressed(0, GamepadButton.LeftTrigger1)) return true;
+        return false;
+    }
+
+    // Track trigger previous states for rising-edge detection
+    private static bool _prevRT;
+    private static bool _prevLT;
+    /// <summary>
+    /// Must be called BEFORE UpdateGamepad() each frame to capture previous trigger states.
+    /// </summary>
+    public static void UpdateInputState()
+    {
+        _prevRT = _sdl?.Connected == true && _sdl.GetAxis(SdlGamepad.AXIS_TRIGGERRIGHT) > 0.3f;
+        _prevLT = _sdl?.Connected == true && _sdl.GetAxis(SdlGamepad.AXIS_TRIGGERLEFT) > 0.3f;
     }
 
     public static bool IsConfirmPressed()
@@ -231,5 +266,20 @@ public static class InputHelper
             if (Raylib.IsGamepadButtonPressed(0, GamepadButton.LeftFaceDown)) dir++;
         }
         return dir;
+    }
+
+    /// <summary>
+    /// Radial deadzone with rescaling. Inside the deadzone = zero.
+    /// Outside, output ramps smoothly from 0 at the edge to 1.0 at full tilt.
+    /// Prevents the input jump that per-axis deadzones cause.
+    /// </summary>
+    private static Vector2 ApplyRadialDeadzone(float x, float y)
+    {
+        float mag = MathF.Sqrt(x * x + y * y);
+        if (mag < DeadZone) return Vector2.Zero;
+        // Rescale so output is 0..1 across the usable range
+        float rescaled = (mag - DeadZone) / (1f - DeadZone);
+        if (rescaled > 1f) rescaled = 1f;
+        return new Vector2(x / mag * rescaled, y / mag * rescaled);
     }
 }

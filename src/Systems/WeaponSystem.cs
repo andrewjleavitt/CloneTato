@@ -8,7 +8,7 @@ namespace CloneTato.Systems;
 
 public static class WeaponSystem
 {
-    public const float OrbitRadius = 18f;
+    public const float WeaponDrawOffset = 10f; // small offset from player toward aim
 
     private static float GetAttackSpeedMultiplier(GameState state)
     {
@@ -16,6 +16,9 @@ public static class WeaponSystem
         float mult = player.ComputedStats.AttackSpeedMultiplier;
         if (player.DashBuffTimer > 0 && player.ComputedStats.PostDashAttackSpeed > 0)
             mult *= (1f + player.ComputedStats.PostDashAttackSpeed);
+        // Adrenaline Rush: attack speed burst from kill streak
+        if (state.Passives.AdrenalineActive > 0)
+            mult *= (1f + state.Passives.AdrenalineBoost);
         return mult;
     }
 
@@ -31,16 +34,12 @@ public static class WeaponSystem
         else aimDir = new Vector2(1, 0);
         float aimAngle = MathF.Atan2(aimDir.Y, aimDir.X);
 
-        // Update orbit angles — weapons fan out toward aim direction
+        // Track aim angle per weapon slot (smooth lerp for visual rotation)
         int weaponCount = state.EquippedWeapons.Count;
         for (int w = 0; w < weaponCount; w++)
         {
-            float spread = weaponCount > 1 ? MathF.PI * 0.6f : 0f;
-            float step = weaponCount > 1 ? spread / (weaponCount - 1) : 0f;
-            float targetAngle = aimAngle - spread / 2f + step * w;
-
             float current = state.WeaponOrbitAngles[w];
-            float diff = NormalizeAngle(targetAngle - current);
+            float diff = NormalizeAngle(aimAngle - current);
             state.WeaponOrbitAngles[w] = current + diff * Math.Min(1f, 12f * dt);
         }
 
@@ -70,7 +69,7 @@ public static class WeaponSystem
             if (state.MeleeSwipes[i].Active)
                 state.MeleeSwipes[i].Update(dt);
 
-        // Fire weapons based on type
+        // Fire weapons based on slot
         for (int w = 0; w < weaponCount; w++)
         {
             if (state.WeaponCooldowns[w] > 0) continue;
@@ -78,7 +77,7 @@ public static class WeaponSystem
 
             var weapon = state.EquippedWeapons[w];
 
-            // Check clip (0 = unlimited, e.g. melee/mines)
+            // Check clip (0 = unlimited, e.g. melee)
             if (weapon.ClipSize > 0 && state.WeaponClipAmmo[w] <= 0)
             {
                 // Start reload
@@ -86,49 +85,52 @@ public static class WeaponSystem
                 continue;
             }
 
-            switch (weapon.Def.Type)
+            if (weapon.Def.Slot == WeaponSlot.Secondary)
             {
-                case WeaponType.Auto when weapon.Def.IsLockOn:
-                    UpdateLockOnWeapon(state, w, weapon);
-                    break;
-                case WeaponType.Auto:
-                    UpdateAutoWeapon(state, w, weapon, aimDir, aimAngle);
-                    break;
-                case WeaponType.Manual:
-                    UpdateManualWeapon(state, w, weapon, aimDir, aimAngle);
-                    break;
-                case WeaponType.Melee:
-                    UpdateMeleeWeapon(state, w, weapon, aimDir, aimAngle);
-                    break;
+                // Secondary: fires on press, or when held and cooldown just expired
+                if (!state.IsSecondaryFiring && !state.IsSecondaryDown) continue;
+                FireSecondaryWeapon(state, w, weapon, aimDir, aimAngle);
+            }
+            else if (weapon.Def.Type == WeaponType.Melee)
+            {
+                // Melee primary: auto-fires when enemy in range (reactive)
+                UpdateMeleeWeapon(state, w, weapon, aimDir, aimAngle);
+            }
+            else
+            {
+                // Ranged primary: fires based on FireMode
+                UpdatePrimaryWeapon(state, w, weapon, aimDir, aimAngle);
             }
         }
+
+        // Tick special ability cooldown
+        if (state.SpecialCooldown > 0)
+            state.SpecialCooldown -= dt;
     }
 
-    private static void UpdateAutoWeapon(GameState state, int w, WeaponInstance weapon,
+    private static void UpdatePrimaryWeapon(GameState state, int w, WeaponInstance weapon,
         Vector2 aimDir, float aimAngle)
     {
+        // Player-controlled firing based on FireMode
+        switch (weapon.Def.FireMode)
+        {
+            case FireMode.HoldAuto:
+                // Hold to fire continuously
+                if (!state.IsFiring) return;
+                break;
+            case FireMode.TapSemi:
+                // Each press = one shot
+                if (!state.IsFirePressed) return;
+                break;
+            default:
+                if (!state.IsFiring) return;
+                break;
+        }
+
         var player = state.Player;
 
-        // Only fire when enemies are in range (but aim toward mouse, not nearest enemy)
-        bool enemyInRange = false;
-        for (int e = 0; e < state.Enemies.Count; e++)
-        {
-            if (!state.Enemies[e].Active || state.Enemies[e].IsDying) continue;
-            if (Vector2.Distance(player.Position, state.Enemies[e].Position) < weapon.Range * 1.2f)
-            {
-                enemyInRange = true;
-                break;
-            }
-        }
-        if (!enemyInRange) return;
-
-        // Fire toward mouse cursor
-        float orbitAngle = state.WeaponOrbitAngles[w];
-        Vector2 weaponPos = player.Position + new Vector2(
-            MathF.Cos(orbitAngle) * OrbitRadius,
-            MathF.Sin(orbitAngle) * OrbitRadius);
-
-        Vector2 fireDir = state.MouseWorldPosition - weaponPos;
+        // Fire from player center toward mouse cursor
+        Vector2 fireDir = state.MouseWorldPosition - player.Position;
         float fireDist = fireDir.Length();
         if (fireDist > 1f) fireDir /= fireDist;
         else fireDir = aimDir;
@@ -140,7 +142,11 @@ public static class WeaponSystem
         if (weapon.ClipSize > 0)
             state.WeaponClipAmmo[w]--;
 
-        int damage = (int)weapon.Damage;
+        if (weapon.Def.IsLockOn)
+        {
+            FireLockOnVolley(state, w, weapon, aimAngle, player.Position);
+            return;
+        }
 
         if (weapon.BurstCount > 1)
         {
@@ -149,7 +155,7 @@ public static class WeaponSystem
             {
                 float spreadAngle = baseAngle + (Random.Shared.NextSingle() - 0.5f) * weapon.Def.Spread * 2f;
                 Vector2 spreadDir = new(MathF.Cos(spreadAngle), MathF.Sin(spreadAngle));
-                FireProjectile(state, weaponPos, spreadDir, weapon);
+                FireProjectile(state, player.Position, spreadDir, weapon);
             }
         }
         else
@@ -160,25 +166,25 @@ public static class WeaponSystem
                 float spreadAngle = baseAngle + (Random.Shared.NextSingle() - 0.5f) * weapon.Def.Spread;
                 fireDir = new Vector2(MathF.Cos(spreadAngle), MathF.Sin(spreadAngle));
             }
-            FireProjectile(state, weaponPos, fireDir, weapon);
+            FireProjectile(state, player.Position, fireDir, weapon);
         }
 
         state.Assets.PlaySoundVariant("shoot", 0.25f);
     }
 
-    private static void UpdateManualWeapon(GameState state, int w, WeaponInstance weapon,
+    private static void FireSecondaryWeapon(GameState state, int w, WeaponInstance weapon,
         Vector2 aimDir, float aimAngle)
     {
-        // Only fire on mouse click
-        if (!state.IsFiring) return;
-
         var player = state.Player;
-        float cooldown = 1f / (weapon.FireRate * GetAttackSpeedMultiplier(state));
-        state.WeaponCooldowns[w] = cooldown;
 
-        // Consume ammo
-        if (weapon.ClipSize > 0)
-            state.WeaponClipAmmo[w]--;
+        // Use CooldownTime if set, otherwise fall back to 1/FireRate
+        float cooldown = weapon.Def.CooldownTime > 0
+            ? weapon.Def.CooldownTime
+            : 1f / (weapon.FireRate * GetAttackSpeedMultiplier(state));
+        // Overclock: reduce secondary cooldown
+        if (state.Passives.OverclockMult > 0)
+            cooldown *= (1f - state.Passives.OverclockMult);
+        state.WeaponCooldowns[w] = cooldown;
 
         if (weapon.Def.IsMine)
         {
@@ -191,20 +197,19 @@ public static class WeaponSystem
             }
             state.Assets.PlaySoundVariant("select", 0.3f);
         }
+        else if (weapon.Def.IsLockOn)
+        {
+            FireLockOnVolley(state, w, weapon, aimAngle, player.Position);
+        }
         else
         {
-            // Fire grenade/bomb toward mouse
-            float orbitAngle = state.WeaponOrbitAngles[w];
-            Vector2 weaponPos = player.Position + new Vector2(
-                MathF.Cos(orbitAngle) * OrbitRadius,
-                MathF.Sin(orbitAngle) * OrbitRadius);
-
-            Vector2 fireDir = state.MouseWorldPosition - weaponPos;
+            // Fire grenade/rocket/bomb from player toward mouse
+            Vector2 fireDir = state.MouseWorldPosition - player.Position;
             float dist = fireDir.Length();
             if (dist > 1f) fireDir /= dist;
             else fireDir = aimDir;
 
-            FireProjectile(state, weaponPos, fireDir, weapon);
+            FireProjectile(state, player.Position, fireDir, weapon);
             state.Assets.PlaySoundVariant("shoot", 0.4f);
         }
     }
@@ -214,25 +219,27 @@ public static class WeaponSystem
     {
         var player = state.Player;
 
-        // Check if any enemy is in melee range
-        bool enemyInRange = false;
-        for (int e = 0; e < state.Enemies.Count; e++)
-        {
-            if (!state.Enemies[e].Active || state.Enemies[e].IsDying) continue;
-            if (Vector2.Distance(player.Position, state.Enemies[e].Position) < weapon.Range + 10f)
-            {
-                enemyInRange = true;
-                break;
-            }
-        }
-        if (!enemyInRange) return;
+        // BladeDancer: manual attack on RT press (Hades-style)
+        // Swing toward aim direction, can whiff if nothing is in range
+        // Dash strike: RT during dash = lunging slash with bonus damage/range
+        bool isDashStrike = player.IsDashing && state.IsFirePressed;
+        if (!isDashStrike && !state.IsFirePressed) return;
 
         float cooldown = 1f / (weapon.FireRate * GetAttackSpeedMultiplier(state));
+        // Dash strike has reduced cooldown for snappy chaining
+        if (isDashStrike) cooldown *= 0.6f;
         state.WeaponCooldowns[w] = cooldown;
 
-        float swingAngle = state.WeaponOrbitAngles[w];
-        float halfArc = weapon.MeleeArc / 2f;
-        int damage = (int)(weapon.Damage * player.ComputedStats.DamageMultiplier);
+        // Dash strike swings in dash direction; normal attack swings toward aim
+        float swingAngle = isDashStrike
+            ? MathF.Atan2(player.DashDirection.Y, player.DashDirection.X)
+            : aimAngle;
+        // Dash strike: wider arc, more range, more damage
+        float effectiveArc = isDashStrike ? weapon.MeleeArc * 1.4f : weapon.MeleeArc;
+        float effectiveRange = isDashStrike ? weapon.Range * 1.5f : weapon.Range;
+        float halfArc = effectiveArc / 2f;
+        float dashDmgMult = isDashStrike ? 1.5f : 1f;
+        int damage = (int)(weapon.Damage * player.ComputedStats.DamageMultiplier * dashDmgMult);
 
         // Damage all enemies in the arc
         int hitCount = 0;
@@ -242,7 +249,7 @@ public static class WeaponSystem
             if (!enemy.Active || enemy.IsDying || enemy.IsBurrowed) continue;
 
             float dist = Vector2.Distance(player.Position, enemy.Position);
-            if (dist > weapon.Range + enemy.Radius) continue;
+            if (dist > effectiveRange + enemy.Radius) continue;
 
             // Check if enemy is within the arc
             float angleToEnemy = MathF.Atan2(
@@ -286,23 +293,38 @@ public static class WeaponSystem
         }
 
         // Trigger player melee attack animation
-        player.MeleeAnimTimer = 0.35f;
+        player.MeleeAnimTimer = isDashStrike ? 0.25f : 0.35f; // dash strike is faster
+        player.MeleeAttackCount++;
 
-        // Melee lunge — slight forward movement toward aim direction
-        float lungeForce = player.HeroType == Data.HeroType.BladeDancer ? 80f : 40f;
-        player.Velocity += aimDir * lungeForce;
+        // Melee lunge — dash strike gets a stronger forward burst
+        float lungeForce = isDashStrike ? 140f : 80f;
+        Vector2 lungeDir = isDashStrike ? player.DashDirection : aimDir;
+        player.Velocity += lungeDir * lungeForce;
 
-        // Spawn swipe visual — tint by weapon type
-        Color swipeColor = hitCount > 0
-            ? weapon.Def.Name switch
-            {
-                "Knife" => new Color((byte)200, (byte)230, (byte)255, (byte)255),   // cold steel
-                "Spear" => new Color((byte)255, (byte)220, (byte)150, (byte)255),   // golden
-                "Hammer" => new Color((byte)255, (byte)180, (byte)100, (byte)255),  // impact orange
-                "Cleaver" => new Color((byte)255, (byte)150, (byte)150, (byte)255), // blood red
-                _ => Color.White,
-            }
-            : new Color((byte)200, (byte)200, (byte)200, (byte)150);
+        // End dash on dash strike (committed attack, can't keep rolling)
+        if (isDashStrike)
+        {
+            player.DashTimer = 0f;
+            player.IsDashing = false;
+        }
+
+        // Spawn swipe visual — dash strike is bigger and gold-tinted
+        Color swipeColor;
+        if (isDashStrike)
+            swipeColor = hitCount > 0
+                ? new Color((byte)255, (byte)200, (byte)80, (byte)255)   // gold flash
+                : new Color((byte)200, (byte)180, (byte)100, (byte)150);
+        else
+            swipeColor = hitCount > 0
+                ? weapon.Def.Name switch
+                {
+                    "Knife" => new Color((byte)200, (byte)230, (byte)255, (byte)255),
+                    "Spear" => new Color((byte)255, (byte)220, (byte)150, (byte)255),
+                    "Hammer" => new Color((byte)255, (byte)180, (byte)100, (byte)255),
+                    "Cleaver" => new Color((byte)255, (byte)150, (byte)150, (byte)255),
+                    _ => Color.White,
+                }
+                : new Color((byte)200, (byte)200, (byte)200, (byte)150);
         var swipe = state.GetInactiveMeleeSwipe();
         swipe?.Init(player.Position, swingAngle, weapon.MeleeArc, weapon.Range, swipeColor);
 
@@ -320,11 +342,12 @@ public static class WeaponSystem
             state.Assets.PlaySoundVariant("move", 0.15f);
     }
 
-    private static void UpdateLockOnWeapon(GameState state, int w, WeaponInstance weapon)
+    private static void FireLockOnVolley(GameState state, int w, WeaponInstance weapon,
+        float aimAngle, Vector2 weaponPos)
     {
         var player = state.Player;
 
-        // Find all active, non-dying enemies
+        // Find all active, non-dying enemies in range
         var targets = new List<int>();
         for (int e = 0; e < state.Enemies.Count; e++)
         {
@@ -334,25 +357,12 @@ public static class WeaponSystem
         }
         if (targets.Count == 0) return;
 
-        float cooldown = 1f / (weapon.FireRate * GetAttackSpeedMultiplier(state));
-        state.WeaponCooldowns[w] = cooldown;
-
         int missileCount = weapon.MissileCount;
 
-        // Consume full clip
-        if (weapon.ClipSize > 0)
-            state.WeaponClipAmmo[w] = 0;
-
         // Distribute missiles among targets
-        // If fewer targets than missiles, spread evenly
         int[] missilesPerTarget = new int[targets.Count];
         for (int i = 0; i < missileCount; i++)
             missilesPerTarget[i % targets.Count]++;
-
-        float orbitAngle = state.WeaponOrbitAngles[w];
-        Vector2 weaponPos = player.Position + new Vector2(
-            MathF.Cos(orbitAngle) * OrbitRadius,
-            MathF.Sin(orbitAngle) * OrbitRadius);
 
         for (int t = 0; t < targets.Count; t++)
         {
@@ -361,11 +371,10 @@ public static class WeaponSystem
                 var proj = state.GetInactiveProjectile();
                 if (proj == null) break;
 
-                // Launch in a spread pattern, missiles will home in
-                float spreadAngle = orbitAngle + (Random.Shared.NextSingle() - 0.5f) * MathF.PI * 0.8f;
+                float spreadAngle = aimAngle + (Random.Shared.NextSingle() - 0.5f) * MathF.PI * 0.8f;
                 Vector2 launchDir = new(MathF.Cos(spreadAngle), MathF.Sin(spreadAngle));
 
-                float lifetime = weapon.Range / weapon.ProjectileSpeed * 2f; // extra lifetime for homing
+                float lifetime = weapon.Range / weapon.ProjectileSpeed * 2f;
                 int damage = (int)weapon.Damage;
                 proj.Init(weaponPos, launchDir * weapon.ProjectileSpeed, damage, lifetime,
                     0, weapon.Def.ProjectileColor, weapon.ExplosionRadius);
@@ -500,8 +509,8 @@ public static class WeaponSystem
     {
         float angle = state.WeaponOrbitAngles[weaponIndex];
         return state.Player.Position + new Vector2(
-            MathF.Cos(angle) * OrbitRadius,
-            MathF.Sin(angle) * OrbitRadius);
+            MathF.Cos(angle) * WeaponDrawOffset,
+            MathF.Sin(angle) * WeaponDrawOffset);
     }
 
     public static float GetWeaponDrawAngle(GameState state, int weaponIndex)

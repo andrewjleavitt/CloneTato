@@ -7,7 +7,7 @@ public class GameCamera
 {
     public Camera2D Camera;
     private Vector2 _target;
-    private const float LerpSpeed = 5f;
+    private const float LerpSpeed = 12f; // snappy camera — tight twin-stick feel
 
     public GameCamera()
     {

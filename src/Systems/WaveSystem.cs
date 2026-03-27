@@ -14,14 +14,19 @@ public static class WaveSystem
         state.WaveTimer -= dt;
 
         // Spawn enemies (respecting per-biome density cap)
+        // Global density multiplier — applied to both count and rate
+        const float DensityMult = 2.0f;
+        int totalEnemies = (int)(config.TotalEnemies * DensityMult);
+        float spawnRate = config.BaseSpawnRate * DensityMult;
+
         int enemyCap = Constants.BiomeEnemyCap(state.CurrentBiome);
-        if (state.EnemiesSpawnedThisWave < config.TotalEnemies)
+        if (state.EnemiesSpawnedThisWave < totalEnemies)
         {
             float waveProgress = 1f - (state.WaveTimer / config.Duration);
             float spawnMult = GetSpawnPhaseMultiplier(waveProgress);
-            state.SpawnAccumulator += config.BaseSpawnRate * spawnMult * dt;
+            state.SpawnAccumulator += spawnRate * spawnMult * dt;
 
-            while (state.SpawnAccumulator >= 1f && state.EnemiesSpawnedThisWave < config.TotalEnemies)
+            while (state.SpawnAccumulator >= 1f && state.EnemiesSpawnedThisWave < totalEnemies)
             {
                 if (state.ActiveEnemyCount() >= enemyCap)
                 {
@@ -35,7 +40,7 @@ public static class WaveSystem
         }
 
         // Wave complete: timer expired AND all enemies dead
-        bool allSpawned = state.EnemiesSpawnedThisWave >= config.TotalEnemies;
+        bool allSpawned = state.EnemiesSpawnedThisWave >= totalEnemies;
         bool allDead = state.ActiveEnemyCount() == 0;
         bool timerDone = state.WaveTimer <= 0;
 
@@ -47,7 +52,7 @@ public static class WaveSystem
         else if (timerDone && !allSpawned)
         {
             // Timer ran out but not all spawned: force-spawn remaining faster
-            state.SpawnAccumulator += config.BaseSpawnRate * 3f * dt;
+            state.SpawnAccumulator += spawnRate * 3f * dt;
         }
     }
 

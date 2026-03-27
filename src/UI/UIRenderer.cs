@@ -133,42 +133,131 @@ public static class UIRenderer
             DrawTextSmall("BUFF", barX + 44, buffY - 1, Color.Gold);
         }
 
-        // Weapon icons (bottom left)
+        // Weapon slots (bottom left): Primary | Secondary | Special
         int weaponY = Constants.LogicalHeight - 28;
         for (int i = 0; i < state.EquippedWeapons.Count; i++)
         {
             var weapon = state.EquippedWeapons[i];
-            int wx = 4 + i * 26;
+            int wx = 4 + i * 32; // wider spacing for slot labels
 
-            // Dim background if reloading
+            // Slot label
+            string slotLabel = i == 0 ? "PRI" : "SEC";
+            Color slotColor = i == 0 ? Color.SkyBlue : Color.Orange;
+
             bool isReloading = state.WeaponReloadTimers[i] > 0;
-            Raylib.DrawRectangle(wx - 1, weaponY - 1, 26, 26, new Color(0, 0, 0, 150));
+            bool isOnCooldown = state.WeaponCooldowns[i] > 0 && weapon.Def.Slot == Data.WeaponSlot.Secondary;
+
+            // Background
+            Raylib.DrawRectangle(wx - 1, weaponY - 1, 28, 28, new Color(0, 0, 0, 150));
+
+            // Cooldown darkening for secondaries
+            if (isOnCooldown)
+            {
+                float cooldownPct = state.WeaponCooldowns[i] / (weapon.Def.CooldownTime > 0 ? weapon.Def.CooldownTime : 1f);
+                int darkH = (int)(26 * cooldownPct);
+                Raylib.DrawRectangle(wx, weaponY + (26 - darkH), 26, darkH, new Color(0, 0, 0, 180));
+            }
 
             Color weapTint = isReloading ? new Color((byte)100, (byte)100, (byte)100, (byte)255) : Color.White;
-            state.Assets.Weapons.Draw(weapon.Def.SpriteIndex, wx + 1, weaponY + 1, weapTint);
+            state.Assets.Weapons.Draw(weapon.Def.SpriteIndex, wx + 2, weaponY + 2, weapTint);
+
+            // Slot label above
+            Raylib.DrawText(slotLabel, wx, weaponY - 9, 6, slotColor);
 
             // Reload bar overlay
             if (isReloading)
             {
                 float reloadPct = 1f - state.WeaponReloadTimers[i] / weapon.ReloadTime;
-                Raylib.DrawRectangle(wx, weaponY + 22, (int)(24 * reloadPct), 2, Color.SkyBlue);
+                Raylib.DrawRectangle(wx, weaponY + 24, (int)(26 * reloadPct), 2, Color.SkyBlue);
             }
 
-            // Clip ammo counter
-            if (weapon.ClipSize > 0)
+            // Clip ammo counter (primary only)
+            if (weapon.ClipSize > 0 && weapon.Def.Slot == Data.WeaponSlot.Primary)
             {
                 string ammoText = isReloading ? "R" : $"{state.WeaponClipAmmo[i]}";
                 Color ammoColor = isReloading ? Color.SkyBlue :
                     state.WeaponClipAmmo[i] <= weapon.ClipSize / 4 ? Color.Red : Color.White;
-                Raylib.DrawText(ammoText, wx + 1, weaponY - 8, 6, ammoColor);
+                Raylib.DrawText(ammoText, wx + 1, weaponY + 18, 6, ammoColor);
             }
 
             // Upgrade level indicator
             if (weapon.UpgradeLevel > 0)
             {
                 string lvl = $"+{weapon.UpgradeLevel}";
-                Raylib.DrawText(lvl, wx + 16, weaponY + 18, 6, Color.Gold);
+                Raylib.DrawText(lvl, wx + 18, weaponY + 18, 6, Color.Gold);
             }
+        }
+
+        // Special ability cooldown indicator
+        {
+            int sx = 4 + state.EquippedWeapons.Count * 32;
+            Raylib.DrawRectangle(sx - 1, weaponY - 1, 28, 28, new Color(0, 0, 0, 150));
+            Raylib.DrawText("SPL", sx, weaponY - 9, 6, Color.Magenta);
+
+            if (state.SpecialCooldown > 0 && state.SpecialMaxCooldown > 0)
+            {
+                float pct = state.SpecialCooldown / state.SpecialMaxCooldown;
+                int darkH = (int)(26 * pct);
+                Raylib.DrawRectangle(sx, weaponY + (26 - darkH), 26, darkH, new Color(0, 0, 0, 180));
+                Raylib.DrawText("Q", sx + 9, weaponY + 8, 10, new Color(255, 255, 255, 100));
+            }
+            else
+            {
+                Raylib.DrawText("Q", sx + 9, weaponY + 8, 10, Color.Magenta);
+            }
+        }
+
+        // Active passives (bottom right, stacking upward)
+        DrawPassives(state);
+    }
+
+    private static void DrawPassives(GameState state)
+    {
+        var p = state.Passives;
+        int x = Constants.LogicalWidth - 8; // right-aligned
+        int y = Constants.LogicalHeight - 10;
+        const int lineH = 9;
+
+        // Build list of active passives (bottom to top)
+        if (p.AdrenalineWindow > 0)
+        {
+            Color c = p.AdrenalineActive > 0 ? Color.Gold : Color.DarkGray;
+            string text = p.AdrenalineActive > 0
+                ? $"ADRENALINE {p.AdrenalineActive:F1}s"
+                : "ADRENALINE";
+            DrawTextSmall(text, x - text.Length * 5, y, c);
+            y -= lineH;
+        }
+        if (p.OverclockMult > 0)
+        {
+            string text = $"OVERCLOCK {(int)(p.OverclockMult * 100)}%";
+            DrawTextSmall(text, x - text.Length * 5, y, Color.SkyBlue);
+            y -= lineH;
+        }
+        if (p.ExplosiveKills)
+        {
+            string text = "EXPLOSIVE";
+            DrawTextSmall(text, x - text.Length * 5, y, Color.Orange);
+            y -= lineH;
+        }
+        if (p.ThornsDamage > 0)
+        {
+            string text = $"THORNS x{p.ThornsDamage}";
+            DrawTextSmall(text, x - text.Length * 5, y,
+                new Color((byte)180, (byte)100, (byte)255, (byte)255));
+            y -= lineH;
+        }
+        if (p.VampiricHeal > 0)
+        {
+            string text = $"VAMPIRIC +{p.VampiricHeal}";
+            DrawTextSmall(text, x - text.Length * 5, y, Color.Green);
+            y -= lineH;
+        }
+        if (p.Ricochet > 0)
+        {
+            string text = $"RICOCHET x{p.Ricochet}";
+            DrawTextSmall(text, x - text.Length * 5, y, Color.Yellow);
+            y -= lineH;
         }
     }
 
